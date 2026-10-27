@@ -315,7 +315,8 @@ button.row:hover .t,.row-l:hover .t{text-decoration:underline;text-decoration-co
 .seg button[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--fg);color:var(--fg)}
 .seg.moods button{font-size:26px;line-height:1;padding:10px 0}
 .mgrid{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
-@media (min-width:900px){.mgrid{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}}
+@media (min-width:1100px){.mgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.seg button span{text-align:center;line-height:1.25}
 .wmood{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;text-align:center}
 .wmood div{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;border-radius:14px;background:var(--surface-2)}
 .wmood small{font-size:12px;color:var(--muted);font-weight:600}
@@ -726,13 +727,15 @@ function weekStats(mon){const t=today();let sc=0,dn=0;const votes={};
 const todoItems=s=>((S.data.todos[s]||{}).items||[]);
 function saveTodos(s,items){put('todos',s,{date:s,items})}
 
-/* ---------- Journée : énergie et humeur du matin (mêmes choix que le tableau « Days » de Notion) ---------- */
+/* ---------- Journée : sommeil, énergie et humeur du matin (mêmes choix que le tableau « Days » de Notion) ---------- */
+const SLEEP=[[5,'🌕','Excellent'],[4,'🌔','Bon'],[3,'🌓','Moyen'],[2,'🌒','Mauvais'],[1,'🌑','Très mauvais']];
+const sleepOf=n=>SLEEP.find(x=>x[0]===n);
 const ENERGY=[[5,'⚡','Ultra','Ultra énergétique'],[4,'💪','Motivé','Motivé · bonne énergie'],[3,'⚖️','Stable','Équilibré · stable'],[2,'🐢','Fatigué','Fatigué · lourd et lent'],[1,'🪫','KO','Épuisé · KO']];
 const MOODS=['🤩','🙂','😐','😠','😔'];
 const dayOf=d=>S.data.days[d]||{};
 const energyOf=n=>ENERGY.find(x=>x[0]===n);
 function setDay(d,patch){const b=S.data.days[d];put('days',d,{...(b?clean(b):{}),date:d,...patch,updatedAt:nowIso()})}
-function weekMood(mon){const days=[...Array(7)].map((_,i)=>addDays(mon,i));const es=days.map(d=>dayOf(d).energy).filter(n=>n>0);return{days,avg:es.length?avg(es):null}}
+function weekMood(mon){const days=[...Array(7)].map((_,i)=>addDays(mon,i));const mean=f=>{const v=days.map(d=>dayOf(d)[f]).filter(n=>n>0);return v.length?avg(v):null};return{days,avg:mean('energy'),sleep:mean('sleep')}}
 
 /* ---------- Studio ---------- */
 const stageIdx=k=>Math.max(0,STAGES.findIndex(s=>s.k===k));
@@ -811,9 +814,10 @@ function viewToday(){
     <section class="sec">${weekFocus(mon)}</section>
     <section class="sec">${focusVideo()}</section>
   </div>`}
-function morningCard(t){const d=dayOf(t);const e=energyOf(d.energy);
-  return `<section class="sec"><div class="sec-h"><h2>Ce matin</h2><span class="hint">${e||d.mood?`${e?esc(e[3]):''}${e&&d.mood?' · ':''}${d.mood||''}`:'Comment tu te sens ?'}</span></div>
-  <div class="mgrid"><div class="field"><span>Énergie</span><div class="seg" role="group" aria-label="Énergie">${ENERGY.map(([n,ic,sh,l])=>`<button data-act="day-energy" data-n="${n}" aria-pressed="${d.energy===n}" aria-label="${esc(l)}" title="${esc(l)}"><i aria-hidden="true">${ic}</i><span>${sh}</span></button>`).join('')}</div></div>
+function morningCard(t){const d=dayOf(t);const e=energyOf(d.energy),sl=sleepOf(d.sleep);const said=[sl&&`Sommeil ${sl[2].toLowerCase()}`,e&&e[3],d.mood].filter(Boolean);
+  return `<section class="sec"><div class="sec-h"><h2>Ce matin</h2><span class="hint">${said.length?esc(said.join(' · ')):'Comment tu te sens ?'}</span></div>
+  <div class="mgrid"><div class="field"><span>Qualité du sommeil</span><div class="seg" role="group" aria-label="Qualité du sommeil">${SLEEP.map(([n,ic,l])=>`<button data-act="day-sleep" data-n="${n}" aria-pressed="${d.sleep===n}" aria-label="Sommeil ${esc(l.toLowerCase())}"><i aria-hidden="true">${ic}</i><span>${l}</span></button>`).join('')}</div></div>
+  <div class="field"><span>Énergie</span><div class="seg" role="group" aria-label="Énergie">${ENERGY.map(([n,ic,sh,l])=>`<button data-act="day-energy" data-n="${n}" aria-pressed="${d.energy===n}" aria-label="${esc(l)}" title="${esc(l)}"><i aria-hidden="true">${ic}</i><span>${sh}</span></button>`).join('')}</div></div>
   <div class="field"><span>Humeur</span><div class="seg moods" role="group" aria-label="Humeur">${MOODS.map(m=>`<button data-act="day-mood" data-v="${m}" aria-pressed="${d.mood===m}" aria-label="Humeur ${m}">${m}</button>`).join('')}</div></div></div></section>`}
 function focusVideo(){
   const prod=videos().filter(v=>v.stage!=='publie'&&v.stage!=='idee').sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999'));
@@ -941,8 +945,8 @@ function viewReview(){
   </div>
   <section class="sec"><div class="sec-h"><h2>Ton bilan</h2></div>
     <div class="rv-grid">${fld('wins','Ce qui a marché','Les victoires, même petites')}${fld('blocks','Ce qui a bloqué','Sans te juger')}${fld('lesson','La leçon de la semaine','Une phrase')}${fld('next','Mes 3 priorités pour la semaine prochaine','1. …')}</div>
-    <div class="field" style="margin-top:16px"><span>Énergie et humeur du matin</span><div class="wmood">${wm.days.map(d=>{const x=dayOf(d),e=energyOf(x.energy);return `<div class="${d===today()?'today':''}"><small>${DAYS[wd(d)]}</small><b aria-label="Humeur">${x.mood||'·'}</b><i title="${e?esc(e[3]):''}">${e?e[1]:'·'}</i></div>`}).join('')}</div>
-      <p class="hint">${wm.avg!=null?`Énergie moyenne ${fmtN(wm.avg)} / 5 · ${esc(energyOf(Math.round(wm.avg))[3])}`:'Rien de noté cette semaine. Renseigne ton énergie et ton humeur chaque matin dans Aujourd’hui.'}</p></div>
+    <div class="field" style="margin-top:16px"><span>Sommeil, énergie et humeur du matin</span><div class="wmood">${wm.days.map(d=>{const x=dayOf(d),e=energyOf(x.energy),sl=sleepOf(x.sleep);return `<div class="${d===today()?'today':''}"><small>${DAYS[wd(d)]}</small><i title="${sl?`Sommeil ${esc(sl[2].toLowerCase())}`:''}">${sl?sl[1]:'·'}</i><i title="${e?esc(e[3]):''}">${e?e[1]:'·'}</i><b aria-label="Humeur">${x.mood||'·'}</b></div>`}).join('')}</div>
+      <p class="hint">${wm.avg!=null||wm.sleep!=null?[wm.sleep!=null&&`Sommeil&nbsp;: ${fmtN(wm.sleep)} / 5 en moyenne · ${esc(sleepOf(Math.round(wm.sleep))[2])}`,wm.avg!=null&&`Énergie&nbsp;: ${fmtN(wm.avg)} / 5 en moyenne · ${esc(energyOf(Math.round(wm.avg))[3])}`].filter(Boolean).join('<br>'):'Rien de noté cette semaine. Renseigne ton sommeil, ton énergie et ton humeur chaque matin dans Aujourd’hui.'}</p></div>
   </section>
   ${hist.length?`<section class="sec"><div class="sec-h"><h2>Semaines sauvegardées</h2></div><div class="list">${hist.map(r=>`<button class="row" data-act="goto-review" data-mon="${r.monday||''}">${av('',null,'sm','S')}<span class="m"><span class="t">Semaine ${esc(r.id.split('-W')[1])}</span><span class="s">${esc(r.lesson||r.wins||(r.auto?'Sauvegarde automatique':'—'))}</span></span><span class="r"><b>${r.weekScore!=null?pctS(r.weekScore):r.habitRate!=null?pctS(r.habitRate):'—'}</b><span class="muted">${(w=>w.avg!=null?`énergie ${fmtN(w.avg)}/5`:r.energy?`énergie ${r.energy}/5`:'')(r.monday?weekMood(r.monday):{avg:null})}</span></span></button>`).join('')}</div></section>`:''}`}
 
@@ -1311,6 +1315,7 @@ const ACT={
   'kr-make-habit':a=>{makeHabitForKr(a.dataset.id);renderSheet()},
   'set-icon':a=>{const c=a.dataset.coll,id=a.dataset.id;const d=S.data[c][id];if(!d)return;const v=d.icon===a.dataset.v?'':a.dataset.v;put(c,id,{...d,icon:v});if(c==='krs'){const h=S.data.habits[d.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,icon:v})}renderSheet()},
   'day-energy':a=>{const t=today(),n=+a.dataset.n;setDay(t,{energy:dayOf(t).energy===n?null:n})},
+  'day-sleep':a=>{const t=today(),n=+a.dataset.n;setDay(t,{sleep:dayOf(t).sleep===n?null:n})},
   'day-mood':a=>{const t=today(),v=a.dataset.v;setDay(t,{mood:dayOf(t).mood===v?'':v})},
   'qty-step':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;stepQty(k,a.dataset.date||today(),+a.dataset.d,a.dataset.from);if(S.sheet)renderSheet()},
   'new-identity':()=>{const n=identities().length;const id=create('identities',{name:'',statement:'',beliefs:'',vision:'',icon:'',color:COLORS[n%COLORS.length],order:n});openSheet('identity','identities',id,true)},
