@@ -319,10 +319,16 @@ button.row:hover .t,.row-l:hover .t{text-decoration:underline;text-decoration-co
 @media (min-width:1100px){.mgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .seg button span{text-align:center;line-height:1.25}
 .wmood{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;text-align:center}
-.wmood div{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;border-radius:14px;background:var(--surface-2)}
+.wmood > *{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;border-radius:14px;background:var(--surface-2)}
 .wmood small{font-size:12px;color:var(--muted);font-weight:600}
 .wmood b{font-size:20px;line-height:1.2}
 .wmood i{font-style:normal;font-size:16px;line-height:1.2}
+.wmood button:disabled{opacity:.5}
+.tgrid .tg-day button{display:block;text-align:left}
+.qnav button:disabled{opacity:.3}
+.eyebrow .act{font:inherit;color:var(--fg);text-decoration:underline;text-underline-offset:3px}
+.close-wk{margin-top:24px;display:grid;gap:10px;justify-items:start}
+.remind{border-radius:20px;background:var(--surface);padding:20px}
 .wmood .today{box-shadow:inset 0 0 0 2px var(--fg)}
 .metric .sec-h{align-items:center}
 .mhead{display:flex;align-items:center;gap:12px;text-align:left;min-width:0}
@@ -576,7 +582,7 @@ const COLLS=['settings','identities','objectives','krs','habits','habitlog','tod
 const S={
   data:Object.fromEntries(COLLS.map(c=>[c,{}])), ver:0,
   mode:'boot', loaded:{},
-  tab:'today', quarter:qKey(today()), habitWeek:monday(today()), reviewWeek:monday(today()),
+  tab:'today', day:null, quarter:qKey(today()), habitWeek:monday(today()), reviewWeek:monday(today()),
   okrMode:'week', week:monday(today()), qtyOpen:null, studio:'pipeline', ideaCat:'Tout', ideaQuery:'', allIdeas:false, range:{okr:'q',habits:'m',progress:'t'}, sheet:null, pendingImport:null
 };
 try{const v=JSON.parse(localStorage.getItem('dqte:ui')||'{}');if(v.studio)S.studio=v.studio;if(v.ideaCat)S.ideaCat=v.ideaCat;if(v.range)S.range={...S.range,...v.range};if(v.okrMode)S.okrMode=v.okrMode}catch(e){}
@@ -717,8 +723,8 @@ function archiveOf(mon){const ws=weekSummary(mon);const st=weekStats(mon);const 
   return{snapshot:snap,weekVals:vals,weekScore:ws.score,identityScores:ws.per,habitRate:st.rate,todosDone:st.todosDone}}
 function autoArchive(){if(archived||!ready())return;archived=true;repairHabits();migrateLevels();const starts=[...list('habits'),...list('krs')].map(x=>(x.createdAt||'').slice(0,10)).filter(Boolean).sort();if(!starts.length)return;
   const first=monday(starts[0]),cur=monday(today());
-  for(let i=1;i<=6;i++){const mon=addDays(cur,-7*i);if(mon<first)break;const key=isoWeek(mon).key;const r=S.data.reviews[key];if(r&&r.snapshot)continue;
-    put('reviews',key,{...(r?clean(r):{}),week:key,monday:mon,createdAt:(r&&r.createdAt)||nowIso(),...archiveOf(mon),auto:true,closedAt:nowIso()})}}
+  for(let i=1;i<=6;i++){const mon=addDays(cur,-7*i);if(mon<first)break;const key=isoWeek(mon).key;const r=S.data.reviews[key];const manual=!!(r&&r.auto===false&&r.closedAt);if(r&&r.snapshot&&(!manual||r.final))continue;
+    put('reviews',key,{...(r?clean(r):{}),week:key,monday:mon,createdAt:(r&&r.createdAt)||nowIso(),...archiveOf(mon),auto:!manual,closedAt:manual?r.closedAt:nowIso(),final:true})}}
 
 /* ---------- Habitudes ---------- */
 const freqOf=h=>h.freq||(Array.isArray(h.days)&&h.days.length?'days':'daily');
@@ -819,38 +825,42 @@ function swipeRow(h,d){const on=habitDone(h.id,d);const i=idOf(h.identityId);
   <button class="hcheck ${on?'on':''}" data-act="habit-toggle" data-id="${h.id}" data-date="${d}" aria-label="${on?'Annuler':'Valider'} ${esc(h.name)}">${ICON.check}</button></div></div>`}
 
 /* ---------- Vue : Aujourd'hui ---------- */
+/* Aujourd'hui affiche le jour choisi : les flèches remontent dans les jours passés pour les revoir ou les corriger */
 function viewToday(){
-  const t=today(),mon=monday(t),q=weekQuarter(mon),reset=diffDays(t,addDays(mon,7));
+  const real=today(),t=S.day&&S.day<real?S.day:real,past=t<real,mon=monday(t),q=weekQuarter(mon),reset=diffDays(real,addDays(monday(real),7)),ago=diffDays(t,real);
   const title=parse(t).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   const items=todoItems(t),done=items.filter(i=>i.done).length;
   const hs=habits().filter(h=>visibleOn(h,t)&&t>=hStart(h)),hd=hs.filter(h=>habitDone(h.id,t)).length;
-  const ws=weekSummary(mon),pw=weekSummary(addDays(mon,-7));const carry=todoItems(addDays(t,-1)).filter(i=>!i.done);
-  return `<header class="page-head"><h1 class="h1 cap">${esc(title)}</h1></header>
-  <p class="eyebrow">Semaine ${isoWeek(t).w} · ${qLabel(q)} · nouvelle semaine dans ${plural(reset,'jour')}</p>
+  const ws=weekSummary(mon),pw=weekSummary(addDays(mon,-7));const carry=past?[]:todoItems(addDays(t,-1)).filter(i=>!i.done);
+  const rv=S.data.reviews[isoWeek(real).key]||{};
+  const remind=!past&&wd(real)===6&&!(rv.closedAt&&rv.auto===false)?`<section class="sec remind"><div class="sec-h"><h2>C’est dimanche : ta revue</h2></div><p class="note">Fais le bilan de ta semaine (ce qui a marché, ce qui a bloqué, tes 3 priorités), puis clôture-la.</p><div style="margin-top:14px"><button class="btn" data-act="open-review">Faire ma revue</button></div></section>`:'';
+  const nav=`<div class="qnav"><button data-act="day-nav" data-d="-1" aria-label="Jour précédent">${ICON.left}</button><button data-act="day-nav" data-d="1" ${past?'':'disabled'} aria-label="Jour suivant">${ICON.right}</button></div>`;
+  return `<header class="page-head"><h1 class="h1 cap">${esc(title)}</h1>${nav}</header>
+  <p class="eyebrow">${past?`${ago===1?'Hier':`Il y a ${ago} jours`} · semaine ${isoWeek(t).w} · <button class="act" data-act="day-today">Revenir à aujourd’hui</button>`:`Semaine ${isoWeek(t).w} · ${qLabel(q)} · nouvelle semaine dans ${plural(reset,'jour')}`}</p>
   <section class="stats">
-    ${stat('Votes du jour',`${hd}<small> / ${hs.length}</small>`,hs.length?`${pctS(hd/hs.length)} des habitudes`:'Aucune habitude prévue')}
-    ${stat('To-do',`${done}<small> / ${items.length}</small>`,items.length?(done===items.length?'Tout est fait':`${plural(items.length-done,'tâche')} à faire`):'Rien de noté')}
-    ${stat('Semaine',ws.score==null?'—':pctS(ws.score),ws.score!=null&&pw.score!=null?dPts(ws.score-pw.score,'vs sem. dernière'):`jour ${diffDays(mon,t)+1} / 7`)}
+    ${stat(past?'Votes ce jour-là':'Votes du jour',`${hd}<small> / ${hs.length}</small>`,hs.length?`${pctS(hd/hs.length)} des habitudes`:'Aucune habitude prévue')}
+    ${stat('To-do',`${done}<small> / ${items.length}</small>`,items.length?(done===items.length?'Tout est fait':`${plural(items.length-done,'tâche')} ${past?'non faite':'à faire'}${items.length-done>1&&past?'s':''}`):'Rien de noté')}
+    ${stat(past?`Semaine ${isoWeek(t).w}`:'Semaine',ws.score==null?'—':pctS(ws.score),ws.score!=null&&pw.score!=null?dPts(ws.score-pw.score,'vs sem. d’avant'):`jour ${diffDays(mon,t)+1} / 7`)}
   </section>
-  ${morningCard(t)}
+  ${remind}${morningCard(t)}
   <div class="cols">
     <section class="sec"><div class="sec-h"><h2>Habitudes</h2><span class="hint">Glisse vers la droite pour valider</span></div>
-      ${hs.length?`<div class="list">${hs.map(h=>swipeRow(h,t)).join('')}</div>`:`<p class="empty">Aucune habitude aujourd'hui. Ajoute-en une dans l’onglet Habitudes.</p>`}
+      ${hs.length?`<div class="list">${hs.map(h=>swipeRow(h,t)).join('')}</div>`:`<p class="empty">${past?'Aucune habitude prévue ce jour-là.':'Aucune habitude aujourd\'hui. Ajoute-en une dans l’onglet Habitudes.'}</p>`}
     </section>
     <section class="sec"><div class="sec-h"><h2>To-do</h2>${carry.length?`<button class="act" data-act="carry">Reprendre ${plural(carry.length,'tâche')} d'hier</button>`:''}</div>
-      <form class="todo-add" data-form="todo"><input id="todo-new" placeholder="Ajouter une tâche" autocomplete="off" aria-label="Nouvelle tâche"><button class="btn sm" type="submit">Ajouter</button></form>
-      ${items.length?`<ul class="todo">${items.map(i=>`<li class="${i.done?'done':''}"><button class="hcheck ${i.done?'on':''}" data-act="todo-toggle" data-id="${i.id}" aria-label="${i.done?'Décocher':'Cocher'} « ${esc(i.text)} »">${ICON.check}</button><span>${esc(i.text)}</span><button class="x" data-act="todo-del" data-id="${i.id}" aria-label="Supprimer">${ICON.x}</button></li>`).join('')}</ul>`:`<p class="empty">Le matin, note les 3 à 5 tâches qui comptent aujourd'hui.</p>`}
+      <form class="todo-add" data-form="todo"><input id="todo-new" placeholder="${past?'Ajouter une tâche à ce jour':'Ajouter une tâche'}" autocomplete="off" aria-label="Nouvelle tâche"><button class="btn sm" type="submit">Ajouter</button></form>
+      ${items.length?`<ul class="todo">${items.map(i=>`<li class="${i.done?'done':''}"><button class="hcheck ${i.done?'on':''}" data-act="todo-toggle" data-id="${i.id}" aria-label="${i.done?'Décocher':'Cocher'} « ${esc(i.text)} »">${ICON.check}</button><span>${esc(i.text)}</span><button class="x" data-act="todo-del" data-id="${i.id}" aria-label="Supprimer">${ICON.x}</button></li>`).join('')}</ul>`:`<p class="empty">${past?'Aucune tâche notée ce jour-là.':'Le matin, note les 3 à 5 tâches qui comptent aujourd\'hui.'}</p>`}
     </section>
   </div>
   <div class="cols">
     <section class="sec">${weekFocus(mon)}</section>
-    <section class="sec">${focusVideo()}</section>
+    ${past?'':`<section class="sec">${focusVideo()}</section>`}
   </div>`}
 function morningCard(t){const d=dayOf(t);const e=energyOf(d.energy),sl=sleepOf(d.sleep);const said=[sl&&`Sommeil ${sl[2].toLowerCase()}`,e&&e[3],d.mood].filter(Boolean);
-  return `<section class="sec"><div class="sec-h"><h2>Ce matin</h2><span class="hint">${said.length?esc(said.join(' · ')):'Comment tu te sens ?'}</span></div>
-  <div class="mgrid"><div class="field"><span>Qualité du sommeil</span><div class="seg" role="group" aria-label="Qualité du sommeil">${SLEEP.map(([n,ic,l])=>`<button data-act="day-sleep" data-n="${n}" aria-pressed="${d.sleep===n}" aria-label="Sommeil ${esc(l.toLowerCase())}"><i aria-hidden="true">${ic}</i><span>${l}</span></button>`).join('')}</div></div>
-  <div class="field"><span>Énergie</span><div class="seg" role="group" aria-label="Énergie">${ENERGY.map(([n,ic,sh,l])=>`<button data-act="day-energy" data-n="${n}" aria-pressed="${d.energy===n}" aria-label="${esc(l)}" title="${esc(l)}"><i aria-hidden="true">${ic}</i><span>${sh}</span></button>`).join('')}</div></div>
-  <div class="field"><span>Humeur</span><div class="seg moods" role="group" aria-label="Humeur">${MOODS.map(m=>`<button data-act="day-mood" data-v="${m}" aria-pressed="${d.mood===m}" aria-label="Humeur ${m}">${m}</button>`).join('')}</div></div></div></section>`}
+  return `<section class="sec"><div class="sec-h"><h2>${t<today()?'Ce matin-là':'Ce matin'}</h2><span class="hint">${said.length?esc(said.join(' · ')):'Comment tu te sens ?'}</span></div>
+  <div class="mgrid"><div class="field"><span>Qualité du sommeil</span><div class="seg" role="group" aria-label="Qualité du sommeil">${SLEEP.map(([n,ic,l])=>`<button data-act="day-sleep" data-date="${t}" data-n="${n}" aria-pressed="${d.sleep===n}" aria-label="Sommeil ${esc(l.toLowerCase())}"><i aria-hidden="true">${ic}</i><span>${l}</span></button>`).join('')}</div></div>
+  <div class="field"><span>Énergie</span><div class="seg" role="group" aria-label="Énergie">${ENERGY.map(([n,ic,sh,l])=>`<button data-act="day-energy" data-date="${t}" data-n="${n}" aria-pressed="${d.energy===n}" aria-label="${esc(l)}" title="${esc(l)}"><i aria-hidden="true">${ic}</i><span>${sh}</span></button>`).join('')}</div></div>
+  <div class="field"><span>Humeur</span><div class="seg moods" role="group" aria-label="Humeur">${MOODS.map(m=>`<button data-act="day-mood" data-date="${t}" data-v="${m}" aria-pressed="${d.mood===m}" aria-label="Humeur ${m}">${m}</button>`).join('')}</div></div></div></section>`}
 function focusVideo(){
   const prod=videos().filter(v=>v.stage!=='publie'&&v.stage!=='idee').sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999'));
   const v=prod[0];
@@ -941,7 +951,7 @@ function viewHabits(){
   const ws=weekStats(monday(t)),pw=weekStats(addDays(monday(t),-7));
   const n=range==='w'?7:range==='m'?30:90;const xs=[...Array(n)].map((_,i)=>addDays(t,i-n+1));const act=xs.map(dayScore);
   const grid=`<div class="tgrid-wrap"><table class="tgrid"><thead><tr><th class="tg-day">Jour</th>${hs.map(h=>`<th><button class="tg-h" data-act="edit-habit" data-id="${h.id}" title="${esc(h.name||'')}" aria-label="${esc(h.name||'Habitude')}">${esc(h.icon||(h.name||'?').charAt(0).toUpperCase())}</button></th>`).join('')}<th class="tg-sl" title="Qualité du sommeil">🌙</th></tr></thead><tbody>
-    ${days.map(d=>{const fut=d>t;const sc=fut?null:dayScore(d);const sl=sleepOf(dayOf(d).sleep);return `<tr class="${d===t?'today':''}"><th class="tg-day"><b>${DAYS[wd(d)]} ${parse(d).getDate()}</b><small>${sc==null?'&nbsp;':pctS(sc)}</small></th>
+    ${days.map(d=>{const fut=d>t;const sc=fut?null:dayScore(d);const sl=sleepOf(dayOf(d).sleep);return `<tr class="${d===t?'today':''}"><th class="tg-day"><button data-act="goto-day" data-date="${d}" ${fut?'disabled':''} aria-label="Ouvrir le ${fmtD(d)} dans Aujourd’hui"><b>${DAYS[wd(d)]} ${parse(d).getDate()}</b><small>${sc==null?'&nbsp;':pctS(sc)}</small></button></th>
       ${hs.map(h=>{const on=habitDone(h.id,d),fx=freqOf(h)==='weekly'||fixedOn(h,d);return `<td><button class="cell ${on?'on':''} ${!fx&&!on?'off':''}" ${fut||d<hStart(h)?'disabled':''} data-act="habit-toggle" data-id="${h.id}" data-date="${d}" aria-label="${esc(h.name)} le ${fmtD(d)}">${ICON.check}</button></td>`}).join('')}
       <td class="tg-sl" title="${sl?`Sommeil ${esc(sl[2].toLowerCase())}`:''}">${sl?sl[1]:'<span class="faint">·</span>'}</td></tr>`}).join('')}</tbody></table></div>`;
   const rows=hs.map(h=>{const r=rate30(h);return `<button class="row" data-act="edit-habit" data-id="${h.id}">${av(h.icon,idColor(h.identityId),'sm',h.name)}<span class="m"><span class="t">${esc(h.name||'Sans nom')}</span><span class="s">${esc(freqLabel(h))} · ${streakTxt(h)}</span></span><span class="r"><b>${r==null?'—':pctS(r)}</b><span class="muted">30 j</span></span></button>`}).join('');
@@ -1011,7 +1021,7 @@ function viewReview(){
   const qtys=proofs.filter(k=>kindOf(k)==='qty'),levels=proofs.filter(k=>kindOf(k)==='level');const actDate=minD(today(),sun);
   const fld=(f,label,ph)=>`<label class="field"><span>${label}</span><textarea id="rv-${f}" data-bind="reviews:${key}:${f}" placeholder="${ph}">${esc(rev[f]||'')}</textarea></label>`;
   const hist=list('reviews').filter(r=>r.closedAt&&r.id!==key).sort((a,b)=>b.id.localeCompare(a.id)).slice(0,12);
-  const saved=rev.closedAt&&mon<monday(today())?`<span class="tag pos">Sauvegardée le ${fmtD(rev.closedAt.slice(0,10))}</span>`:'';const wm=weekMood(mon);
+  const saved=rev.closedAt?`<span class="tag pos">${rev.auto?'Sauvegardée':'Clôturée'} le ${fmtD(rev.closedAt.slice(0,10))}</span>`:'';const closed=rev.closedAt&&rev.auto===false;const wm=weekMood(mon);
   return `<header class="page-head"><h1 class="h1">Revue · semaine ${wk.w}</h1>${qnav('rweek',fmtD(mon))}</header>
   <p class="eyebrow">Du ${fmtD(mon)} au ${fmtD(sun)}</p>
   ${hero('rv','Score de la semaine',sm.score==null?'—':pctS(sm.score),sm.score!=null&&pm.score!=null?dPts(sm.score-pm.score,'vs semaine précédente'):'<span class="muted">premier score de la série</span>')}
@@ -1028,8 +1038,9 @@ function viewReview(){
   </div>
   <section class="sec"><div class="sec-h"><h2>Ton bilan</h2></div>
     <div class="rv-grid">${fld('wins','Ce qui a marché','Les victoires, même petites')}${fld('blocks','Ce qui a bloqué','Sans te juger')}${fld('lesson','La leçon de la semaine','Une phrase')}${fld('next','Mes 3 priorités pour la semaine prochaine','1. …')}</div>
-    <div class="field" style="margin-top:16px"><span>Sommeil, énergie et humeur du matin</span><div class="wmood">${wm.days.map(d=>{const x=dayOf(d),e=energyOf(x.energy),sl=sleepOf(x.sleep);return `<div class="${d===today()?'today':''}"><small>${DAYS[wd(d)]}</small><i title="${sl?`Sommeil ${esc(sl[2].toLowerCase())}`:''}">${sl?sl[1]:'·'}</i><i title="${e?esc(e[3]):''}">${e?e[1]:'·'}</i><b aria-label="Humeur">${x.mood||'·'}</b></div>`}).join('')}</div>
+    <div class="field" style="margin-top:16px"><span>Sommeil, énergie et humeur du matin</span><div class="wmood">${wm.days.map(d=>{const x=dayOf(d),e=energyOf(x.energy),sl=sleepOf(x.sleep);return `<button class="${d===today()?'today':''}" data-act="goto-day" data-date="${d}" ${d>today()?'disabled':''} aria-label="Ouvrir le ${fmtD(d)}"><small>${DAYS[wd(d)]}</small><i title="${sl?`Sommeil ${esc(sl[2].toLowerCase())}`:''}">${sl?sl[1]:'·'}</i><i title="${e?esc(e[3]):''}">${e?e[1]:'·'}</i><b aria-label="Humeur">${x.mood||'·'}</b></button>`}).join('')}</div>
       <p class="hint">${wm.avg!=null||wm.sleep!=null?[wm.sleep!=null&&`Sommeil&nbsp;: ${fmtN(wm.sleep)} / 5 en moyenne · ${esc(sleepOf(Math.round(wm.sleep))[2])}`,wm.avg!=null&&`Énergie&nbsp;: ${fmtN(wm.avg)} / 5 en moyenne · ${esc(energyOf(Math.round(wm.avg))[3])}`].filter(Boolean).join('<br>'):'Rien de noté cette semaine. Renseigne ton sommeil, ton énergie et ton humeur chaque matin dans Aujourd’hui.'}</p></div>
+    <div class="close-wk">${closed?`<span class="tag pos">Semaine clôturée le ${fmtD(rev.closedAt.slice(0,10))}</span>`:''}<button class="btn" data-act="close-review" data-key="${key}" data-mon="${mon}">${closed?'Mettre à jour la clôture':'Clôturer la semaine'}</button><p class="hint">Enregistre ton score, tes preuves et ton bilan dans tes semaines sauvegardées. Si tu oublies, la semaine est sauvegardée automatiquement lundi.</p></div>
   </section>
   ${hist.length?`<section class="sec"><div class="sec-h"><h2>Semaines sauvegardées</h2></div><div class="list">${hist.map(r=>`<button class="row" data-act="goto-review" data-mon="${r.monday||''}">${av('',null,'sm','S')}<span class="m"><span class="t">Semaine ${esc(r.id.split('-W')[1])}</span><span class="s">${esc(r.lesson||r.wins||(r.auto?'Sauvegarde automatique':'—'))}</span></span><span class="r"><b>${r.weekScore!=null?pctS(r.weekScore):r.habitRate!=null?pctS(r.habitRate):'—'}</b><span class="muted">${(w=>w.avg!=null?`énergie ${fmtN(w.avg)}/5`:r.energy?`énergie ${r.energy}/5`:'')(r.monday?weekMood(r.monday):{avg:null})}</span></span></button>`).join('')}</div></section>`:''}`}
 
@@ -1149,7 +1160,7 @@ function openSheet(kind,coll,id,isNew){const from=S.sheet&&S.sheet.kind;if(S.she
 /* Historique : chaque onglet et chaque fiche ouverte devient une page. Le bouton retour du téléphone ferme la fiche
    ou revient à l'écran précédent au lieu de quitter l'app. */
 let navLock=false;
-const navState=()=>({dq:1,tab:S.tab,sheet:S.sheet?{kind:S.sheet.kind,coll:S.sheet.coll||null,id:S.sheet.id||null}:null});
+const navState=()=>({dq:1,tab:S.tab,day:S.tab==='today'&&S.day?S.day:null,sheet:S.sheet?{kind:S.sheet.kind,coll:S.sheet.coll||null,id:S.sheet.id||null}:null});
 const navUrl=st=>{const t=TABS.find(x=>x.k===st.tab);return '#'+(t?t.hash:'reglages')};
 function navPush(replace){if(navLock)return;const st=navState();if(JSON.stringify(history.state)===JSON.stringify(st))return;try{history[replace?'replaceState':'pushState'](st,'',navUrl(st))}catch(e){}}
 const sheetOnTop=()=>{const h=history.state;return !!(h&&h.dq&&h.sheet)};
@@ -1159,7 +1170,9 @@ function dropSheet(){S.sheet=null;closeSheet();if(sheetOnTop())history.back()}
 window.addEventListener('popstate',e=>{const st=e.state;navLock=true;try{
     const want=st&&st.dq?st.sheet:null;const cur=S.sheet;
     if(cur&&!(want&&want.kind===cur.kind&&want.id===(cur.id||null)))closeSheet(true);
+    const nd=st&&st.dq?st.day||null:null;const dayChanged=nd!==S.day;S.day=nd;
     if(st&&st.dq&&st.tab&&st.tab!==S.tab){S.tab=st.tab;renderShell();renderMain(true);window.scrollTo(0,0)}
+    else if(dayChanged&&S.tab==='today'){renderMain(true);window.scrollTo(0,0)}
     if(want&&!S.sheet)openSheet(want.kind,want.coll,want.id);
     schedule()}finally{navLock=false}});
 function closeSheet(silent){const s=S.sheet;S.sheet=null;$('#sheet').hidden=true;$('#sheet-panel').innerHTML='';
@@ -1334,7 +1347,7 @@ document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.t
 document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty'){e.preventDefault();const k=S.data.krs[f.dataset.id];const inp=f.querySelector('input[type=number]');const amt=+inp.value;if(!k||inp.value===''||!isFinite(amt)||!amt)return;const dIn=f.querySelector('input[name=date]');const d=(dIn&&dIn.value)||f.dataset.date||today();const log={...(k.log||{})};log[d]=(+log[d]||0)+amt;put('krs',k.id,{...k,log,updatedAt:nowIso()});toast(`${signed(amt,k.unit||'')} · ${krTitle(k)}`);if(S.sheet)renderSheet();else{S.qtyOpen=null;renderMain(true)}return}if(f.dataset.form==='metric'){e.preventDefault();const m=S.data.metrics[f.dataset.id];if(!m)return;const el=f.elements;const d=(el.date&&el.date.value)||today();let v;
     if(m.type==='rank')v=rankVal(+el.tier.value,+el.div.value);else{if(el.v.value==='')return;v=+el.v.value;if(!isFinite(v))return}
     setMetric(m,d,v);toast(`${m.name||'Indicateur'} · ${mFmt(m,v)}`);if(document.activeElement)document.activeElement.blur();renderMain(true);return}
-  if(f.dataset.form==='todo'){e.preventDefault();const inp=$('#todo-new');const txt=inp.value.trim();if(!txt)return;const t=today();saveTodos(t,[...todoItems(t),{id:uid(),text:txt,done:false}]);inp.value='';renderMain(true);const n=$('#todo-new');if(n)n.focus()}});
+  if(f.dataset.form==='todo'){e.preventDefault();const inp=$('#todo-new');const txt=inp.value.trim();if(!txt)return;const t=S.day||today();saveTodos(t,[...todoItems(t),{id:uid(),text:txt,done:false}]);inp.value='';renderMain(true);const n=$('#todo-new');if(n)n.focus()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet)dismissSheet();if(e.key==='Enter'&&S.sheet&&e.target.tagName==='INPUT'&&e.target.type!=='file')e.target.blur()});
 
 /* ---------- Glissement des habitudes & lecture des courbes ---------- */
@@ -1371,7 +1384,13 @@ function migrateLevels(){for(const k of list('krs').filter(k=>kindOf(k)==='level
     put('metrics','lv-'+k.id,{name:k.title||'Indicateur',icon:k.icon||'📈',type:'number',unit:k.unit||'',target:+k.target||null,identityId:o.identityId||'',history:h,createdAt:k.createdAt||nowIso(),fromKr:k.id});removeKr(k.id)}}
 function removeKr(kid){const k=S.data.krs[kid];if(!k)return;const h=S.data.habits[k.habitId];if(h&&h.fromKr===kid)del('habits',h.id);del('krs',kid)}
 const ACT={
-  'tab':a=>{if(S.sheet)closeSheet(true);setTab(a.dataset.tab)},
+  'tab':a=>{if(S.sheet)closeSheet(true);if(a.dataset.tab==='today')S.day=null;setTab(a.dataset.tab)},
+  'day-nav':a=>{const t=today();const d=addDays(S.day||t,+a.dataset.d);S.day=d<t?d:null;renderMain(true);window.scrollTo(0,0);navPush()},
+  'day-today':()=>{S.day=null;renderMain(true);window.scrollTo(0,0);navPush()},
+  'goto-day':a=>{const d=a.dataset.date;S.day=d&&d<today()?d:null;if(S.sheet)closeSheet(true);setTab('today')},
+  'open-review':()=>{S.reviewWeek=monday(today());setTab('review')},
+  'close-review':a=>{const key=a.dataset.key,mon=a.dataset.mon;const base=S.data.reviews[key]||{createdAt:nowIso()};
+    put('reviews',key,{...base,week:key,monday:mon,...archiveOf(mon),auto:false,final:addDays(mon,6)<today(),closedAt:nowIso()});toast('Semaine clôturée : elle rejoint tes semaines sauvegardées.')},
   'close-sheet':()=>dismissSheet(),
   'jump':a=>{const el=document.getElementById('id-'+a.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},
   'quarter':a=>{S.quarter=qShift(S.quarter,+a.dataset.d);renderMain(true)},
@@ -1383,8 +1402,8 @@ const ACT={
   'studio':a=>{S.studio=a.dataset.v;saveUi();renderMain(true)},
   'all-ideas':()=>{S.allIdeas=true;renderMain(true)},
   'idea-cat':a=>{S.ideaCat=a.dataset.v;saveUi();renderMain(true)},
-  'todo-toggle':a=>{const t=today();saveTodos(t,todoItems(t).map(i=>i.id===a.dataset.id?{...i,done:!i.done}:i))},
-  'todo-del':a=>{const t=today();saveTodos(t,todoItems(t).filter(i=>i.id!==a.dataset.id))},
+  'todo-toggle':a=>{const t=S.day||today();saveTodos(t,todoItems(t).map(i=>i.id===a.dataset.id?{...i,done:!i.done}:i))},
+  'todo-del':a=>{const t=S.day||today();saveTodos(t,todoItems(t).filter(i=>i.id!==a.dataset.id))},
   'carry':()=>{const t=today(),y=addDays(t,-1);const c=todoItems(y).filter(i=>!i.done);saveTodos(t,[...todoItems(t),...c.map(i=>({...i,id:uid()}))]);saveTodos(y,todoItems(y).filter(i=>i.done));toast(`${plural(c.length,'tâche')} reprise${c.length>1?'s':''}`)},
   'habit-toggle':a=>{toggleHabit(a.dataset.id,a.dataset.date);if(S.sheet)setTimeout(renderSheet,0)},
   'freq':a=>{const h=S.data.habits[a.dataset.id];if(!h)return;const n={...h,freq:a.dataset.v};if(a.dataset.v==='days'&&!(h.days||[]).length)n.days=[0,1,2,3,4];if(a.dataset.v==='weekly'&&!h.perWeek)n.perWeek=3;put('habits',h.id,n);renderSheet()},
@@ -1405,7 +1424,7 @@ const ACT={
     renderSheet()},
   'kr-make-habit':a=>{makeHabitForKr(a.dataset.id);renderSheet()},
   'set-icon':a=>{const c=a.dataset.coll,id=a.dataset.id;const d=S.data[c][id];if(!d)return;const v=d.icon===a.dataset.v?'':a.dataset.v;put(c,id,{...d,icon:v});if(c==='krs'){const h=S.data.habits[d.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,icon:v})}renderSheet()},
-  'day-energy':a=>{const t=today(),n=+a.dataset.n;setDay(t,{energy:dayOf(t).energy===n?null:n})},
+  'day-energy':a=>{const t=a.dataset.date||today(),n=+a.dataset.n;setDay(t,{energy:dayOf(t).energy===n?null:n})},
   'prog-range':a=>{S.range.progress=a.dataset.v;saveUi();renderMain(true)},
   'new-metric':()=>{const id=create('metrics',{name:'',icon:'📈',type:'number',unit:'',target:null,identityId:'',history:{}});openSheet('metric','metrics',id,true)},
   'edit-metric':a=>openSheet('metric','metrics',a.dataset.id),
@@ -1414,8 +1433,8 @@ const ACT={
   'metric-type':a=>{const m=S.data.metrics[a.dataset.id];if(!m||m.type===a.dataset.v)return;put('metrics',m.id,{...m,type:a.dataset.v,target:null});renderSheet()},
   'metric-del':a=>{const m=S.data.metrics[a.dataset.id];if(!m)return;const history={...(m.history||{})};delete history[a.dataset.d];put('metrics',m.id,{...m,history});renderSheet()},
   'del-metric':a=>{del('metrics',a.dataset.id);dropSheet()},
-  'day-sleep':a=>{const t=today(),n=+a.dataset.n;setDay(t,{sleep:dayOf(t).sleep===n?null:n})},
-  'day-mood':a=>{const t=today(),v=a.dataset.v;setDay(t,{mood:dayOf(t).mood===v?'':v})},
+  'day-sleep':a=>{const t=a.dataset.date||today(),n=+a.dataset.n;setDay(t,{sleep:dayOf(t).sleep===n?null:n})},
+  'day-mood':a=>{const t=a.dataset.date||today(),v=a.dataset.v;setDay(t,{mood:dayOf(t).mood===v?'':v})},
   'qty-step':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;stepQty(k,a.dataset.date||today(),+a.dataset.d,a.dataset.from);if(S.sheet)renderSheet()},
   'new-identity':()=>{const n=identities().length;const id=create('identities',{name:'',statement:'',beliefs:'',vision:'',icon:'',color:COLORS[n%COLORS.length],order:n});openSheet('identity','identities',id,true)},
   'edit-identity':a=>openSheet('identity','identities',a.dataset.id),
