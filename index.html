@@ -300,6 +300,28 @@ button.row:hover .t,.row-l:hover .t{text-decoration:underline;text-decoration-co
 .energy{display:flex;gap:6px}
 .energy button{width:42px;height:42px;border-radius:50%;background:var(--surface-2);font-weight:600}
 .energy button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.qrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 14px;align-items:center;padding:10px 0}
+.qrow .m{display:flex;flex-direction:column;min-width:0}
+.qctl{grid-column:2;display:flex;align-items:center;gap:8px}
+.qctl .qty-form{margin:0;flex:1;min-width:0;flex-wrap:nowrap}
+.qctl input{flex:1;min-width:0;width:100%;height:40px;padding:0 14px;border-radius:999px;border:0;background:var(--surface-2);font-weight:600}
+.qctl .step{width:40px;height:40px;flex:none}
+.qsteps{display:flex;gap:6px}
+.step svg{width:18px;height:18px}
+.kr .row-l .t{white-space:normal;overflow-wrap:anywhere}
+.seg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.seg button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 2px;border-radius:14px;background:var(--surface-2);font-size:12px;font-weight:600;color:var(--muted)}
+.seg button i{font-style:normal;font-size:22px;line-height:1}
+.seg button[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--fg);color:var(--fg)}
+.seg.moods button{font-size:26px;line-height:1;padding:10px 0}
+.mgrid{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){.mgrid{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}}
+.wmood{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;text-align:center}
+.wmood div{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;border-radius:14px;background:var(--surface-2)}
+.wmood small{font-size:12px;color:var(--muted);font-weight:600}
+.wmood b{font-size:20px;line-height:1.2}
+.wmood i{font-style:normal;font-size:16px;line-height:1.2}
+.wmood .today{box-shadow:inset 0 0 0 2px var(--fg)}
 .krinput{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:8px 0}
 .krinput .m{display:flex;flex-direction:column;min-width:0}
 .krinput > input{width:7rem}
@@ -489,6 +511,7 @@ const ICON={
   studio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="m10 9.2 5 2.8-5 2.8z" fill="currentColor"/></svg>',
   settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  kb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7.5 14h9"/></svg>',
   x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
   plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   left:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6-6 6 6 6"/></svg>',
@@ -514,7 +537,7 @@ const KINDS=[['habit','Habitude','Se valide dans Aujourd’hui, les jours que tu
 const COLORS=['#FF7A45','#E8B10E','#4C7DFF','#9B6BFF','#19B9A8','#FF5D8F','#6CC56C','#8E9AAF'];
 const PICTOS=['🥊','🏆','💪','🏃','🧘','😴','🌅','🥗','💧','📚','✍️','🎬','🎙️','🎞️','🖼️','💡','🧠','♟️','🎮','💼','💻','🚀','📈','💰','✈️','🎯','🔥','⭐','🗣️','❤️','🎵','🙏'];
 const DEF={phases:{angle:5,recherche:20,ecriture:10,voix:2,montage:10,marge:2},complexity:{legere:.6,moyenne:.8,lourde:1},goals:{'2026':4,'2027':7},capacity:20,hoursPerVideo:45,channel:'Zav le brave'};
-const COLLS=['settings','identities','objectives','krs','habits','habitlog','todos','reviews','videos','ideas','templates'];
+const COLLS=['settings','identities','objectives','krs','habits','habitlog','todos','days','reviews','videos','ideas','templates'];
 
 /* ---------- Etat ---------- */
 const S={
@@ -576,6 +599,7 @@ const sumLog=(log,a,b)=>Object.entries(log||{}).reduce((s,[d,v])=>d>=a&&d<=b?s+(
 const signed=(v,u)=>`${v>0?'+':v<0?'−':''}${fmtN(Math.abs(v))}${u?' '+esc(u):''}`;
 function autoTarget(kr){const h=habitOf(kr);if(!h)return 0;const{s,e}=krSpan(kr);return occurrences(h,maxD(s,hStart(h)),e)}
 function krTarget(kr){const k=kindOf(kr);if(k==='milestone')return 1;if(k==='habit')return autoTarget(kr);return +kr.target||0}
+const qtyStep=kr=>+kr.step>0?+kr.step:1;
 const krStart=kr=>kindOf(kr)==='level'?(+kr.start||0):0;
 function levelAt(kr,d){const h=kr.history||{};const ks=Object.keys(h).filter(x=>x<=d).sort();if(ks.length)return +h[ks[ks.length-1]]||0;return Object.keys(h).length?krStart(kr):(+kr.current||0)}
 function krValueAt(kr,d){const{qs}=krSpan(kr);const k=kindOf(kr);
@@ -702,6 +726,14 @@ function weekStats(mon){const t=today();let sc=0,dn=0;const votes={};
 const todoItems=s=>((S.data.todos[s]||{}).items||[]);
 function saveTodos(s,items){put('todos',s,{date:s,items})}
 
+/* ---------- Journée : énergie et humeur du matin (mêmes choix que le tableau « Days » de Notion) ---------- */
+const ENERGY=[[5,'⚡','Ultra','Ultra énergétique'],[4,'💪','Motivé','Motivé · bonne énergie'],[3,'⚖️','Stable','Équilibré · stable'],[2,'🐢','Fatigué','Fatigué · lourd et lent'],[1,'🪫','KO','Épuisé · KO']];
+const MOODS=['🤩','🙂','😐','😠','😔'];
+const dayOf=d=>S.data.days[d]||{};
+const energyOf=n=>ENERGY.find(x=>x[0]===n);
+function setDay(d,patch){const b=S.data.days[d];put('days',d,{...(b?clean(b):{}),date:d,...patch,updatedAt:nowIso()})}
+function weekMood(mon){const days=[...Array(7)].map((_,i)=>addDays(mon,i));const es=days.map(d=>dayOf(d).energy).filter(n=>n>0);return{days,avg:es.length?avg(es):null}}
+
 /* ---------- Studio ---------- */
 const stageIdx=k=>Math.max(0,STAGES.findIndex(s=>s.k===k));
 const publishedBetween=(a,b)=>videos().filter(v=>v.stage==='publie'&&v.publishDate&&v.publishDate>=a&&v.publishDate<=b);
@@ -765,6 +797,7 @@ function viewToday(){
     ${stat('To-do',`${done}<small> / ${items.length}</small>`,items.length?(done===items.length?'Tout est fait':`${plural(items.length-done,'tâche')} à faire`):'Rien de noté')}
     ${stat('Semaine',ws.score==null?'—':pctS(ws.score),ws.score!=null&&pw.score!=null?dPts(ws.score-pw.score,'vs sem. dernière'):`jour ${diffDays(mon,t)+1} / 7`)}
   </section>
+  ${morningCard(t)}
   <div class="cols">
     <section class="sec"><div class="sec-h"><h2>Habitudes</h2><span class="hint">Glisse vers la droite pour valider</span></div>
       ${hs.length?`<div class="list">${hs.map(h=>swipeRow(h,t)).join('')}</div>`:`<p class="empty">Aucune habitude aujourd'hui. Ajoute-en une sous une identité.</p>`}
@@ -778,6 +811,10 @@ function viewToday(){
     <section class="sec">${weekFocus(mon)}</section>
     <section class="sec">${focusVideo()}</section>
   </div>`}
+function morningCard(t){const d=dayOf(t);const e=energyOf(d.energy);
+  return `<section class="sec"><div class="sec-h"><h2>Ce matin</h2><span class="hint">${e||d.mood?`${e?esc(e[3]):''}${e&&d.mood?' · ':''}${d.mood||''}`:'Comment tu te sens ?'}</span></div>
+  <div class="mgrid"><div class="field"><span>Énergie</span><div class="seg" role="group" aria-label="Énergie">${ENERGY.map(([n,ic,sh,l])=>`<button data-act="day-energy" data-n="${n}" aria-pressed="${d.energy===n}" aria-label="${esc(l)}" title="${esc(l)}"><i aria-hidden="true">${ic}</i><span>${sh}</span></button>`).join('')}</div></div>
+  <div class="field"><span>Humeur</span><div class="seg moods" role="group" aria-label="Humeur">${MOODS.map(m=>`<button data-act="day-mood" data-v="${m}" aria-pressed="${d.mood===m}" aria-label="Humeur ${m}">${m}</button>`).join('')}</div></div></div></section>`}
 function focusVideo(){
   const prod=videos().filter(v=>v.stage!=='publie'&&v.stage!=='idee').sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999'));
   const v=prod[0];
@@ -843,12 +880,21 @@ function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());
   else{rb=kind==='milestone'?(k.done?'Faite':'À faire'):kind==='level'?`${fmtN(krValue(k))} / ${fmtN(krTarget(k))}`:`${fmtN(krValue(k))} / ${fmtN(krTarget(k))}`;rs=pctS(krProgress(k));sub=`${tag(krStatus(k))} · ${quarterSub(k)}`;bp=krProgress(k);be=krExpectedAt(k,today())}
   let ctl='';
   if(kind==='habit'&&habitOf(k)&&(mode==='quarter'||isCur)){const on=habitDone(k.habitId,today());ctl=`<button class="hcheck ${on?'on':''}" data-act="habit-toggle" data-id="${k.habitId}" data-date="${today()}" aria-label="${on?'Annuler':'Valider'} aujourd'hui">${ICON.check}</button>`}
-  else if(kind==='qty')ctl=`<button class="step" data-act="qty-open" data-id="${k.id}" aria-label="Ajouter des ${esc(k.unit||'unités')}">+</button>`;
+  else if(kind==='qty')ctl=qtyCtl(k,actDate,mode==='week'?mon:krSpan(k).qs)+`<button class="step" data-act="qty-open" data-id="${k.id}" aria-label="Saisir au clavier">${ICON.kb}</button>`;
   else if(kind==='milestone')ctl=`${!k.done&&k.week!==mon&&mode==='week'?`<button class="pill-mini" data-act="plan-week" data-id="${k.id}" data-mon="${mon}">Cette semaine</button>`:''}<button class="hcheck ${k.done?'on':''}" data-act="kr-done" data-id="${k.id}" data-date="${actDate}" aria-label="${k.done?'Marquer à faire':'Marquer faite'}">${ICON.check}</button>`;
   else if(kind==='level')ctl=`<button class="step" data-act="kr-step" data-id="${k.id}" data-d="-1" aria-label="Retirer 1">−</button><button class="step" data-act="kr-step" data-id="${k.id}" data-d="1" aria-label="Ajouter 1">+</button>`;
-  const form=kind==='qty'&&S.qtyOpen===k.id?`<form class="qty-form" data-form="qty" data-id="${k.id}" data-date="${actDate}"><input id="qty-${k.id}" type="number" step="any" inputmode="decimal" placeholder="Combien de ${esc(k.unit||'unités')} ?" aria-label="Quantité à ajouter" required><button class="btn sm" type="submit">Ajouter</button><button class="btn-sec" type="button" data-act="qty-close">Annuler</button></form>`:'';
+  const form=kind==='qty'&&S.qtyOpen===k.id?`<form class="qty-form" data-form="qty" data-id="${k.id}" data-date="${actDate}"><input id="qty-${k.id}" type="number" step="any" inputmode="decimal" placeholder="Nombre de ${esc(k.unit||'unités')} à ajouter" aria-label="Quantité à ajouter" required><button class="btn sm" type="submit">Ajouter</button><button class="btn-sec" type="button" data-act="qty-close">Annuler</button></form>`:'';
   const faded=mode==='week'&&kind==='milestone'&&((k.done&&k.doneAt<mon)||(!k.done&&k.week&&k.week>mon));
   return `<div class="kr ${faded?'faded':''}"><div class="row"><button class="row-l" ${editAttr(k)}>${av(krIcon(k),color,'sm',krTitle(k))}<span class="m"><span class="t">${esc(krTitle(k))}</span><span class="s">${sub}</span></span></button><span class="kr-r"><span class="r"><b>${rb}</b><span class="muted">${rs}</span></span>${ctl}</span></div>${bar(bp,be,color)}${form}</div>`}
+
+const objTitleOf=k=>{const o=S.data.objectives[k.objectiveId];return o&&o.title?esc(o.title)+' · ':''};
+/* − retire depuis les saisies les plus récentes de la période (semaine affichée ou trimestre), sans passer sous zéro */
+const qtyCtl=(k,date,from)=>{const st=fmtN(qtyStep(k)),u=esc(k.unit||'');return `<span class="qsteps"><button class="step" data-act="qty-step" data-id="${k.id}" data-d="-1" data-date="${date}" data-from="${from}" aria-label="Retirer ${st} ${u}">−</button><button class="step" data-act="qty-step" data-id="${k.id}" data-d="1" data-date="${date}" data-from="${from}" aria-label="Ajouter ${st} ${u}">+</button></span>`};
+function stepQty(k,d,dir,from){const r3=x=>Math.round(x*1000)/1000;const n=qtyStep(k);const log={...(k.log||{})};
+  if(dir>0)log[d]=r3((+log[d]||0)+n);
+  else{let rest=n;for(const day of Object.keys(log).filter(x=>x>=(from||'0000')&&x<=d&&+log[x]>0).sort().reverse()){const take=Math.min(rest,+log[day]);log[day]=r3(+log[day]-take);rest=r3(rest-take);if(!log[day])delete log[day];if(!rest)break}
+    if(rest===n){toast('Rien à retirer sur cette période');return}}
+  put('krs',k.id,{...k,log,updatedAt:nowIso()})}
 
 /* ---------- Vue : Habitudes ---------- */
 function viewHabits(){
@@ -876,7 +922,7 @@ function viewReview(){
   const qtys=proofs.filter(k=>kindOf(k)==='qty'),levels=proofs.filter(k=>kindOf(k)==='level');const actDate=minD(today(),sun);
   const fld=(f,label,ph)=>`<label class="field"><span>${label}</span><textarea id="rv-${f}" data-bind="reviews:${key}:${f}" placeholder="${ph}">${esc(rev[f]||'')}</textarea></label>`;
   const hist=list('reviews').filter(r=>r.closedAt&&r.id!==key).sort((a,b)=>b.id.localeCompare(a.id)).slice(0,12);
-  const saved=rev.closedAt?`<span class="tag pos">${rev.auto?'Sauvegardée automatiquement':'Clôturée'} le ${fmtD(rev.closedAt.slice(0,10))}</span>`:'';
+  const saved=rev.closedAt&&mon<monday(today())?`<span class="tag pos">Sauvegardée le ${fmtD(rev.closedAt.slice(0,10))}</span>`:'';const wm=weekMood(mon);
   return `<header class="page-head"><h1 class="h1">Revue · semaine ${wk.w}</h1>${qnav('rweek',fmtD(mon))}</header>
   <p class="eyebrow">Du ${fmtD(mon)} au ${fmtD(sun)}</p>
   ${hero('rv','Score de la semaine',sm.score==null?'—':pctS(sm.score),sm.score!=null&&pm.score!=null?dPts(sm.score-pm.score,'vs semaine précédente'):'<span class="muted">premier score de la série</span>')}
@@ -885,18 +931,20 @@ function viewReview(){
     <section class="sec"><div class="sec-h"><h2>Preuves de la semaine</h2>${saved}</div>
       ${rows.length?`<div class="list">${rows.map(k=>proofRow(k,mon)).join('')}</div>`:'<p class="empty">Rien n’était à tenir cette semaine.</p>'}
     </section>
-    <section class="sec"><div class="sec-h"><h2>Quantités à ajouter</h2></div><p class="hint" style="margin-bottom:6px">Toutes tes preuves de type « Quantité » (mots, heures…) et « Niveau ». Les habitudes et les étapes se cochent directement sur leur ligne.</p>
-      ${qtys.map(k=>`<div class="krinput">${av(krIcon(k),idColor(k.identityId),'sm',krTitle(k))}<div class="m"><b style="font-weight:500">${esc(krTitle(k))}</b><span class="hint">${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${esc(k.unit||'')} cette semaine</span></div><form class="qty-form" style="margin:0" data-form="qty" data-id="${k.id}" data-date="${actDate}"><input id="rq-${k.id}" type="number" step="any" inputmode="decimal" placeholder="+ ${esc(k.unit||'')}" aria-label="Ajouter à ${esc(krTitle(k))}" required><button class="btn sm" type="submit">OK</button></form></div>`).join('')}
-      ${levels.map(k=>`<div class="krinput">${av(krIcon(k),idColor(k.identityId),'sm',krTitle(k))}<label for="kri-${k.id}">${esc(krTitle(k))}${k.unit?` <span class="muted">(${esc(k.unit)})</span>`:''}</label><input id="kri-${k.id}" type="number" step="any" inputmode="decimal" value="${esc(k.current??'')}" data-bind="krs:${k.id}:current" data-type="number"></div>`).join('')}
+    <section class="sec"><div class="sec-h"><h2>Quantités à ajouter</h2></div><p class="hint" style="margin-bottom:6px">Toutes tes preuves de type « Quantité » et « Niveau ». Utilise − et +, ou tape un nombre puis OK pour les grandes quantités. Les habitudes et les étapes se cochent directement sur leur ligne.</p>
+      ${qtys.map(k=>`<div class="qrow">${av(krIcon(k),idColor(k.identityId),'sm',krTitle(k))}<div class="m"><b style="font-weight:500">${esc(krTitle(k))}</b><span class="hint">${objTitleOf(k)}${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${esc(k.unit||'')} cette semaine</span></div>
+        <div class="qctl">${qtyCtl(k,actDate,mon)}<form class="qty-form" data-form="qty" data-id="${k.id}" data-date="${actDate}"><input id="rq-${k.id}" type="number" step="any" inputmode="decimal" placeholder="Saisir ${esc(k.unit||'')}" aria-label="Nombre de ${esc(k.unit||'unités')} à ajouter à ${esc(krTitle(k))}" required><button class="btn sm" type="submit">OK</button></form></div></div>`).join('')}
+      ${levels.map(k=>`<div class="qrow">${av(krIcon(k),idColor(k.identityId),'sm',krTitle(k))}<div class="m"><b style="font-weight:500">${esc(krTitle(k))}</b><span class="hint">${objTitleOf(k)}niveau actuel${k.unit?` en ${esc(k.unit)}`:''}</span></div>
+        <div class="qctl"><button class="step" data-act="kr-step" data-id="${k.id}" data-d="-1" aria-label="Retirer 1">−</button><button class="step" data-act="kr-step" data-id="${k.id}" data-d="1" aria-label="Ajouter 1">+</button><input id="kri-${k.id}" type="number" step="any" inputmode="decimal" value="${esc(k.current??'')}" data-bind="krs:${k.id}:current" data-type="number" aria-label="Niveau actuel de ${esc(krTitle(k))}"></div></div>`).join('')}
       ${!qtys.length&&!levels.length?'<p class="empty">Rien à saisir : tes habitudes et tes étapes se cochent directement.</p>':''}
     </section>
   </div>
   <section class="sec"><div class="sec-h"><h2>Ton bilan</h2></div>
     <div class="rv-grid">${fld('wins','Ce qui a marché','Les victoires, même petites')}${fld('blocks','Ce qui a bloqué','Sans te juger')}${fld('lesson','La leçon de la semaine','Une phrase')}${fld('next','Mes 3 priorités pour la semaine prochaine','1. …')}</div>
-    <div class="field" style="margin-top:16px"><span>Énergie</span><div class="energy">${[1,2,3,4,5].map(n=>`<button data-act="energy" data-key="${key}" data-n="${n}" aria-pressed="${rev.energy===n}">${n}</button>`).join('')}</div></div>
-    <div style="margin-top:20px"><button class="btn" data-act="close-review" data-key="${key}" data-mon="${mon}">${rev.closedAt?'Mettre à jour la sauvegarde':'Clôturer la semaine'}</button><p class="hint" style="margin-top:8px">Sans action de ta part, la semaine est sauvegardée automatiquement à l’ouverture de l’app la semaine suivante.</p></div>
+    <div class="field" style="margin-top:16px"><span>Énergie et humeur du matin</span><div class="wmood">${wm.days.map(d=>{const x=dayOf(d),e=energyOf(x.energy);return `<div class="${d===today()?'today':''}"><small>${DAYS[wd(d)]}</small><b aria-label="Humeur">${x.mood||'·'}</b><i title="${e?esc(e[3]):''}">${e?e[1]:'·'}</i></div>`}).join('')}</div>
+      <p class="hint">${wm.avg!=null?`Énergie moyenne ${fmtN(wm.avg)} / 5 · ${esc(energyOf(Math.round(wm.avg))[3])}`:'Rien de noté cette semaine. Renseigne ton énergie et ton humeur chaque matin dans Aujourd’hui.'}</p></div>
   </section>
-  ${hist.length?`<section class="sec"><div class="sec-h"><h2>Semaines sauvegardées</h2></div><div class="list">${hist.map(r=>`<button class="row" data-act="goto-review" data-mon="${r.monday||''}">${av('',null,'sm','S')}<span class="m"><span class="t">Semaine ${esc(r.id.split('-W')[1])}</span><span class="s">${esc(r.lesson||r.wins||(r.auto?'Sauvegarde automatique':'—'))}</span></span><span class="r"><b>${r.weekScore!=null?pctS(r.weekScore):r.habitRate!=null?pctS(r.habitRate):'—'}</b><span class="muted">${r.energy?`énergie ${r.energy}/5`:''}</span></span></button>`).join('')}</div></section>`:''}`}
+  ${hist.length?`<section class="sec"><div class="sec-h"><h2>Semaines sauvegardées</h2></div><div class="list">${hist.map(r=>`<button class="row" data-act="goto-review" data-mon="${r.monday||''}">${av('',null,'sm','S')}<span class="m"><span class="t">Semaine ${esc(r.id.split('-W')[1])}</span><span class="s">${esc(r.lesson||r.wins||(r.auto?'Sauvegarde automatique':'—'))}</span></span><span class="r"><b>${r.weekScore!=null?pctS(r.weekScore):r.habitRate!=null?pctS(r.habitRate):'—'}</b><span class="muted">${(w=>w.avg!=null?`énergie ${fmtN(w.avg)}/5`:r.energy?`énergie ${r.energy}/5`:'')(r.monday?weekMood(r.monday):{avg:null})}</span></span></button>`).join('')}</div></section>`:''}`}
 
 /* ---------- Vue : Studio YouTube (année en cours) ---------- */
 function viewStudio(){
@@ -1010,7 +1058,23 @@ function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
   const fn={identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
-function openSheet(kind,coll,id,isNew){if(S.sheet)closeSheet(true);S.sheet={kind,coll,id,isNew:!!isNew};$('#sheet-panel').scrollTop=0;renderSheet();if(isNew){const el=$('#sheet-panel [data-bind$=":title"],#sheet-panel [data-bind$=":name"],#sheet-panel [data-bind$=":text"]');if(el)setTimeout(()=>el.focus(),60)}}
+function openSheet(kind,coll,id,isNew){const from=S.sheet&&S.sheet.kind;if(S.sheet)closeSheet(true);S.sheet={kind,coll,id,isNew:!!isNew};navPush(from==='pick');$('#sheet-panel').scrollTop=0;renderSheet();if(isNew){const el=$('#sheet-panel [data-bind$=":title"],#sheet-panel [data-bind$=":name"],#sheet-panel [data-bind$=":text"]');if(el)setTimeout(()=>el.focus(),60)}}
+/* Historique : chaque onglet et chaque fiche ouverte devient une page. Le bouton retour du téléphone ferme la fiche
+   ou revient à l'écran précédent au lieu de quitter l'app. */
+let navLock=false;
+const navState=()=>({dq:1,tab:S.tab,sheet:S.sheet?{kind:S.sheet.kind,coll:S.sheet.coll||null,id:S.sheet.id||null}:null});
+const navUrl=st=>{const t=TABS.find(x=>x.k===st.tab);return '#'+(t?t.hash:'reglages')};
+function navPush(replace){if(navLock)return;const st=navState();if(JSON.stringify(history.state)===JSON.stringify(st))return;try{history[replace?'replaceState':'pushState'](st,'',navUrl(st))}catch(e){}}
+const sheetOnTop=()=>{const h=history.state;return !!(h&&h.dq&&h.sheet)};
+/* Fermer depuis l'app (Terminé, fond, Échap, suppression) revient aussi d'une page en arrière */
+function dismissSheet(){if(sheetOnTop())history.back();else closeSheet()}
+function dropSheet(){S.sheet=null;closeSheet();if(sheetOnTop())history.back()}
+window.addEventListener('popstate',e=>{const st=e.state;navLock=true;try{
+    const want=st&&st.dq?st.sheet:null;const cur=S.sheet;
+    if(cur&&!(want&&want.kind===cur.kind&&want.id===(cur.id||null)))closeSheet(true);
+    if(st&&st.dq&&st.tab&&st.tab!==S.tab){S.tab=st.tab;renderShell();renderMain(true);window.scrollTo(0,0)}
+    if(want&&!S.sheet)openSheet(want.kind,want.coll,want.id);
+    schedule()}finally{navLock=false}});
 function closeSheet(silent){const s=S.sheet;S.sheet=null;$('#sheet').hidden=true;$('#sheet-panel').innerHTML='';
   if(s&&s.isNew&&s.coll){const d=S.data[s.coll][s.id];if(d&&!String(d.title||d.name||d.text||'').trim()){if(s.coll==='krs')removeKr(s.id);else del(s.coll,s.id)}}
   if(!silent)schedule()}
@@ -1034,7 +1098,7 @@ function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf
       ${habits().length>1?F('krs',id,'habitId','Habitude liée',{options:habits().map(x=>[x.id,x.name||'Sans nom'])}):''}`:`<button class="btn sm" data-act="kr-make-habit" data-id="${id}">Créer l'habitude liée</button>`}
   else if(kind==='qty'){const log=Object.entries(k.log||{}).filter(([,v])=>+v).sort((a,b)=>b[0].localeCompare(a[0]));const mon=monday(today());
     extra=`<div class="two">${F('krs',id,'target','Objectif du trimestre',{type:'number',ph:'4000'})}${F('krs',id,'unit','Unité',{ph:'mots, heures…'})}</div>
-    ${F('krs',id,'weekTarget','Objectif par semaine',{type:'number',ph:`${fmtN(krWeekTarget({...k,weekTarget:null},mon))} (calculé)`,hint:'Laisse vide : le reste à faire est réparti sur les semaines restantes du trimestre.'})}
+    <div class="two">${F('krs',id,'weekTarget','Objectif par semaine',{type:'number',ph:`${fmtN(krWeekTarget({...k,weekTarget:null},mon))} (calculé)`,hint:'Laisse vide : le reste à faire est réparti sur les semaines restantes.'})}${F('krs',id,'step','Pas des boutons − / +',{type:'number',ph:'1',hint:'Ex. 100 : chaque + ajoute 100 mots.'})}</div>
     <div class="field"><span>Ajouter</span><form class="qty-form" style="margin:0" data-form="qty" data-id="${id}"><input id="qty-s-${id}" type="number" step="any" inputmode="decimal" placeholder="Quantité" required aria-label="Quantité"><input name="date" type="date" value="${today()}" aria-label="Date" class="qdate"><button class="btn sm" type="submit">Ajouter</button></form></div>
     <div class="field"><span>Journal · ${fmtN(krValue(k))} / ${fmtN(krTarget(k))} ${esc(k.unit||'')} ce trimestre</span>${log.length?`<ul class="log">${log.map(([d,v])=>`<li><span>${fmtD(d,true)} · sem. ${isoWeek(d).w}</span><b>${signed(+v,k.unit||'')}</b><button class="x" data-act="log-del" data-id="${id}" data-d="${d}" aria-label="Supprimer la saisie du ${fmtD(d)}">${ICON.x}</button></li>`).join('')}</ul>`:'<p class="hint">Rien de saisi pour l’instant.</p>'}</div>`}
   else if(kind==='milestone')extra=`<div class="checks"><label><input type="checkbox" id="kr-done-${id}" data-bind="krs:${id}:done" ${k.done?'checked':''}><span><b>Faite</b>${k.done&&k.doneAt?`Le ${fmtD(k.doneAt,true)}`:'Coche quand l’étape est franchie.'}</span></label></div>
@@ -1053,7 +1117,7 @@ function howTo(k){const kind=kindOf(k);const step=(ok,n,html)=>`<li class="${ok?
     ${step(hasDays,2,h?(hasDays?`<b>Quand</b>&nbsp;: ${f==='weekly'?`${h.perWeek||3} fois par semaine`:f==='daily'?'tous les jours':`${days.length>1?'les':'le'} ${esc(daysLong(h))}`}. Tu changes ça juste en dessous.`:'<b>Choisis au moins un jour</b> juste en dessous.'):'<b>Choisis ses jours</b>&nbsp;: tous les jours, X fois par semaine ou des jours précis.')}
     ${step(false,3,`<b>Elle apparaît dans Aujourd’hui → Habitudes</b> ${when}. Glisse-la vers la droite pour la valider.${nd?` <b>Prochaine fois&nbsp;: ${nd===today()?'aujourd’hui':esc(fmtDay(nd,true))}</b>.`:''}`)}
     </ol><p>Chaque validation compte 1. Tu peux aussi la cocher dans Identités avec le rond ✓.${h?` Cette semaine&nbsp;: ${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))}. Trimestre&nbsp;: ${fmtN(krValue(k))} / ${fmtN(krTarget(k))}, calculé à partir des jours choisis.`:''}</p></div>`}
-  const T={qty:['Sur sa ligne dans Identités, avec le bouton <b>+</b>, ou dans « Ajouter » ci-dessous. Elle n’apparaît pas dans Aujourd’hui.','Chaque saisie s’additionne. L’objectif de la semaine se calcule à partir de ce qu’il reste à faire dans le trimestre.'],
+  const T={qty:['Sur sa ligne dans Identités&nbsp;: <b>−</b> et <b>+</b> (le pas se règle ci-dessous), ou le clavier pour un grand nombre. Aussi dans Revue → Quantités à ajouter. Elle n’apparaît pas dans Aujourd’hui.','Chaque saisie s’additionne. L’objectif de la semaine se calcule à partir de ce qu’il reste à faire dans le trimestre.'],
     milestone:['Sur sa ligne dans Identités (rond ✓), ou avec la case « Faite » ci-dessous. Elle n’apparaît pas dans Aujourd’hui.','0 ou 100 %. Donne-lui une semaine prévue&nbsp;: elle comptera dans le score de cette semaine.'],
     level:['Sur sa ligne dans Identités, avec <b>−</b> et <b>+</b>, ou dans « Valeur actuelle » ci-dessous. Elle n’apparaît pas dans Aujourd’hui.','Elle avance du point de départ vers l’objectif. Chaque changement est daté.'],
     videos:['Rien à faire&nbsp;: le Studio compte les vidéos publiées.','Ancien type de preuve.']}[kind];
@@ -1111,12 +1175,12 @@ function applyTemplate(tid,{identityId,videoId}={}){const t=S.data.templates[tid
   const oid=create('objectives',{title:v?`${t.objTitle||'Vidéo'} ${v.title||''}`.trim():(t.objTitle||t.name||''),icon:t.icon||'',identityId:identityId||t.identityId||'',quarter:curQ(),videoId:videoId||'',fromTemplate:tid});
   const base=Date.now();
   (t.items||[]).forEach((it,i)=>{const kind=it.kind||'milestone';const kid=uid();
-    put('krs',kid,{title:it.title||'',icon:it.icon||'',objectiveId:oid,kind,target:kind==='milestone'?1:kind==='habit'?null:(+it.target||null),unit:it.unit||'',weekTarget:+it.weekTarget||null,done:false,log:{},start:0,current:0,createdAt:new Date(base+(i+1)*1000).toISOString()});
+    put('krs',kid,{title:it.title||'',icon:it.icon||'',objectiveId:oid,kind,target:kind==='milestone'?1:kind==='habit'?null:(+it.target||null),unit:it.unit||'',weekTarget:+it.weekTarget||null,step:+it.step||null,done:false,log:{},start:0,current:0,createdAt:new Date(base+(i+1)*1000).toISOString()});
     if(kind==='habit'){const hid=makeHabitForKr(kid);const h=hid&&S.data.habits[hid];if(h&&it.freq)put('habits',hid,{...h,freq:it.freq,days:it.days||[],perWeek:it.perWeek||3})}});
   return oid}
 function templateFromObjective(oid){const o=S.data.objectives[oid];if(!o)return;
   const items=krsOf(oid).map(k=>{const kind=kindOf(k)==='videos'?'milestone':kindOf(k);const h=habitOf(k);const it={title:krTitle(k),icon:krIcon(k),kind,unit:k.unit||''};
-    if(kind==='qty'||kind==='level')it.target=+k.target||null;if(kind==='qty'&&+k.weekTarget>0)it.weekTarget=+k.weekTarget;if(kind==='habit'&&h){it.freq=freqOf(h);it.days=h.days||[];it.perWeek=h.perWeek||3}return it});
+    if(kind==='qty'||kind==='level')it.target=+k.target||null;if(kind==='qty'&&+k.weekTarget>0)it.weekTarget=+k.weekTarget;if(kind==='qty'&&+k.step>0)it.step=+k.step;if(kind==='habit'&&h){it.freq=freqOf(h);it.days=h.days||[];it.perWeek=h.perWeek||3}return it});
   const vid=!!o.videoId;const id=create('templates',{name:vid?'Vidéo longue':(o.title||'Modèle'),objTitle:vid?'Vidéo':(o.title||''),icon:o.icon||'',identityId:o.identityId||'',video:vid,items});
   openSheet('template','templates',id);toast('Modèle enregistré')}
 function sheetPick(iid){const ts=templates();const i=idOf(iid);
@@ -1157,7 +1221,7 @@ function renderMain(force){
   if(S.tab==='studio'&&S.studio==='idees')filterIdeas();
   if(keep){const el=document.getElementById(keep);if(el)el.focus()}}
 document.addEventListener('focusout',()=>{if(pending){pending=false;setTimeout(()=>{const ae=document.activeElement;if(!(ae&&$('#main').contains(ae)&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)))renderMain()},0)}});
-function setTab(k){S.tab=k;renderShell();renderMain(true);window.scrollTo(0,0);const t=TABS.find(x=>x.k===k);try{history.replaceState(null,'','#'+(t?t.hash:'reglages'))}catch(e){}}
+function setTab(k){S.tab=k;renderShell();renderMain(true);window.scrollTo(0,0);navPush()}
 function filterIdeas(){const q=S.ideaQuery.trim().toLowerCase();document.querySelectorAll('#idea-list .idea').forEach(el=>{el.hidden=!!q&&!el.dataset.text.includes(q)})}
 let toastT;function toast(m){let el=$('.toast');if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el)}el.textContent=m;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true},2800)}
 
@@ -1179,7 +1243,7 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}});
 document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty'){e.preventDefault();const k=S.data.krs[f.dataset.id];const inp=f.querySelector('input[type=number]');const amt=+inp.value;if(!k||inp.value===''||!isFinite(amt)||!amt)return;const dIn=f.querySelector('input[name=date]');const d=(dIn&&dIn.value)||f.dataset.date||today();const log={...(k.log||{})};log[d]=(+log[d]||0)+amt;put('krs',k.id,{...k,log,updatedAt:nowIso()});toast(`${signed(amt,k.unit||'')} · ${krTitle(k)}`);if(S.sheet)renderSheet();else{S.qtyOpen=null;renderMain(true)}return}if(f.dataset.form==='todo'){e.preventDefault();const inp=$('#todo-new');const txt=inp.value.trim();if(!txt)return;const t=today();saveTodos(t,[...todoItems(t),{id:uid(),text:txt,done:false}]);inp.value='';renderMain(true);const n=$('#todo-new');if(n)n.focus()}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet)closeSheet();if(e.key==='Enter'&&S.sheet&&e.target.tagName==='INPUT'&&e.target.type!=='file')e.target.blur()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet)dismissSheet();if(e.key==='Enter'&&S.sheet&&e.target.tagName==='INPUT'&&e.target.type!=='file')e.target.blur()});
 
 /* ---------- Glissement des habitudes & lecture des courbes ---------- */
 document.addEventListener('pointerdown',e=>{const fg=e.target.closest&&e.target.closest('.swipe-fg');if(!fg||e.button>0)return;sw={fg,el:fg.parentElement,x:e.clientX,y:e.clientY,id:e.pointerId,drag:false,dx:0}});
@@ -1213,7 +1277,7 @@ function repairHabits(){for(const h of list('habits')){const k=h.fromKr&&S.data.
 function removeKr(kid){const k=S.data.krs[kid];if(!k)return;const h=S.data.habits[k.habitId];if(h&&h.fromKr===kid)del('habits',h.id);del('krs',kid)}
 const ACT={
   'tab':a=>{if(S.sheet)closeSheet(true);setTab(a.dataset.tab)},
-  'close-sheet':()=>closeSheet(),
+  'close-sheet':()=>dismissSheet(),
   'jump':a=>{const el=document.getElementById('id-'+a.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},
   'quarter':a=>{S.quarter=qShift(S.quarter,+a.dataset.d);renderMain(true)},
   'okr-range':a=>{S.range.okr=a.dataset.v;saveUi();renderMain(true)},
@@ -1246,9 +1310,9 @@ const ACT={
     renderSheet()},
   'kr-make-habit':a=>{makeHabitForKr(a.dataset.id);renderSheet()},
   'set-icon':a=>{const c=a.dataset.coll,id=a.dataset.id;const d=S.data[c][id];if(!d)return;const v=d.icon===a.dataset.v?'':a.dataset.v;put(c,id,{...d,icon:v});if(c==='krs'){const h=S.data.habits[d.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,icon:v})}renderSheet()},
-  'energy':a=>{const key=a.dataset.key;const base=S.data.reviews[key]||{week:key,monday:S.reviewWeek,createdAt:nowIso()};put('reviews',key,{...base,energy:+a.dataset.n})},
-  'close-review':a=>{const key=a.dataset.key,mon=a.dataset.mon;const base=S.data.reviews[key]||{week:key,monday:mon,createdAt:nowIso()};
-    put('reviews',key,{...base,monday:mon,...archiveOf(mon),auto:false,closedAt:nowIso()});toast('Semaine clôturée. Valeurs des preuves enregistrées.')},
+  'day-energy':a=>{const t=today(),n=+a.dataset.n;setDay(t,{energy:dayOf(t).energy===n?null:n})},
+  'day-mood':a=>{const t=today(),v=a.dataset.v;setDay(t,{mood:dayOf(t).mood===v?'':v})},
+  'qty-step':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;stepQty(k,a.dataset.date||today(),+a.dataset.d,a.dataset.from);if(S.sheet)renderSheet()},
   'new-identity':()=>{const n=identities().length;const id=create('identities',{name:'',statement:'',beliefs:'',vision:'',icon:'',color:COLORS[n%COLORS.length],order:n});openSheet('identity','identities',id,true)},
   'edit-identity':a=>openSheet('identity','identities',a.dataset.id),
   'set-color':a=>{const i=S.data.identities[a.dataset.id];if(!i)return;put('identities',i.id,{...i,color:a.dataset.c});renderSheet()},
@@ -1262,7 +1326,7 @@ const ACT={
   'new-template':()=>{const id=create('templates',{name:'',objTitle:'',icon:'',identityId:(identities()[0]||{}).id||'',video:false,items:[{title:'',kind:'milestone',icon:''}]});openSheet('template','templates',id,true)},
   'tpl-item-add':a=>{const t=S.data.templates[a.dataset.id];if(!t)return;put('templates',t.id,{...t,items:[...(t.items||[]),{title:'',kind:'milestone',icon:''}]});renderSheet()},
   'tpl-item-del':a=>{const t=S.data.templates[a.dataset.id];if(!t)return;const it=[...(t.items||[])];it.splice(+a.dataset.i,1);put('templates',t.id,{...t,items:it});renderSheet()},
-  'del-template':a=>{del('templates',a.dataset.id);S.sheet=null;closeSheet()},
+  'del-template':a=>{del('templates',a.dataset.id);dropSheet()},
   'edit-objective':a=>openSheet('objective','objectives',a.dataset.id),
   'new-kr':a=>{const id=create('krs',{title:'',icon:'',objectiveId:a.dataset.id,kind:'habit',start:0,target:null,current:0,unit:''});makeHabitForKr(id);openSheet('kr','krs',id,true)},
   'edit-kr':a=>openSheet('kr','krs',a.dataset.id),
@@ -1277,12 +1341,12 @@ const ACT={
   'edit-idea':a=>openSheet('idea','ideas',a.dataset.id),
   'idea-to-video':a=>{const i=S.data.ideas[a.dataset.id];if(!i)return;const vid=create('videos',{title:i.text||'',oeuvre:i.category==='Manga'?i.text:'',subject:i.category==='Manga'?'':i.text,notes:i.notes||'',stage:'idee',complexity:'lourde',stageLog:[{stage:'idee',date:today()}],loops:[],titles:['','',''],filters:{},stats:{},fromIdea:i.id});put('ideas',i.id,{...i,videoId:vid});openSheet('video','videos',vid);toast('Vidéo créée dans le pipeline')},
   'arm':a=>{if(a.dataset.armed){ACT[a.dataset.next](a);return}a.dataset.armed='1';a.textContent='Confirmer la suppression';setTimeout(()=>{if(a.isConnected)delete a.dataset.armed},5000)},
-  'del-identity':a=>{const id=a.dataset.id;for(const o of list('objectives').filter(o=>o.identityId===id)){krsOf(o.id).forEach(k=>removeKr(k.id));del('objectives',o.id)}del('identities',id);S.sheet=null;closeSheet()},
-  'del-objective':a=>{krsOf(a.dataset.id).forEach(k=>removeKr(k.id));del('objectives',a.dataset.id);S.sheet=null;closeSheet()},
-  'del-kr':a=>{removeKr(a.dataset.id);S.sheet=null;closeSheet()},
-  'del-habit':a=>{const id=a.dataset.id;list('krs').filter(k=>k.habitId===id&&kindOf(k)==='habit').forEach(k=>del('krs',k.id));del('habits',id);S.sheet=null;closeSheet()},
-  'del-video':a=>{del('videos',a.dataset.id);S.sheet=null;closeSheet()},
-  'del-idea':a=>{del('ideas',a.dataset.id);S.sheet=null;closeSheet()},
+  'del-identity':a=>{const id=a.dataset.id;for(const o of list('objectives').filter(o=>o.identityId===id)){krsOf(o.id).forEach(k=>removeKr(k.id));del('objectives',o.id)}del('identities',id);dropSheet()},
+  'del-objective':a=>{krsOf(a.dataset.id).forEach(k=>removeKr(k.id));del('objectives',a.dataset.id);dropSheet()},
+  'del-kr':a=>{removeKr(a.dataset.id);dropSheet()},
+  'del-habit':a=>{const id=a.dataset.id;list('krs').filter(k=>k.habitId===id&&kindOf(k)==='habit').forEach(k=>del('krs',k.id));del('habits',id);dropSheet()},
+  'del-video':a=>{del('videos',a.dataset.id);dropSheet()},
+  'del-idea':a=>{del('ideas',a.dataset.id);dropSheet()},
   'export':()=>exportData(),
   'sign-out':()=>{if(window.DQ_BACKEND&&window.DQ_BACKEND.signOut)window.DQ_BACKEND.signOut()},
   'import-go':()=>runImport(),
@@ -1308,7 +1372,7 @@ async function runImport(){const d=S.pendingImport&&S.pendingImport.data;if(!d)r
 
 /* ---------- Démarrage ---------- */
 window.addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1);const t=TABS.find(x=>x.hash===h);const k=t?t.k:h==='reglages'?'settings':null;if(k&&k!==S.tab){if(S.sheet)closeSheet(true);S.tab=k;renderShell();renderMain(true)}});
-(function boot(){const h=(location.hash||'').slice(1);const t=TABS.find(x=>x.hash===h);if(t)S.tab=t.k;else if(h==='reglages')S.tab='settings';renderShell();initStore()})();
+(function boot(){const h=(location.hash||'').slice(1);const t=TABS.find(x=>x.hash===h);if(t)S.tab=t.k;else if(h==='reglages')S.tab='settings';try{history.replaceState(navState(),'',navUrl(navState()))}catch(e){}renderShell();initStore()})();
 </script>
 
 <script type="module">
