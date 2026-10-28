@@ -521,6 +521,25 @@ body{font-size:16px}
 .id-sum{font-size:14px;color:var(--muted);margin-top:6px}
 .id-pause{margin-top:12px;color:var(--warn)}
 .res-ed{display:grid;gap:12px}
+.today-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0 16px;align-items:start}
+@media (min-width:1100px){.today-grid{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
+details.sec>summary{list-style:none;cursor:pointer;margin-bottom:0}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec[open]>summary{margin-bottom:10px}
+details.sec>summary h2::after{content:"▾";font-size:14px;color:var(--muted);margin-left:8px;display:inline-block;transition:transform .15s}
+details.sec:not([open])>summary h2::after{transform:rotate(-90deg)}
+.prio{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.prio-b{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;margin-top:6px}
+.prio-b .m{display:flex;flex-direction:column;min-width:0}
+.prio-b b{font-size:19px;font-weight:600;overflow-wrap:break-word}
+.prio-a{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.prio-ok{margin-top:12px;color:var(--pos);font-weight:700}
+.prio.done .prio-b b{color:var(--muted)}
+.stats.mini{grid-template-columns:repeat(auto-fit,minmax(96px,1fr));margin-top:8px}
+.stats.mini .stat .v{font-size:24px}
+.rv-prios input{margin-bottom:8px}
+.todo li small{color:var(--faint);font-size:12px;display:block}
+.carry-d{font-size:13px;color:var(--muted);font-weight:600;margin:14px 0 4px}
 .hmc{display:flex;gap:6px;align-items:center}
 .hmin{height:30px;padding:0 10px;border-radius:10px;border:2px solid var(--surface-3);font-size:12px;font-weight:700;color:var(--muted)}
 .hmin.on{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
@@ -805,7 +824,7 @@ function qSummary(q){const krs=allProofs(q).filter(k=>!idPausedWeek(k.identityId
 let archived=false;
 function archiveOf(mon){const ws=weekSummary(mon);const st=weekStats(mon);const snap={},vals={};for(const k of allProofs(ws.q)){snap[k.id]=krValueAt(k,addDays(mon,6));vals[k.id]={v:krWeekValue(k,mon),t:krWeekTarget(k,mon)}}
   return{snapshot:snap,weekVals:vals,weekScore:ws.score,identityScores:ws.per,habitRate:st.rate,todosDone:st.todosDone}}
-function autoArchive(){if(archived||!ready())return;archived=true;repairHabits();migrateLevels();const starts=[...list('habits'),...list('krs')].map(x=>(x.createdAt||'').slice(0,10)).filter(Boolean).sort();if(!starts.length)return;
+function autoArchive(){if(archived||!ready())return;archived=true;repairHabits();migrateLevels();migratePrios();const starts=[...list('habits'),...list('krs')].map(x=>(x.createdAt||'').slice(0,10)).filter(Boolean).sort();if(!starts.length)return;
   const first=monday(starts[0]),cur=monday(today());
   for(let i=1;i<=6;i++){const mon=addDays(cur,-7*i);if(mon<first)break;const key=isoWeek(mon).key;const r=S.data.reviews[key];const manual=!!(r&&r.auto===false&&r.closedAt);if(r&&r.snapshot&&(!manual||r.final))continue;
     put('reviews',key,{...(r?clean(r):{}),week:key,monday:mon,createdAt:(r&&r.createdAt)||nowIso(),...archiveOf(mon),auto:!manual,closedAt:manual?r.closedAt:nowIso(),final:true})}}
@@ -898,7 +917,8 @@ const MOODS=['🤩','🙂','😐','😠','😔'];
 const dayOf=d=>S.data.days[d]||{};
 const energyOf=n=>ENERGY.find(x=>x[0]===n);
 function setDay(d,patch){const b=S.data.days[d];put('days',d,{...(b?clean(b):{}),date:d,...patch,updatedAt:nowIso()})}
-function weekMood(mon){const days=[...Array(7)].map((_,i)=>addDays(mon,i));const mean=f=>{const v=days.map(d=>dayOf(d)[f]).filter(n=>n>0);return v.length?avg(v):null};return{days,avg:mean('energy'),sleep:mean('sleep')}}
+function weekMood(mon){const days=[...Array(7)].map((_,i)=>addDays(mon,i));const vals=f=>days.map(d=>dayOf(d)[f]).filter(n=>n>0);const mean=f=>{const v=vals(f);return v.length?avg(v):null};
+  return{days,avg:mean('energy'),sleep:mean('sleep'),nE:vals('energy').length,nS:vals('sleep').length}}
 
 /* ---------- Studio ---------- */
 const stageIdx=k=>Math.max(0,STAGES.findIndex(s=>s.k===k));
@@ -950,50 +970,90 @@ function swipeRow(h,d){const on=habitDone(h.id,d);const i=idOf(h.identityId);
   ${habitCtl(h,d)}</div></div>`}
 
 /* ---------- Vue : Aujourd'hui ---------- */
-/* Aujourd'hui affiche le jour choisi : les flèches remontent dans les jours passés pour les revoir ou les corriger */
+/* Aujourd'hui (U01) : la priorité et les prochaines actions d'abord, les compteurs en second plan.
+   Les flèches remontent dans les jours passés pour les revoir ou les corriger. */
 function viewToday(){
   const real=today(),t=S.day&&S.day<real?S.day:real,past=t<real,mon=monday(t),q=weekQuarter(mon),reset=diffDays(real,addDays(monday(real),7)),ago=diffDays(t,real);
   const title=parse(t).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   const items=todoItems(t),done=items.filter(i=>i.done).length;
   const hs=habits().filter(h=>visibleOn(h,t)&&t>=hStart(h)),hd=hs.filter(h=>habitDone(h.id,t)).length;
-  const ws=weekSummary(mon),pw=weekSummary(addDays(mon,-7));const carry=past?[]:todoItems(addDays(t,-1)).filter(i=>!i.done);
+  const ws=weekSummary(mon),pw=weekSummary(addDays(mon,-7));const nCarry=past?0:carryCandidates(t).length;
   const rv=S.data.reviews[isoWeek(real).key]||{};
   const remind=!past&&wd(real)===6&&!(rv.closedAt&&rv.auto===false)?`<section class="sec remind"><div class="sec-h"><h2>C’est dimanche : ta revue</h2></div><p class="note">Fais le bilan de ta semaine (ce qui a marché, ce qui a bloqué, tes 3 priorités), puis clôture-la.</p><div style="margin-top:14px"><button class="btn" data-act="open-review">Faire ma revue</button></div></section>`:'';
   const nav=`<div class="qnav"><button data-act="day-nav" data-d="-1" aria-label="Jour précédent">${ICON.left}</button><button data-act="day-nav" data-d="1" ${past?'':'disabled'} aria-label="Jour suivant">${ICON.right}</button></div>`;
+  const nMiss=past?0:missedList().length;
+  const habitsSec=`<section class="sec"><div class="sec-h"><h2>Habitudes du jour</h2>${nMiss?`<button class="act" data-act="tab" data-tab="habits">${nMiss} à justifier</button>`:'<span class="hint">Touche le rond pour valider</span>'}</div>
+      ${hs.length?`<div class="list">${hs.map(h=>swipeRow(h,t)).join('')}</div>`:`<p class="empty">${past?'Aucune habitude prévue ce jour-là.':'Aucune habitude prévue aujourd\'hui. Ajoute-en une dans l’onglet Habitudes.'}</p>`}</section>`;
+  const todoSec=`<section class="sec"><div class="sec-h"><h2>Tâches</h2>${nCarry?`<button class="act" data-act="carry-open">Reprendre des tâches (${nCarry})</button>`:''}</div>
+      <form class="todo-add" data-form="todo"><input id="todo-new" placeholder="${past?'Ajouter une tâche à ce jour':'Ajouter une tâche'}" autocomplete="off" aria-label="Nouvelle tâche"><button class="btn sm" type="submit">Ajouter</button></form>
+      ${items.length?`<ul class="todo">${items.map(i=>`<li class="${i.done?'done':''}"><button class="hcheck ${i.done?'on':''}" data-act="todo-toggle" data-id="${i.id}" aria-label="${i.done?'Décocher':'Cocher'} « ${esc(i.text)} »">${ICON.check}</button><span>${esc(i.text)}${i.from?`<small>Reportée du ${fmtD(i.from)}</small>`:''}</span><button class="x" data-act="todo-del" data-id="${i.id}" aria-label="Supprimer">${ICON.x}</button></li>`).join('')}</ul>`:`<p class="empty">${past?'Aucune tâche notée ce jour-là.':'Le matin, note les 3 à 5 tâches qui comptent aujourd\'hui.'}</p>`}</section>`;
+  const counters=`<section class="sec"><div class="sec-h"><h2>En chiffres</h2></div><div class="stats mini">
+    ${stat(past?'Habitudes ce jour-là':'Habitudes du jour',`${hd}<small> / ${hs.length}</small>`,hs.length?`${pctS(hd/hs.length)} validées`:'Aucune prévue')}
+    ${stat('Tâches',`${done}<small> / ${items.length}</small>`,items.length?(done===items.length?'Tout est fait':`${items.length-done} restante${items.length-done>1?'s':''}`):'Rien de noté')}
+    ${stat(`Engagements sem. ${isoWeek(t).w}`,ws.score==null?'—':`<span class="tone-${rateTone(ws.score,past).k}">${pctS(ws.score)}</span>`,ws.score==null?'Aucun engagement prévu':ws.score!=null&&pw.score!=null?dPts(ws.score-pw.score,'vs sem. d’avant'):`jour ${diffDays(mon,t)+1} / 7`)}
+  </div><p class="hint" style="margin-top:8px">Engagements : preuves et habitudes liées à tes identités. Les habitudes indépendantes n’y comptent pas.</p></section>`;
   return `<header class="page-head"><h1 class="h1 cap">${esc(title)}</h1>${nav}</header>
   <p class="eyebrow">${past?`${ago===1?'Hier':`Il y a ${ago} jours`} · semaine ${isoWeek(t).w} · <button class="act" data-act="day-today">Revenir à aujourd’hui</button>`:`Semaine ${isoWeek(t).w} · ${qLabel(q)} · nouvelle semaine dans ${plural(reset,'jour')}`}</p>
-  <section class="stats">
-    ${stat(past?'Votes ce jour-là':'Votes du jour',`${hd}<small> / ${hs.length}</small>`,hs.length?`${pctS(hd/hs.length)} des habitudes`:'Aucune habitude prévue')}
-    ${stat('To-do',`${done}<small> / ${items.length}</small>`,items.length?(done===items.length?'Tout est fait':`${plural(items.length-done,'tâche')} ${past?'non faite':'à faire'}${items.length-done>1&&past?'s':''}`):'Rien de noté')}
-    ${stat(past?`Engagements sem. ${isoWeek(t).w}`:'Engagements',ws.score==null?'—':pctS(ws.score),ws.score!=null&&pw.score!=null?dPts(ws.score-pw.score,'vs sem. d’avant'):`jour ${diffDays(mon,t)+1} / 7`)}
-  </section>
-  ${remind}${morningCard(t)}
-  <div class="cols">
-    <section class="sec"><div class="sec-h"><h2>Habitudes</h2>${(n=>n?`<button class="act" data-act="tab" data-tab="habits">${n} à justifier</button>`:'<span class="hint">Touche le rond pour valider</span>')(past?0:missedList().length)}</div>
-      ${hs.length?`<div class="list">${hs.map(h=>swipeRow(h,t)).join('')}</div>`:`<p class="empty">${past?'Aucune habitude prévue ce jour-là.':'Aucune habitude aujourd\'hui. Ajoute-en une dans l’onglet Habitudes.'}</p>`}
-    </section>
-    <section class="sec"><div class="sec-h"><h2>To-do</h2>${carry.length?`<button class="act" data-act="carry">Reprendre ${plural(carry.length,'tâche')} d'hier</button>`:''}</div>
-      <form class="todo-add" data-form="todo"><input id="todo-new" placeholder="${past?'Ajouter une tâche à ce jour':'Ajouter une tâche'}" autocomplete="off" aria-label="Nouvelle tâche"><button class="btn sm" type="submit">Ajouter</button></form>
-      ${items.length?`<ul class="todo">${items.map(i=>`<li class="${i.done?'done':''}"><button class="hcheck ${i.done?'on':''}" data-act="todo-toggle" data-id="${i.id}" aria-label="${i.done?'Décocher':'Cocher'} « ${esc(i.text)} »">${ICON.check}</button><span>${esc(i.text)}</span><button class="x" data-act="todo-del" data-id="${i.id}" aria-label="Supprimer">${ICON.x}</button></li>`).join('')}</ul>`:`<p class="empty">${past?'Aucune tâche notée ce jour-là.':'Le matin, note les 3 à 5 tâches qui comptent aujourd\'hui.'}</p>`}
-    </section>
-  </div>
-  <div class="cols">
-    <section class="sec">${weekFocus(mon)}</section>
-    ${past?'':`<section class="sec">${focusVideo()}</section>`}
-  </div>`}
+  ${remind}<div class="today-grid"><div>${morningCard(t)}${prioCard(t)}${habitsSec}${todoSec}</div>
+  <div>${past?'':`<section class="sec">${focusVideo()}</section>`}${weeklyPrios(t)}${counters}<section class="sec">${weekFocus(mon)}</section></div></div>`}
+/* F01 : une priorité principale par date. Elle référence une tâche, une preuve, une habitude, une priorité de la semaine
+   ou une action Studio, sans jamais la recopier. Accomplie, elle le reste : aucune autre n'est imposée à sa place. */
+function prioInfo(t){const d=dayOf(t),p=d.prio;if(!p)return null;const miss={p,missing:true,label:p.label||'Élément introuvable',icon:'⭐'};let label='',sub='',done=false,act='',icon='⭐',iid='';
+  if(p.kind==='todo'){const it=todoItems(t).find(i=>i.id===p.id);if(!it)return miss;label=it.text;icon='📝';done=!!it.done;act=`<button class="btn" data-act="todo-toggle" data-id="${it.id}">Marquer comme faite</button>`}
+  else if(p.kind==='habit'){const h=S.data.habits[p.id];if(!h)return miss;label=h.name||'Habitude';icon=h.icon||'🔁';iid=h.identityId;const st=habitState(h.id,t);done=st==='target';sub=[h.targetLabel,st==='min'?'Minimum réalisé':''].filter(Boolean).join(' · ');act=habitCtl(h,t)}
+  else if(p.kind==='kr'){const k=S.data.krs[p.id];if(!k)return miss;const o=S.data.objectives[k.objectiveId]||{},kind=kindOf(k),mon=monday(t);label=krTitle(k);icon=krIcon(k)||'🎯';iid=o.identityId;sub=o.title||'';
+    if(kind==='milestone'){done=!!k.done;act=`<button class="btn" data-act="kr-done" data-id="${k.id}" data-date="${t}">Marquer faite</button>`}
+    else if(kind==='qty'){const r=krWeekRate(k,mon);done=r!=null&&r>=1;sub=`${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${k.unit||''} cette semaine`;act=qtyCtl(k,t,mon)+`<button class="step" data-act="qty-open" data-id="${k.id}" aria-label="Saisir au clavier">${ICON.kb}</button>`}
+    else{const h=habitOf(k);if(h){done=habitState(h.id,t)==='target';act=habitCtl(h,t)}}}
+  else if(p.kind==='video'){const v=S.data.videos[p.id];if(!v)return miss;label=v.nextAction||`${STAGE_LABEL[v.stage]} · ${v.title||''}`;sub=v.title||'';icon='🎬';done=!!d.prioDone;act=`<button class="btn-sec" data-act="edit-video" data-id="${v.id}">Ouvrir la fiche</button><button class="btn" data-act="prio-done" data-date="${t}">Marquer accomplie</button>`}
+  else if(p.kind==='weekly'){const r2=S.data.reviews[p.week];const x=r2&&r2.prios&&r2.prios[p.id];if(!x)return miss;label=x.text;icon='📌';sub='Priorité de la semaine';done=!!x.done;act=`<button class="btn" data-act="wprio-done" data-key="${p.week}" data-id="${p.id}">Marquer accomplie</button>`}
+  return{p,label,sub,done,act,icon,iid}}
+function prioCard(t){const x=prioInfo(t),past=t<today();
+  if(!x)return `<section class="sec prio"><div class="sec-h"><h2>Priorité du jour</h2></div>${past?'<p class="empty">Aucune priorité choisie ce jour-là.</p>':`<p class="note">Choisis l’action qui compte le plus aujourd’hui : une tâche, une preuve ou une action du Studio.</p><div class="prio-a"><button class="btn" data-act="prio-pick">Choisir ma priorité</button></div>`}</section>`;
+  const i=idOf(x.iid);
+  return `<section class="sec prio ${x.done?'done':''}"><div class="sec-h"><h2>Priorité du jour</h2><button class="act" data-act="prio-pick">Changer</button></div>
+  <div class="prio-b">${av(x.icon,i?i.color:'#8B83FF','',x.label)}<div class="m"><b>${esc(x.label)}</b><span class="hint">${[i&&i.name,x.sub].filter(Boolean).map(esc).join(' · ')||'&nbsp;'}</span></div></div>
+  ${x.missing?'<p class="hint" style="margin-top:10px">L’élément d’origine a été supprimé ou déplacé. Choisis une autre priorité.</p>':x.done?'<p class="prio-ok">✓ Priorité accomplie</p>':`<div class="prio-a">${x.act}</div>`}</section>`}
+function sheetPrio(t){const mon=monday(t);const items=todoItems(t).filter(i=>!i.done);const hs=habits().filter(h=>visibleOn(h,t)&&t>=hStart(h)&&habitState(h.id,t)!=='target');
+  const krs=weekProofs(mon).filter(k=>!k.virtual&&(s=>s!=null&&s<1)(krWeekScore(k,mon)));const wp=weekPriosFor(t).filter(x=>!x.done);
+  const vids=videos().filter(v=>v.stage!=='publie'&&v.stage!=='idee').sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999')).slice(0,3);
+  const row=(kind,id,icon,label,sub,extra='')=>`<button class="row" data-act="prio-set" data-kind="${kind}" data-id="${id}" ${extra}>${av(icon,'#8B83FF','sm',label)}<span class="m"><span class="t">${esc(label)}</span>${sub?`<span class="s">${esc(sub)}</span>`:''}</span><span></span></button>`;
+  const grp=(h,rows)=>rows.length?`<section><h3>${h}</h3><div class="list">${rows.join('')}</div></section>`:'';
+  return sheetTop('Priorité du jour',esc(fmtDay(t,true)))+`<section><h3>Une nouvelle tâche</h3><form class="todo-add" data-form="prio-new"><input id="prio-new" placeholder="Ce qui compte le plus aujourd’hui" autocomplete="off" aria-label="Nouvelle tâche prioritaire"><button class="btn sm" type="submit">Choisir</button></form></section>
+  ${grp('Tâches du jour',items.map(i=>row('todo',i.id,'📝',i.text,'')))}
+  ${grp('Priorités de la semaine',wp.map(x=>row('weekly',x.id,'📌',x.text,'',`data-week="${x.week}"`)))}
+  ${grp('Engagements de la semaine',krs.map(k=>row('kr',k.id,krIcon(k)||'🎯',krTitle(k),`${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${kindOf(k)==='milestone'?'':k.unit||''}`.trim())))}
+  ${grp('Habitudes du jour',hs.map(h=>row('habit',h.id,h.icon||'🔁',h.name||'Habitude',freqLabel(h))))}
+  ${grp('Studio',vids.map(v=>row('video',v.id,'🎬',v.nextAction||`${STAGE_LABEL[v.stage]} · ${v.title||''}`,v.nextAction?(v.title||''):'Prochaine action à définir dans la fiche')))}
+  ${dayOf(t).prio?`<section><button class="btn-sec" data-act="prio-clear">Retirer la priorité</button></section>`:''}`}
+/* F02 / F30 : les trois priorités écrites dans la revue de la semaine précédente, sans copie */
+function weekPriosFor(t){const key=isoWeek(addDays(monday(t),-7)).key;const ps=(S.data.reviews[key]||{}).prios||{};return ['p1','p2','p3'].map(id=>({id,week:key,text:((ps[id]||{}).text||'').trim(),done:!!(ps[id]||{}).done})).filter(x=>x.text)}
+function weeklyPrios(t){const ps=weekPriosFor(t),past=t<today(),cur=dayOf(t).prio;
+  return `<section class="sec"><div class="sec-h"><h2>Priorités de la semaine</h2><button class="act" data-act="open-review-prev">Voir la revue</button></div>
+  ${ps.length?`<ul class="todo">${ps.map(x=>`<li class="${x.done?'done':''}"><button class="hcheck ${x.done?'on':''}" data-act="wprio-done" data-key="${x.week}" data-id="${x.id}" aria-label="${x.done?'Décocher':'Cocher'} « ${esc(x.text)} »">${ICON.check}</button><span>${esc(x.text)}</span>${!x.done&&!past&&!(cur&&cur.kind==='weekly'&&cur.id===x.id&&cur.week===x.week)?`<button class="pill-mini" data-act="prio-set" data-kind="weekly" data-id="${x.id}" data-week="${x.week}"><span class="t" hidden>${esc(x.text)}</span>Aujourd’hui</button>`:''}</li>`).join('')}</ul>`:'<p class="empty">Écris tes 3 priorités dans la revue du dimanche : elles s’afficheront ici toute la semaine suivante.</p>'}</section>`}
+/* F03 / D09 : reprise sélective ; la tâche est déplacée (même identifiant, date d'origine gardée), jamais copiée */
+function carryCandidates(t){const out=[];for(let i=1;i<=7;i++){const d=addDays(t,-i);for(const it of todoItems(d))if(!it.done)out.push({d,it})}return out}
+function sheetCarry(t){const cs=carryCandidates(t);let last='';
+  return sheetTop('Reprendre des tâches','Tâches non terminées des 7 derniers jours')+(cs.length?`<section><form data-form="carry">${cs.map(({d,it})=>{const head=d!==last?`<p class="carry-d">${esc(fmtDay(d,true))}</p>`:'';last=d;return `${head}<div class="checks"><label><input type="checkbox" name="carry" value="${d}|${it.id}"><span><b>${esc(it.text)}</b></span></label></div>`}).join('')}
+  <div style="margin-top:16px"><button class="btn" type="submit">Reprendre les tâches sélectionnées</button></div></form><p class="hint" style="margin-top:10px">Les tâches choisies sont déplacées à aujourd’hui ; leur date d’origine reste indiquée.</p></section>`:'<section><p class="empty">Aucune tâche en attente.</p></section>')}
+function carryTasks(sel){const t=today();const add=[];for(const[d,id] of sel){const src=todoItems(d);const it=src.find(i=>i.id===id);if(!it)continue;saveTodos(d,src.filter(i=>i.id!==id));if(!todoItems(t).some(i=>i.id===id))add.push({...it,from:it.from||d})}
+  if(add.length)saveTodos(t,[...todoItems(t),...add]);toast(`${plural(add.length,'tâche')} reprise${add.length>1?'s':''}`)}
+/* F05 : trois évaluations facultatives et indépendantes ; le bloc se replie une fois rempli */
 function morningCard(t){const d=dayOf(t);const e=energyOf(d.energy),sl=sleepOf(d.sleep);const said=[sl&&`Sommeil ${sl[2].toLowerCase()}`,e&&e[3],d.mood].filter(Boolean);
-  return `<section class="sec"><div class="sec-h"><h2>${t<today()?'Ce matin-là':'Ce matin'}</h2><span class="hint">${said.length?esc(said.join(' · ')):'Comment tu te sens ?'}</span></div>
+  const open=S.mOpen&&S.mOpen.d===t?S.mOpen.open:!(d.sleep&&d.energy&&d.mood);
+  return `<details class="sec morning" data-morning="${t}" ${open?'open':''}><summary class="sec-h"><h2>${t<today()?'Ce matin-là':'Ce matin'}</h2><span class="hint">${said.length?esc(said.join(' · ')):'Facultatif · comment tu te sens ?'}</span></summary>
   <div class="mgrid"><div class="field"><span>Qualité du sommeil</span><div class="seg" role="group" aria-label="Qualité du sommeil">${SLEEP.map(([n,ic,l])=>`<button data-act="day-sleep" data-date="${t}" data-n="${n}" aria-pressed="${d.sleep===n}" aria-label="Sommeil ${esc(l.toLowerCase())}"><i aria-hidden="true">${ic}</i><span>${l}</span></button>`).join('')}</div></div>
   <div class="field"><span>Énergie</span><div class="seg" role="group" aria-label="Énergie">${ENERGY.map(([n,ic,sh,l])=>`<button data-act="day-energy" data-date="${t}" data-n="${n}" aria-pressed="${d.energy===n}" aria-label="${esc(l)}" title="${esc(l)}"><i aria-hidden="true">${ic}</i><span>${sh}</span></button>`).join('')}</div></div>
-  <div class="field"><span>Humeur</span><div class="seg moods" role="group" aria-label="Humeur">${MOODS.map(m=>`<button data-act="day-mood" data-date="${t}" data-v="${m}" aria-pressed="${d.mood===m}" aria-label="Humeur ${m}">${m}</button>`).join('')}</div></div></div></section>`}
+  <div class="field"><span>Humeur</span><div class="seg moods" role="group" aria-label="Humeur">${MOODS.map(m=>`<button data-act="day-mood" data-date="${t}" data-v="${m}" aria-pressed="${d.mood===m}" aria-label="Humeur ${m}">${m}</button>`).join('')}</div></div></div></details>`}
+/* F04 : la vidéo la plus urgente, avec sa prochaine action concrète, son échéance et un blocage éventuel */
 function focusVideo(){
   const prod=videos().filter(v=>v.stage!=='publie'&&v.stage!=='idee').sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999'));
   const v=prod[0];
-  if(!v)return `<div class="sec-h"><h2>Studio</h2></div><p class="empty">Aucune vidéo en production.</p><button class="btn-sec" data-act="tab" data-tab="studio">Ouvrir le studio</button>`;
-  const dl=deadline(v);
-  return `<div class="sec-h"><h2>Prochaine vidéo</h2><button class="act" data-act="tab" data-tab="studio">Studio</button></div>
-  <button class="row" data-act="edit-video" data-id="${v.id}">${av('🎬','#E8B10E')}<span class="m"><span class="t">${esc(v.title||'Sans titre')}</span><span class="s">${esc(STAGE_LABEL[v.stage])}${dl?` · à boucler avant le ${fmtD(dl)}`:''}</span></span><span class="r"><b>${v.publishDate?fmtD(v.publishDate):'Sans date'}</b>${tag(videoStatus(v))}</span></button>
-  ${bar(stageIdx(v.stage)/(STAGES.length-1),null)}`}
+  if(!v)return `<div class="sec-h"><h2>Studio</h2></div><p class="empty">Aucune vidéo en production.</p><button class="btn-sec" data-act="tab" data-tab="studio">Ouvrir le Studio</button>`;
+  const dl=deadline(v),rem=typeof remainingHours==='function'?remainingHours(v):0;
+  return `<div class="sec-h"><h2>Prochaine action Studio</h2><button class="act" data-act="tab" data-tab="studio">Studio</button></div>
+  <button class="row" data-act="edit-video" data-id="${v.id}">${av('🎬','#E8B10E')}<span class="m"><span class="t">${v.nextAction?esc(v.nextAction):'<span class="faint">Définir la prochaine action</span>'}</span><span class="s">${esc(v.title||'Sans titre')} · ${esc(STAGE_LABEL[v.stage])}${rem?` · ${fmtN(rem)} h restantes`:''}</span></span><span class="r"><b>${dl?`Avant le ${fmtD(dl)}`:'Sans échéance'}</b>${tag(videoStatus(v))}</span></button>
+  ${v.blocker?`<p class="hint tone-warn" style="margin-top:6px">Blocage : ${esc(v.blocker)}</p>`:''}`}
 function proofRow(k,mon){const r=krWeekRate(k,mon);return `<button class="row" ${editAttr(k)}>${av(krIcon(k),idColor(k.identityId),'sm',krTitle(k))}<span class="m"><span class="t">${esc(krTitle(k))}</span><span class="s">${weekSub(k,mon)}</span></span><span class="r"><b>${weekVal(k,mon)}</b>${r==null?'':rateHtml(r,mon<monday(today()))}</span></button>`}
 function weekFocus(mon){const all=weekProofs(mon).map(k=>({k,s:krWeekScore(k,mon)})).filter(x=>x.s!=null);
   if(!all.length)return `<div class="sec-h"><h2>Engagements de la semaine</h2></div><p class="empty">Aucun engagement prévu cette semaine. Planifie des étapes ou ajoute des habitudes dans Identités.</p><button class="btn-sec" data-act="tab" data-tab="okr">Ouvrir Identités</button>`;
@@ -1211,9 +1271,9 @@ function viewReview(){
     </section>
   </div>
   <section class="sec"><div class="sec-h"><h2>Ton bilan</h2></div>
-    <div class="rv-grid">${fld('wins','Ce qui a marché','Les victoires, même petites')}${fld('blocks','Ce qui a bloqué','Sans te juger')}${fld('lesson','La leçon de la semaine','Une phrase')}${fld('next','Mes 3 priorités pour la semaine prochaine','1. …')}</div>
+    <div class="rv-grid">${fld('wins','Ce qui a marché','Les victoires, même petites')}${fld('blocks','Ce qui a bloqué','Sans te juger')}${fld('lesson','La leçon de la semaine','Une phrase')}<div class="field rv-prios"><span>Mes 3 priorités pour la semaine ${isoWeek(addDays(mon,7)).w}</span>${['p1','p2','p3'].map((pid,i)=>`<input id="rv-${pid}" data-bind="reviews:${key}:prios.${pid}.text" value="${esc(((rev.prios||{})[pid]||{}).text||'')}" placeholder="Priorité ${i+1}" aria-label="Priorité ${i+1}">`).join('')}<span class="hint">Elles s’affichent dans Aujourd’hui toute la semaine ${isoWeek(addDays(mon,7)).w}.</span></div></div>
     <div class="field" style="margin-top:16px"><span>Sommeil, énergie et humeur du matin</span><div class="wmood">${wm.days.map(d=>{const x=dayOf(d),e=energyOf(x.energy),sl=sleepOf(x.sleep);return `<button class="${d===today()?'today':''}" data-act="goto-day" data-date="${d}" ${d>today()?'disabled':''} aria-label="Ouvrir le ${fmtD(d)}"><small>${DAYS[wd(d)]}</small><i title="${sl?`Sommeil ${esc(sl[2].toLowerCase())}`:''}">${sl?sl[1]:'·'}</i><i title="${e?esc(e[3]):''}">${e?e[1]:'·'}</i><b aria-label="Humeur">${x.mood||'·'}</b></button>`}).join('')}</div>
-      <p class="hint">${wm.avg!=null||wm.sleep!=null?[wm.sleep!=null&&`Sommeil&nbsp;: ${fmtN(wm.sleep)} / 5 en moyenne · ${esc(sleepOf(Math.round(wm.sleep))[2])}`,wm.avg!=null&&`Énergie&nbsp;: ${fmtN(wm.avg)} / 5 en moyenne · ${esc(energyOf(Math.round(wm.avg))[3])}`].filter(Boolean).join('<br>'):'Rien de noté cette semaine. Renseigne ton sommeil, ton énergie et ton humeur chaque matin dans Aujourd’hui.'}</p></div>
+      <p class="hint">${wm.avg!=null||wm.sleep!=null?[wm.sleep!=null&&`Sommeil&nbsp;: ${fmtN(wm.sleep)} / 5 en moyenne (${plural(wm.nS,'réponse')}) · ${esc(sleepOf(Math.round(wm.sleep))[2])}`,wm.avg!=null&&`Énergie&nbsp;: ${fmtN(wm.avg)} / 5 en moyenne (${plural(wm.nE,'réponse')}) · ${esc(energyOf(Math.round(wm.avg))[3])}`].filter(Boolean).join('<br>'):'Rien de noté cette semaine. Renseigne ton sommeil, ton énergie et ton humeur chaque matin dans Aujourd’hui.'}</p></div>
     <div class="close-wk">${closed?`<span class="tag pos">Semaine clôturée le ${fmtD(rev.closedAt.slice(0,10))}</span>`:''}<button class="btn" data-act="close-review" data-key="${key}" data-mon="${mon}">${closed?'Mettre à jour la clôture':'Clôturer la semaine'}</button><p class="hint">Enregistre ton score, tes preuves et ton bilan dans tes semaines sauvegardées. Si tu oublies, la semaine est sauvegardée automatiquement lundi.</p></div>
   </section>
   ${hist.length?`<section class="sec"><div class="sec-h"><h2>Semaines sauvegardées</h2></div><div class="list">${hist.map(r=>`<button class="row" data-act="goto-review" data-mon="${r.monday||''}">${av('',null,'sm','S')}<span class="m"><span class="t">Semaine ${esc(r.id.split('-W')[1])}</span><span class="s">${esc(r.lesson||r.wins||(r.auto?'Sauvegarde automatique':'—'))}</span></span><span class="r"><b>${r.weekScore!=null?pctS(r.weekScore):r.habitRate!=null?pctS(r.habitRate):'—'}</b><span class="muted">${(w=>w.avg!=null?`énergie ${fmtN(w.avg)}/5`:r.energy?`énergie ${r.energy}/5`:'')(r.monday?weekMood(r.monday):{avg:null})}</span></span></button>`).join('')}</div></section>`:''}`}
@@ -1332,7 +1392,7 @@ function freqEditor(h){const f=freqOf(h);const days=Array.isArray(h.days)?h.days
   ${f==='weekly'?`<div class="stepper"><button class="step" data-act="perweek" data-id="${h.id}" data-d="-1" aria-label="Moins">−</button><b>${h.perWeek||3} fois par semaine</b><button class="step" data-act="perweek" data-id="${h.id}" data-d="1" aria-label="Plus">+</button></div>`:''}
   ${f==='days'?`<div class="days">${DAYS.map((d,i)=>`<button data-act="habit-day" data-id="${h.id}" data-d="${i}" aria-pressed="${days.includes(i)}">${d}</button>`).join('')}</div>`:''}`}
 function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
-  if(s.kind==='pick'){const panel=$('#sheet-panel');panel.innerHTML=sheetPick(s.id);$('#sheet').hidden=false;return}
+  const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;return}
   const fn={hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
@@ -1421,6 +1481,7 @@ function sheetVideo(id){const v=S.data.videos[id];const p=plan(v);const loops=v.
   const planHtml=p?`<ul class="plan-t">${[...PHASES.map(ph=>({k:ph.k,l:ph.label,a:p[ph.k]})),{k:'packaging',l:'Titre & miniature (en parallèle)',a:p.packaging}].map(r=>`<li class="${t>=r.a.start&&t<r.a.end?'now':''}"><i class="ph-${r.k}"></i><span>${esc(r.l)}</span><span class="sm muted">${fmtD(r.a.start)} → ${fmtD(addDays(r.a.end,-1))}</span></li>`).join('')}<li><i style="background:var(--fg)"></i><span>Publication</span><span class="sm muted">${fmtD(v.publishDate,true)}</span></li></ul>`:'<p class="hint">Ajoute une date de publication : le rétroplanning se calcule tout seul.</p>';
   return sheetTop(esc(v.title||'Nouvelle vidéo'),`Vidéo · ${esc(STAGE_LABEL[v.stage]||'Idée')}`)+`
   <section>${F('videos',id,'title','Titre de travail')}
+  <div class="two">${F('videos',id,'nextAction','Prochaine action',{ph:'Écrire l’intro'})}${F('videos',id,'blocker','Blocage éventuel',{ph:'En attente des rushs'})}</div>
   <div class="two">${F('videos',id,'oeuvre','Œuvre',{ph:'Berserk, Rick et Morty…'})}${F('videos',id,'stage','Étape',{options:STAGES.map(s=>[s.k,s.label])})}</div>
   <div class="two">${F('videos',id,'publishDate','Date de publication',{type:'date'})}${F('videos',id,'complexity','Complexité',{options:Object.entries(CPLX)})}</div>
   <div class="two">${F('videos',id,'duration','Durée cible (min)',{type:'number'})}${F('videos',id,'scriptUrl','Lien du script',{type:'url',ph:'https://docs.google.com/…'})}</div>
@@ -1539,10 +1600,13 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
   if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled'].includes(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.bind)bindChange(el)});
+document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.morning)S.mOpen={d:el.dataset.morning,open:el.open}},true);
 document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}});
 document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty'){e.preventDefault();const k=S.data.krs[f.dataset.id];const inp=f.querySelector('input[type=number]');const amt=+inp.value;if(!k||inp.value===''||!isFinite(amt)||!amt)return;const dIn=f.querySelector('input[name=date]');const d=(dIn&&dIn.value)||f.dataset.date||today();const log={...(k.log||{})};log[d]=(+log[d]||0)+amt;put('krs',k.id,{...k,log,updatedAt:nowIso()});toast(`${signed(amt,k.unit||'')} · ${krTitle(k)}`);if(S.sheet)renderSheet();else{S.qtyOpen=null;renderMain(true)}return}if(f.dataset.form==='metric'){e.preventDefault();const m=S.data.metrics[f.dataset.id];if(!m)return;const el=f.elements;const d=(el.date&&el.date.value)||today();let v;
     if(m.type==='rank')v=rankVal(+el.tier.value,+el.div.value);else{if(el.v.value==='')return;v=+el.v.value;if(!isFinite(v))return}
     setMetric(m,d,v);toast(`${m.name||'Indicateur'} · ${mFmt(m,v)}`);if(document.activeElement)document.activeElement.blur();renderMain(true);return}
+  if(f.dataset.form==='prio-new'){e.preventDefault();const inp=$('#prio-new');const txt=inp.value.trim();if(!txt)return;const t=S.day||today();const id=uid();saveTodos(t,[...todoItems(t),{id,text:txt,done:false}]);setDay(t,{prio:{kind:'todo',id,label:txt},prioDone:false});dismissSheet();return}
+  if(f.dataset.form==='carry'){e.preventDefault();const sel=[...f.querySelectorAll('input[name=carry]:checked')].map(x=>x.value.split('|'));if(!sel.length){toast('Sélectionne au moins une tâche');return}carryTasks(sel);dismissSheet();return}
   if(f.dataset.form==='todo'){e.preventDefault();const inp=$('#todo-new');const txt=inp.value.trim();if(!txt)return;const t=S.day||today();saveTodos(t,[...todoItems(t),{id:uid(),text:txt,done:false}]);inp.value='';renderMain(true);const n=$('#todo-new');if(n)n.focus()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet)dismissSheet();if(e.key==='Enter'&&S.sheet&&e.target.tagName==='INPUT'&&e.target.type!=='file')e.target.blur()});
 
@@ -1578,6 +1642,8 @@ function repairHabits(){for(const h of list('habits')){const k=h.fromKr&&S.data.
 function migrateLevels(){for(const k of list('krs').filter(k=>kindOf(k)==='level')){const o=S.data.objectives[k.objectiveId]||{};const c=(k.createdAt||nowIso()).slice(0,10);const h={...(k.history||{})};
     if(+k.start&&!Object.keys(h).some(d=>d<=c))h[c]=+k.start;if(!Object.keys(h).length&&k.current!=null&&k.current!=='')h[today()]=+k.current;
     put('metrics','lv-'+k.id,{name:k.title||'Indicateur',icon:k.icon||'📈',type:'number',unit:k.unit||'',target:+k.target||null,identityId:o.identityId||'',history:h,createdAt:k.createdAt||nowIso(),fromKr:k.id});removeKr(k.id)}}
+/* Ancien champ libre « 3 priorités » : découpé une fois en trois priorités à identifiant stable */
+function migratePrios(){for(const rv of list('reviews')){if(rv.prios||!rv.next||!String(rv.next).trim())continue;const ps={};String(rv.next).split('\n').map(x=>x.replace(/^\s*(\d+[.)]|[-•*])\s*/,'').trim()).filter(Boolean).slice(0,3).forEach((text,i)=>ps['p'+(i+1)]={text,done:false});put('reviews',rv.id,{...rv,prios:ps})}}
 function removeKr(kid){const k=S.data.krs[kid];if(!k)return;const h=S.data.habits[k.habitId];if(h&&h.fromKr===kid)del('habits',h.id);del('krs',kid)}
 const ACT={
   'tab':a=>{if(S.sheet)closeSheet(true);if(a.dataset.tab==='today')S.day=null;setTab(a.dataset.tab)},
@@ -1600,6 +1666,13 @@ const ACT={
   'idea-cat':a=>{S.ideaCat=a.dataset.v;saveUi();renderMain(true)},
   'todo-toggle':a=>{const t=S.day||today();saveTodos(t,todoItems(t).map(i=>i.id===a.dataset.id?{...i,done:!i.done}:i))},
   'todo-del':a=>{const t=S.day||today();saveTodos(t,todoItems(t).filter(i=>i.id!==a.dataset.id))},
+  'prio-pick':()=>openSheet('prio',null,S.day||today()),
+  'prio-set':a=>{const t=S.day||today();const pr={kind:a.dataset.kind,id:a.dataset.id,label:((a.querySelector('.t')||{}).textContent||'').trim()};if(a.dataset.week)pr.week=a.dataset.week;setDay(t,{prio:pr,prioDone:false});if(S.sheet)dismissSheet();toast('Priorité du jour choisie')},
+  'prio-clear':()=>{setDay(S.day||today(),{prio:null,prioDone:false});dismissSheet()},
+  'prio-done':a=>{const t=a.dataset.date||today();setDay(t,{prioDone:!dayOf(t).prioDone})},
+  'wprio-done':a=>{const key=a.dataset.key,id=a.dataset.id;const rv=S.data.reviews[key];if(!rv)return;const ps=JSON.parse(JSON.stringify(rv.prios||{}));ps[id]={...(ps[id]||{}),done:!(ps[id]||{}).done};put('reviews',key,{...rv,prios:ps})},
+  'open-review-prev':()=>{S.reviewWeek=addDays(monday(S.day||today()),-7);setTab('review')},
+  'carry-open':()=>openSheet('carry',null,today()),
   'carry':()=>{const t=today(),y=addDays(t,-1);const c=todoItems(y).filter(i=>!i.done);saveTodos(t,[...todoItems(t),...c.map(i=>({...i,id:uid()}))]);saveTodos(y,todoItems(y).filter(i=>i.done));toast(`${plural(c.length,'tâche')} reprise${c.length>1?'s':''}`)},
   'habit-toggle':a=>{applyHabit(a.dataset.id,a.dataset.date,habitDone(a.dataset.id,a.dataset.date)?'none':'target');if(S.sheet)setTimeout(renderSheet,0)},
   'habit-set':a=>{const hid=a.dataset.id,d=a.dataset.date,v=a.dataset.v;applyHabit(hid,d,habitState(hid,d)===v?'none':v);if(S.sheet)setTimeout(renderSheet,0)},
