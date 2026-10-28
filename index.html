@@ -811,6 +811,18 @@ a.btn-sec{text-decoration:none}
 @media (max-width:760px){.stats.four{grid-template-columns:1fr 1fr}.stats.four .stat:nth-child(3){grid-column:auto}}
 .wkn{font-size:14px;font-weight:600}
 .row .ico{width:40px;height:40px}.row .ico svg{width:20px;height:20px}
+.idea{grid-template-columns:minmax(0,1fr) auto auto auto;padding:10px 0}
+.idea>.m{text-align:left;padding:2px 0}
+.idea>.m:hover .txt{text-decoration:underline;text-decoration-color:var(--faint);text-underline-offset:3px}
+.idea .chip{height:28px;cursor:pointer}
+.ifilters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.fsel select{height:38px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--muted);padding:0 12px;font:inherit;font-size:14px;font-weight:500;max-width:100%}
+.fsel.on select{background:var(--accent-bg);color:var(--accent-2);border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.cfg-list{display:flex;flex-direction:column}
+.cfg-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.cfg-row input{height:42px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2);padding:0 12px;min-width:0}
+@media (max-width:560px){.ifilters .fsel{flex:1 1 calc(50% - 8px)}.ifilters .fsel select{width:100%}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -920,10 +932,10 @@ const S={
   data:Object.fromEntries(COLLS.map(c=>[c,{}])), ver:0,
   mode:'boot', loaded:{},
   tab:'today', day:null, quarter:qKey(today()), habitWeek:monday(today()), reviewWeek:monday(today()),
-  okrMode:'week', week:monday(today()), qtyOpen:null, studio:'pipeline', ideaCat:'Tout', ideaQuery:'', allIdeas:false, range:{okr:'q',habits:'m',progress:'t'}, sheet:null, pendingImport:null, fold:{}
+  okrMode:'week', week:monday(today()), qtyOpen:null, studio:'pipeline', ideaCat:'Tout', ideaF:{status:'',tier:'',subj:'',sort:'score'}, ideaQuery:'', allIdeas:false, range:{okr:'q',habits:'m',progress:'t'}, sheet:null, pendingImport:null, fold:{}
 };
-try{const v=JSON.parse(localStorage.getItem('dqte:ui')||'{}');if(v.studio)S.studio=v.studio;if(v.ideaCat)S.ideaCat=v.ideaCat;if(v.range)S.range={...S.range,...v.range};if(v.okrMode)S.okrMode=v.okrMode}catch(e){}
-function saveUi(){try{localStorage.setItem('dqte:ui',JSON.stringify({studio:S.studio,ideaCat:S.ideaCat,range:S.range,okrMode:S.okrMode}))}catch(e){}}
+try{const v=JSON.parse(localStorage.getItem('dqte:ui')||'{}');if(v.studio)S.studio=v.studio;if(v.ideaCat!=null)S.ideaCat=v.ideaCat;if(v.ideaF)S.ideaF={...S.ideaF,...v.ideaF};if(v.range)S.range={...S.range,...v.range};if(v.okrMode)S.okrMode=v.okrMode}catch(e){}
+function saveUi(){try{localStorage.setItem('dqte:ui',JSON.stringify({studio:S.studio,ideaCat:S.ideaCat,ideaF:S.ideaF,range:S.range,okrMode:S.okrMode}))}catch(e){}}
 
 /* ---------- Stockage : base en ligne (claude.ai) ou navigateur ---------- */
 let db=null;
@@ -1504,7 +1516,7 @@ function viewOKR(){
     }else top=`<p class="note" style="margin-top:16px">Aucune preuve pour ${qLabel(q)}. Ajoute un objectif sous une identité, puis ses preuves.</p>`;
     scoreOf=i=>{const x=sum.per.find(p=>p.id===i.id);return x&&x.p!=null?{v:x.p,d:x.p-x.e}:null}}
   const overview=`<section class="sec"><div class="sec-h"><h2>Identités</h2><span class="head-r"><button class="act" data-act="open-templates">Modèles</button><button class="act" data-act="new-identity">Ajouter</button></span></div><div class="list">${ids.map(i=>{const sc=scoreOf(i);const o=objectivesOf(q,i.id)[0];const paused=mode==='week'?idPausedWeek(i.id,mon):i.status==='pause';
-    return `<button class="row" data-act="jump" data-id="${i.id}">${av(i.icon,i.color,'',i.name)}<span class="m"><span class="t">${esc(i.name||'Identité sans nom')}${idBadge(i)}</span><span class="s">${o?`${esc(o.title||'Objectif')} · ${esc(objResult(o).txt)}`:esc(i.statement||'Aucun objectif ce trimestre')}</span></span><span class="r">${paused?'<span class="muted">En pause</span>':sc==null?'<span class="tone-mut">Aucun engagement prévu</span>':`<b>${mode==='week'?rateHtml(sc.v,mon<cur):pctS(sc.v)}</b>${sc.d!=null?dPts(sc.d):''}`}</span></button>`}).join('')}</div></section>`;
+    return `<button class="row" data-act="jump" data-id="${i.id}">${av(i.icon,i.color,'',i.name)}<span class="m"><span class="t">${esc(i.name||'Identité sans nom')}${idBadge(i)}</span><span class="s">${o?esc(objectivesOf(q,i.id).map(x=>x.title||'Objectif').join(' · ')):esc(i.statement||'Aucun objectif ce trimestre')}</span></span><span class="r">${paused?'<span class="muted">En pause</span>':sc==null?'<span class="tone-mut">Aucun engagement prévu</span>':`<b>${mode==='week'?rateHtml(sc.v,mon<cur):pctS(sc.v)}</b>${sc.d!=null?dPts(sc.d):''}`}</span></button>`}).join('')}</div></section>`;
   return head+top+overview+ids.map(i=>identityBlock(i,q,mode,mon,scoreOf(i))).join('')}
 const ID_ST={prioritaire:['Prioritaire','prio'],entretenue:['Entretenue','maint'],pause:['En pause','pause']};
 const idBadge=i=>{const st=ID_ST[i.status];return st?`<span class="badge ${st[1]}">${st[0]}</span>`:''};
@@ -1526,31 +1538,7 @@ function identityBlock(i,q,mode,mon,sc){
   ${objs.map(o=>`<div class="obj"><div class="obj-h">${o.icon?`<span aria-hidden="true">${esc(o.icon)}</span>`:''}<button data-act="edit-objective" data-id="${o.id}">${esc(o.title||'Objectif sans titre')}</button>${o.videoId&&S.data.videos[o.videoId]?`<button class="pill-mini" data-act="edit-video" data-id="${o.videoId}">Fiche vidéo</button>`:''}</div>
     ${krsOf(o.id).map(k=>krRow({...k,identityId:i.id},i.color,mode,mon)).join('')}${addBtn('new-kr','Ajouter une preuve',`data-id="${o.id}"`)}</div>`).join('')}
   ${maint.length?`<div class="obj"><div class="obj-h"><span aria-hidden="true">🔁</span><b>Habitudes d’entretien</b></div>${maint.map(k=>krRow(k,i.color,mode,mon)).join('')}</div>`:''}
-  <div class="obj obj-add">${addBtn('new-objective',`Objectif pour ${qLabel(q)}`,`data-id="${i.id}"`)}${addBtn('new-habit','Habitude d’entretien',`data-id="${i.id}"`)}</div></div>
-  <div class="id-part">${resultsBlock(i,q)}</div></section>`}
-/* F08 : le résultat d'un objectif se lit à part de ses engagements */
-function objResult(o){const t=o.resType||'none';
-  if(t==='check')return{done:!!o.resDone,txt:o.resDone?`Atteint${o.resDoneAt?` le ${fmtD(o.resDoneAt)}`:''}`:'Pas encore atteint'};
-  if(t==='count'){const c=+o.resCurrent||0,tg=+o.resTarget||0;return{done:tg>0&&c>=tg,txt:tg>0?`${fmtN(c)} sur ${fmtN(tg)}`:'Cible à définir'}}
-  if(t==='videos'){const{start,end}=qRange(o.quarter||qKey(today()));const c=publishedBetween(start,end).length,tg=+o.resTarget||0;return{done:tg>0&&c>=tg,txt:`${c} vidéo${c>1?'s':''} publiée${c>1?'s':''}${tg?` sur ${tg}`:''}`}}
-  if(t==='metric'){const m=S.data.metrics[o.metricId];return m?metricGoal(m):{done:false,txt:'Indicateur introuvable'}}
-  return{none:true,done:false,txt:o.criterion?'Mesure à choisir':'Critère à préciser'}}
-function resStatus(o,r){if(r.none)return{k:'mut',t:''};if(r.done)return{k:'pos',t:'Atteint'};return today()>qRange(o.quarter||qKey(today())).end?{k:'neg',t:'Non atteint'}:{k:'warn',t:'En cours'}}
-function metricGoal(m){const es=mEntries(m);const last=es.length?es[es.length-1][1]:null;if(last==null)return{done:false,txt:'Aucune mesure'};const st=metricStatus(m,last),tt=mTargetTxt(m);return{done:!!st.ok,txt:`${mFmt(m,last)}${tt?` · cible ${tt}`:''}`}}
-function resultsBlock(i,q){const objs=objectivesOf(q,i.id);const ms=metrics().filter(m=>(m.identityId===i.id||(m.objectiveId&&(S.data.objectives[m.objectiveId]||{}).identityId===i.id))&&!objs.some(o=>o.resType==='metric'&&o.metricId===m.id));
-  const rows=[...objs.map(o=>{const r=objResult(o);return `<button class="row" data-act="edit-objective" data-id="${o.id}">${av(o.icon,i.color,'sm',o.title)}<span class="m"><span class="t">${esc(o.title||'Objectif sans titre')}</span><span class="s">${o.criterion?esc(o.criterion):'<span class="faint">Critère de réussite à préciser</span>'}</span></span><span class="r"><b>${esc(r.txt)}</b>${tag(resStatus(o,r))}</span></button>`}),
-    ...ms.map(m=>{const g=metricGoal(m);return `<button class="row" data-act="edit-metric" data-id="${m.id}">${av(m.icon,i.color,'sm',m.name)}<span class="m"><span class="t">${esc(m.name||'Indicateur')}</span><span class="s">Indicateur${m.objectiveId&&S.data.objectives[m.objectiveId]?` · ${esc(S.data.objectives[m.objectiveId].title||'')}`:''}</span></span><span class="r"><b>${esc(g.txt)}</b>${tag(metricStatus(m,(mEntries(m).slice(-1)[0]||[])[1]))}</span></button>`})];
-  return `<div class="part-h"><h3>Mes résultats</h3><span class="muted">${qLabel(q)}</span></div>${rows.length?`<div class="list">${rows.join('')}</div>`:'<p class="empty">Ajoute un objectif et son critère de réussite pour suivre tes résultats.</p>'}`}
-const RES=[['none','Pas de mesure'],['check','Case à cocher'],['count','Compteur'],['metric','Indicateur'],['videos','Vidéos publiées']];
-function resultEditor(o){const id=o.id,t=o.resType||'none',r=objResult(o),st=resStatus(o,r);let body='';
-  if(t==='check')body=`<div class="checks"><label><input type="checkbox" id="res-done-${id}" data-bind="objectives:${id}:resDone" ${o.resDone?'checked':''}><span><b>Objectif atteint</b>${o.resDone&&o.resDoneAt?`Le ${fmtD(o.resDoneAt,true)}`:'Coche quand le critère est rempli.'}</span></label></div>`;
-  else if(t==='count')body=`<div class="two">${F('objectives',id,'resCurrent','Où tu en es',{type:'number',ph:'0'})}${F('objectives',id,'resTarget','Cible',{type:'number',ph:'3'})}</div>`;
-  else if(t==='videos')body=F('objectives',id,'resTarget','Vidéos à publier ce trimestre',{type:'number',ph:'3',hint:'Compté automatiquement depuis le Studio.'});
-  else if(t==='metric')body=metrics().length?F('objectives',id,'metricId','Indicateur suivi',{options:[['','— Choisir —'],...metrics().map(m=>[m.id,m.name||'Indicateur'])],hint:'L’objectif est atteint quand l’indicateur atteint sa cible, dans l’onglet Progrès.'}):'<p class="hint">Crée d’abord un indicateur dans l’onglet Progrès.</p>';
-  return `<section class="res-ed"><h3>Résultat attendu</h3>
-  ${F('objectives',id,'criterion','Critère de réussite',{ph:'La vidéo Karaba est publiée sur la chaîne',hint:'Ce qui permettra de dire que l’objectif est atteint. Il se lit à part de tes engagements.'})}
-  <div class="field"><span>Comment le mesurer</span>${pills('obj-res',t,RES,`data-id="${id}"`)}</div>${body}
-  ${r.none?'':`<p class="big-n">${esc(r.txt)} ${tag(st)}</p>`}</section>`}
+  <div class="obj obj-add">${addBtn('new-objective',`Objectif pour ${qLabel(q)}`,`data-id="${i.id}"`)}${addBtn('new-habit','Habitude d’entretien',`data-id="${i.id}"`)}</div></div></section>`}
 function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());const isCur=mon===cur;const actDate=mode==='week'&&mon<cur?addDays(mon,6):today();
   let rb,rs,sub,bp,be=null,col;
   if(mode==='week'){const t=krWeekTarget(k,mon),r=t>0?krWeekRate(k,mon):null,past=mon<cur,paused=idPausedWeek(k.identityId,mon);sub=paused?'<span class="muted">Identité en pause : pas d’attente cette semaine</span>':weekSub(k,mon);rb=weekVal(k,mon);
@@ -1780,16 +1768,47 @@ function viewFrise(){
   return `<section class="sec"><div class="sec-h"><h2>Sorties ${y}</h2></div>
   ${items.length?`<ul class="tl">${items.map(v=>{const pub=v.stage==='publie';const d=parse(v.publishDate);return `<li class="${pub?'pub':''}"><span class="date"><b>${d.getDate()}</b><span>${d.toLocaleDateString('fr-FR',{month:'short'}).replace('.','')}</span></span><button class="tt" data-act="edit-video" data-id="${v.id}"><b>${esc(v.title||'Sans titre')}</b><span class="muted sm">${esc(STAGE_LABEL[v.stage])}</span></button><span>${pub?(v.stats&&v.stats.views?`<b style="font-weight:500">${fmtN(v.stats.views)} vues</b>`:''):tag(videoStatus(v))}</span></li>`}).join('')}</ul>`:'<p class="empty">Aucune sortie programmée cette année. Donne une date à une vidéo du pipeline.</p>'}
   ${undated.length?`<p class="hint" style="margin-top:12px">${plural(undated.length,'vidéo')} en production sans date de sortie.</p>`:''}</section>`}
+/* Catégories et statuts des idées : réglables (Réglages ou banque d'idées) ; par défaut, ceux de Notion plus ceux déjà utilisés */
+const IDEA_CATS=['Manga','Question philo','Benchmark / inspiration'],IDEA_STS=['Lu/Vu','À poursuivre','Pas lu/Pas vu'];
+function ideaCats(){const m=S.data.settings.main||{};return Array.isArray(m.ideaCats)?m.ideaCats:[...new Set([...IDEA_CATS,...ideas().map(i=>i.category).filter(Boolean)])]}
+function ideaStatuses(){const m=S.data.settings.main||{};return Array.isArray(m.ideaStatuses)?m.ideaStatuses:[...new Set([...IDEA_STS,...ideas().map(i=>i.status).filter(Boolean)])]}
+function saveIdeaCfg(cats,sts){const m=S.data.settings.main||{};put('settings','main',{...clean(m),ideaCats:cats,ideaStatuses:sts})}
+const ideaSubject=i=>(i.videoId&&S.data.videos[i.videoId])||null;
+const IDEA_F0={status:'',tier:'',subj:'',sort:'score'};
 function viewIdeas(){
-  const all=ideas();const cats=['Tout',...new Set(all.map(i=>i.category||'Autre'))];const tierRank={S:0,A:1,B:2,C:3};
-  let rows=all.filter(i=>S.ideaCat==='Tout'||(i.category||'Autre')===S.ideaCat);
-  rows.sort((a,b)=>{const sa=ideaScore(a),sb=ideaScore(b);if(sa!=null||sb!=null)return (sb??-1)-(sa??-1);return (tierRank[a.tier]??9)-(tierRank[b.tier]??9)||(a.text||'').localeCompare(b.text||'')});
+  const all=ideas(),f=S.ideaF,cats=ideaCats(),used=new Set(all.map(i=>i.category||''));const tierRank={S:0,A:1,B:2,C:3};
+  const catList=['Tout',...cats,...[...used].filter(c=>c&&!cats.includes(c)),...(used.has('')?['']:[])];if(!catList.includes(S.ideaCat))S.ideaCat='Tout';
+  const is=(v,want)=>!want||(want==='-'?!v:v===want);
+  let rows=all.filter(i=>(S.ideaCat==='Tout'||(i.category||'')===S.ideaCat)&&is(i.status,f.status)&&is(i.tier,f.tier)&&(!f.subj||(f.subj==='yes')===!!ideaSubject(i)));
+  const byScore=(a,b)=>{const sa=ideaScore(a),sb=ideaScore(b);return (sb??-1)-(sa??-1)},byTier=(a,b)=>(tierRank[a.tier]??9)-(tierRank[b.tier]??9),byName=(a,b)=>(a.text||'').localeCompare(b.text||'','fr');
+  rows.sort(f.sort==='az'?byName:f.sort==='recent'?(a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''):f.sort==='tier'?(a,b)=>byTier(a,b)||byScore(a,b)||byName(a,b):(a,b)=>byScore(a,b)||byTier(a,b)||byName(a,b));
   const subj=videos().filter(v=>v.stage==='idee').sort(byCreated);const shown=S.allIdeas?subj:subj.slice(0,5);
-  const top=subj.length?`<section class="sec" style="margin-top:24px"><div class="sec-h"><h2>Sujets retenus</h2><span class="hint">${plural(subj.length,'sujet')} pas encore lancé${subj.length>1?'s':''}</span></div><div class="list">${shown.map(v=>`<div class="row">${av('💡','#E8B10E','sm')}<button class="m" data-act="edit-video" data-id="${v.id}" style="text-align:left"><span class="t">${esc(v.title||'Sans titre')}</span><span class="s">${esc(v.oeuvre||'Sujet')}</span></button><button class="pill-mini" data-act="stage" data-id="${v.id}" data-d="1">Lancer</button></div>`).join('')}</div>${subj.length>5&&!S.allIdeas?`<button class="act" data-act="all-ideas" style="color:var(--muted);font-weight:600;padding:8px 0">Voir les ${subj.length-5} autres</button>`:''}</section><div class="sec-h" style="margin-top:36px"><h2>Banque d’idées</h2></div>`:'';
-  return top+`<div class="ideas-tools"><input id="idea-q" type="search" placeholder="Chercher une idée" value="${esc(S.ideaQuery)}" aria-label="Chercher une idée"><button class="btn sm" data-act="new-idea">Nouvelle idée</button></div>
-  ${pills('idea-cat',S.ideaCat,cats.map(c=>[c,c]))}
-  <p class="hint" style="margin:10px 0">Score = potentiel × envie ÷ effort (notes de 1 à 5). Les idées notées remontent en tête.</p>
-  ${rows.length?`<div class="list" id="idea-list">${rows.map(i=>{const sc=ideaScore(i);return `<button class="idea" data-act="edit-idea" data-id="${i.id}" data-text="${esc(((i.text||'')+' '+(i.notes||'')+' '+(i.category||'')).toLowerCase())}"><span class="m"><span class="txt">${esc(i.text)}</span><span class="cat">${esc(i.category||'Autre')}${i.status?` · ${esc(i.status)}`:''}</span></span><span class="tier ${esc(i.tier||'')}">${esc(i.tier||'–')}</span><span class="score">${sc==null?'':sc.toString().replace('.',',')}</span></button>`}).join('')}</div>`:`<p class="empty">La banque est vide.</p>`}`}
+  const top=`<section class="sec" style="margin-top:20px"><div class="sec-h"><h2>Sujets retenus <small class="muted">${subj.length}</small></h2><button class="act" data-act="new-subject">+ Nouveau sujet</button></div>
+    ${subj.length?`<div class="list">${shown.map(v=>`<div class="row">${av('💡','#E8B10E','sm')}<button class="m" data-act="edit-video" data-id="${v.id}" style="text-align:left"><span class="t">${esc(v.title||'Sans titre')}</span><span class="s">${esc(v.oeuvre||'Sujet')}</span></button><button class="pill-mini" data-act="stage" data-id="${v.id}" data-d="1">Lancer</button></div>`).join('')}</div>${subj.length>5&&!S.allIdeas?`<button class="act" data-act="all-ideas" style="color:var(--muted);font-weight:600;padding:8px 0">Voir les ${subj.length-5} autres</button>`:''}`
+    :'<p class="empty">Aucun sujet retenu. Crée-en un, ou touche « Retenir » sur une idée de la banque.</p>'}</section>`;
+  const sel=(k,label,opts)=>`<label class="fsel ${f[k]&&f[k]!==IDEA_F0[k]?'on':''}"><span class="sr">${label}</span><select id="if-${k}" data-ifilter="${k}">${opts.map(([v,l])=>`<option value="${esc(v)}" ${f[k]===v?'selected':''}>${esc(l)}</option>`).join('')}</select></label>`;
+  const active=S.ideaCat!=='Tout'||Object.keys(IDEA_F0).some(k=>f[k]!==IDEA_F0[k]);
+  const row=i=>{const sc=ideaScore(i),v=ideaSubject(i);return `<div class="idea" data-text="${esc(((i.text||'')+' '+(i.notes||'')+' '+(i.category||'')+' '+(i.status||'')).toLowerCase())}"><button class="m" data-act="edit-idea" data-id="${i.id}"><span class="txt">${esc(i.text||'Idée sans titre')}</span><span class="cat">${esc(i.category||'Sans catégorie')}${i.status?` · ${esc(i.status)}`:''}</span></button>${v?`<button class="chip pos" data-act="edit-video" data-id="${v.id}">Sujet retenu</button>`:`<button class="pill-mini" data-act="idea-retain" data-id="${i.id}" aria-label="Retenir « ${esc(i.text||'cette idée')} » comme sujet">Retenir</button>`}<span class="tier ${esc(i.tier||'')}">${esc(i.tier||'–')}</span><span class="score">${sc==null?'':sc.toString().replace('.',',')}</span></div>`};
+  return top+`<section class="sec"><div class="sec-h"><h2>Banque d’idées <small class="muted">${rows.length===all.length?all.length:`${rows.length} / ${all.length}`}</small></h2><button class="act" data-act="idea-cfg">Catégories et statuts</button></div>
+  <div class="ideas-tools"><input id="idea-q" type="search" placeholder="Chercher une idée" value="${esc(S.ideaQuery)}" aria-label="Chercher une idée"><button class="btn sm" data-act="new-idea">Nouvelle idée</button></div>
+  ${pills('idea-cat',S.ideaCat,catList.map(c=>[c,c||'Sans catégorie']))}
+  <div class="ifilters">${sel('status','Statut',[['','Tous les statuts'],...ideaStatuses().map(x=>[x,x]),['-','Sans statut']])}${sel('tier','Tier',[['','Tous les tiers'],['S','Tier S'],['A','Tier A'],['B','Tier B'],['C','Tier C'],['-','Sans tier']])}${sel('subj','Sujet',[['','Retenues ou non'],['no','Pas encore retenues'],['yes','Déjà retenues']])}${sel('sort','Tri',[['score','Tri : score'],['tier','Tri : tier'],['az','Tri : A → Z'],['recent','Tri : plus récentes']])}${active?'<button class="linkish" data-act="idea-reset">Réinitialiser</button>':''}</div>
+  <p class="hint" style="margin:10px 0">Score = potentiel × envie ÷ effort (notes de 1 à 5). « Retenir » ajoute l’idée aux sujets retenus.</p>
+  ${rows.length?`<div class="list" id="idea-list">${rows.map(row).join('')}</div>`:`<p class="empty">${all.length?'Aucune idée ne correspond à ces filtres.':'La banque est vide.'}</p>`}</section>`}
+/* Retenir une idée : elle devient un sujet du Studio (étape « Idée »), relié à l'idée d'origine, qui reste dans la banque */
+function retainIdea(id,open){const i=S.data.ideas[id];if(!i)return null;const ex=ideaSubject(i);if(ex){if(open)openSheet('video','videos',ex.id);return ex.id}
+  const manga=/manga/i.test(i.category||'');const vid=create('videos',{title:i.text||'',oeuvre:manga?i.text:'',subject:manga?'':i.text,notes:i.notes||'',stage:'idee',complexity:'lourde',stageLog:[{stage:'idee',date:today()}],loops:[],titles:['','',''],filters:{},stats:{},fromIdea:i.id});
+  put('ideas',i.id,{...i,videoId:vid});if(open)openSheet('video','videos',vid);else toast(`« ${i.text||'Idée'} » ajoutée aux sujets retenus`,{label:'Ouvrir',fn:()=>openSheet('video','videos',vid)});return vid}
+function sheetIdeaCfg(){const all=ideas();
+  const block=(kind,title,items,ph)=>`<section><h3>${title}</h3>${items.length?`<div class="cfg-list">${items.map((v,ix)=>{const n=all.filter(i=>(kind==='cat'?i.category:i.status)===v).length;return `<div class="cfg-row"><input id="cfg-${kind}-${ix}" value="${esc(v)}" data-cfg="${kind}" data-old="${esc(v)}" aria-label="Renommer « ${esc(v)} »"><span class="hint">${plural(n,'idée')}</span><button class="pill-mini" data-act="arm" data-next="cfg-del" data-kind="${kind}" data-v="${esc(v)}">Supprimer</button></div>`}).join('')}</div>`:'<p class="empty">Aucun pour l’instant.</p>'}
+    <form class="todo-add" data-form="cfg-add" data-kind="${kind}"><input id="cfg-new-${kind}" placeholder="${ph}" autocomplete="off" aria-label="${ph}"><button class="btn sm" type="submit">Ajouter</button></form></section>`;
+  return sheetTop('Catégories et statuts','Banque d’idées')+`<section><p class="note">Renomme en modifiant le texte : le changement s’applique à toutes les idées concernées. Supprimer laisse ces idées sans catégorie ou sans statut ; elles ne sont pas effacées.</p></section>
+  ${block('cat','Catégories',ideaCats(),'Nouvelle catégorie')}${block('st','Statuts',ideaStatuses(),'Nouveau statut (ex. À revoir)')}`}
+function cfgRename(kind,old,nv){const cats=[...ideaCats()],sts=[...ideaStatuses()],list=kind==='cat'?cats:sts,f=kind==='cat'?'category':'status';
+  if(!nv||nv===old){renderSheet();return}const merge=list.includes(nv);const ix=list.indexOf(old);if(ix<0){renderSheet();return}
+  if(merge)list.splice(ix,1);else list[ix]=nv;saveIdeaCfg(cats,sts);let n=0;for(const i of ideas())if((i[f]||'')===old){put('ideas',i.id,{...i,[f]:nv});n++}
+  if(kind==='cat'&&S.ideaCat===old)S.ideaCat=nv;if(kind==='st'&&S.ideaF.status===old)S.ideaF={...S.ideaF,status:nv};saveUi();
+  toast(`${merge?'Fusionné avec':'Renommé en'} « ${nv} »${n?` · ${plural(n,'idée')}`:''}`);renderSheet()}
 function viewStats(){
   const pub=videos().filter(v=>v.stage==='publie').sort((a,b)=>(b.publishDate||'').localeCompare(a.publishDate||''));
   if(!pub.length)return `<p class="empty" style="margin-top:20px">Les statistiques apparaissent dès qu'une vidéo passe à « Publiée ».</p>`;
@@ -1824,6 +1843,9 @@ function viewSettings(){
       ${templates().length?`<div class="list">${templates().map(t=>`<button class="row" data-act="edit-template" data-id="${t.id}">${av(t.icon,idColor(t.identityId),'sm',t.name)}<span class="m"><span class="t">${esc(t.name||'Modèle sans nom')}</span><span class="s">${plural((t.items||[]).length,'preuve')}${t.video?' · modèle vidéo':''}</span></span><span></span></button>`).join('')}</div>`:'<p class="empty">Aucun modèle. Ouvre un objectif et touche « Enregistrer comme modèle ».</p>'}
       <p class="hint" style="margin-top:8px">Utilise un modèle avec « + Objectif » sous une identité, ou depuis la fiche d’une vidéo du Studio.</p>
     </section>
+    <section class="sec"><div class="sec-h"><h2>Banque d’idées</h2><button class="act" data-act="idea-cfg">Modifier</button></div>
+      <p class="note">Catégories : ${esc(ideaCats().join(', ')||'aucune')}.</p><p class="note">Statuts : ${esc(ideaStatuses().join(', ')||'aucun')}.</p>
+    </section>
     <section class="sec" id="saved-weeks"><div class="sec-h"><h2>Semaines sauvegardées <small class="muted">${savedWeeks().length}</small></h2></div>
       <p class="hint">Chaque semaine clôturée dans la Revue, ou sauvegardée automatiquement le lundi. Touche une semaine pour rouvrir sa revue.</p>
       ${(sw=>sw.length?`<div class="list">${(S.histAll?sw:sw.slice(0,12)).map(savedRow).join('')}</div>${!S.histAll&&sw.length>12?`<div style="margin-top:10px"><button class="btn-sec" data-act="hist-all">Afficher les ${sw.length-12} semaines précédentes</button></div>`:''}`:'<p class="empty">Aucune semaine sauvegardée pour l’instant. Clôture ta semaine en bas de la Revue.</p>')(savedWeeks())}
@@ -1853,7 +1875,7 @@ function freqEditor(h){const f=freqOf(h);const days=Array.isArray(h.days)?h.days
   ${f==='days'?`<div class="days">${DAYS.map((d,i)=>`<button data-act="habit-day" data-id="${h.id}" data-d="${i}" aria-pressed="${days.includes(i)}">${d}</button>`).join('')}</div>`:''}`}
 function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
   $('#sheet-panel').classList.toggle('is-focus',s.kind==='focus');
-  const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry,focus:sheetFocus,morning:sheetMorning,'prio-link':sheetPrioLink}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;if(s.kind==='focus'&&!fzTimer)fzTimer=setInterval(fzTick,1000);return}
+  const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry,focus:sheetFocus,morning:sheetMorning,'prio-link':sheetPrioLink,'idea-cfg':sheetIdeaCfg}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;if(s.kind==='focus'&&!fzTimer)fzTimer=setInterval(fzTick,1000);return}
   const fn={abandon:sheetAbandon,hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
@@ -1893,7 +1915,6 @@ function sheetObjective(id){const o=S.data.objectives[id];const vids=videos().fi
   ${F('objectives',id,'title','Objectif',{ph:'Vidéo Karaba'})}
   <div class="two">${F('objectives',id,'identityId','Identité',{options:idOptions()})}${F('objectives',id,'quarter','Trimestre',{options:quarterOptions()})}</div>
   ${F('objectives',id,'videoId','Vidéo liée (facultatif)',{options:[['','— Aucune —'],...vids.map(v=>[v.id,v.title||'Sans titre'])],hint:'Ajoute un raccourci vers la fiche de la vidéo dans le Studio.'})}</section>
-  ${resultEditor(o)}
   <section><h3>Preuves</h3><div class="list">${krsOf(id).map(k=>`<button class="row" data-act="edit-kr" data-id="${k.id}">${av(krIcon(k),idColor(o.identityId),'sm',krTitle(k))}<span class="m"><span class="t">${esc(krTitle(k))}</span><span class="s">${quarterSub(k)}</span></span><span class="r"><b>${pctS(krProgress(k))}</b></span></button>`).join('')}</div>${addBtn('new-kr','Ajouter une preuve',`data-id="${id}"`)}</section>
   <section><div><button class="btn-sec" data-act="save-template" data-id="${id}">Enregistrer comme modèle</button></div></section>
   ${delBtn('del-objective',id,'Supprimer l’objectif et ses preuves')}`}
@@ -1989,13 +2010,15 @@ function sheetVideo(id){const v=S.data.videos[id];const p=plan(v);const loops=v.
   ${F('videos',id,'length','Durée réelle',{ph:'42:01'})}</section>
   <section><h3>Notes</h3>${F('videos',id,'notes','Notes',{area:1,rows:4})}</section>
   ${delBtn('del-video',id,'Supprimer cette vidéo')}`}
+const withCur=(l,cur)=>cur&&!l.includes(cur)?[...l,cur]:l;
 function sheetIdea(id){const sc=[['','—'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5']];
   return sheetTop('Idée','Banque d’idées')+`<section>${F('ideas',id,'text','Idée',{area:1,rows:2})}
-  <div class="two">${F('ideas',id,'category','Catégorie',{options:[...new Set(['Manga','Question philo','Benchmark / inspiration',...ideas().map(x=>x.category).filter(Boolean)])].map(c=>[c,c])})}${F('ideas',id,'status','Statut',{options:[['',"—"],['Lu/Vu','Lu / vu'],['À poursuivre','À poursuivre'],['Pas lu/Pas vu','Pas lu / pas vu']]})}</div>
+  <div class="two">${F('ideas',id,'category','Catégorie',{options:[['','Sans catégorie'],...withCur(ideaCats(),S.data.ideas[id].category).map(c=>[c,c])]})}${F('ideas',id,'status','Statut',{options:[['','—'],...withCur(ideaStatuses(),S.data.ideas[id].status).map(x=>[x,x])]})}</div>
+  <div><button class="linkish" data-act="idea-cfg">Gérer les catégories et les statuts</button></div>
   ${F('ideas',id,'tier','Tier',{options:[['','—'],['S','S'],['A','A'],['B','B'],['C','C']]})}
   <div class="form-grid">${F('ideas',id,'potentiel','Potentiel',{options:sc})}${F('ideas',id,'envie','Envie',{options:sc})}${F('ideas',id,'effort','Effort',{options:sc})}</div>
   ${F('ideas',id,'notes','Notes',{area:1,rows:4})}
-  <div><button class="btn sm" data-act="idea-to-video" data-id="${id}">Transformer en vidéo</button></div></section>
+  <div>${(v=>v?`<p class="hint" style="margin-bottom:8px">Cette idée est un sujet retenu du Studio.</p><button class="btn-sec" data-act="edit-video" data-id="${v.id}">Ouvrir le sujet</button>`:`<button class="btn sm" data-act="idea-retain" data-id="${id}" data-open="1">Retenir comme sujet</button>`)(ideaSubject(S.data.ideas[id]))}</div></section>
   ${delBtn('del-idea',id,'Supprimer cette idée')}`}
 
 /* ---------- Modèles d'objectif ---------- */
@@ -2078,15 +2101,14 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   let doc=JSON.parse(JSON.stringify(clean(base)));setPath(doc,path,v);doc.updatedAt=nowIso();
   if(coll==='videos'&&path==='stage'&&base.stage!==v){doc.stageLog=[...(base.stageLog||[]),{stage:v,date:today()}];if(v==='publie'&&(!doc.publishDate||doc.publishDate>today()))doc.publishDate=today()}
   if(coll==='krs'&&path==='current')doc=withHistory(doc);
-  if(coll==='objectives'&&path==='resDone')doc.resDoneAt=v?today():null;
   if(coll==='habits'&&path==='identityId'&&v!==base.identityId)doc.identitySince=today();
   if(coll==='objectives'&&path==='videoId'&&v){const vid=S.data.videos[v];const t=S.data.templates[base.fromTemplate];const plain=(t&&t.objTitle)||'Vidéo';if(vid&&(!base.title||base.title.trim()===plain))doc.title=`${plain} ${vid.title||''}`.trim()}
   if(coll==='krs'&&path==='done')doc.doneAt=v?today():null;
   if(coll==='krs'&&path==='week'&&base.week&&v!==base.week&&!base.done)doc.reschedules=[...(base.reschedules||[]),{from:base.week,to:v||null,at:today()}];
   put(coll,id,doc);
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
-  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled','week','objectiveId','min','max'].includes(path)||/^remaining\./.test(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
-document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.vstage){setStage(el.dataset.vstage,el.value);return}if(el.dataset&&el.dataset.bind)bindChange(el)});
+  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','metricId','minEnabled','week','objectiveId','min','max'].includes(path)||/^remaining\./.test(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
+document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.vstage){setStage(el.dataset.vstage,el.value);return}if(el.dataset&&el.dataset.ifilter){S.ideaF={...S.ideaF,[el.dataset.ifilter]:el.value};saveUi();renderMain(true);return}if(el.dataset&&el.dataset.cfg){cfgRename(el.dataset.cfg,el.dataset.old,el.value.trim());return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.fold)S.fold[el.dataset.fold]=el.open},true);
 /* Téléphone : la barre du haut est transparente sur l'image, puis devient opaque dès que la page défile */
 window.addEventListener('scroll',()=>{const m=$('.mtop');if(m)m.classList.toggle('solid',window.scrollY>4)},{passive:true});
@@ -2104,6 +2126,8 @@ document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty
     const sp=val('spent');if(sp!==''&&!(+sp>=0)){toast('Temps passé invalide');return}
     const res=applyPrioResult(t,x,{qty:val('qty'),ms:!!(el.ms&&el.ms.checked&&!el.ms.disabled),hab:val('hab'),delta:val('delta'),sign:val('sign')||'1',val:val('val'),div:val('div')||'0'});if(!res)return;
     finishPrio(t,x,sp===''?null:Math.round(+sp),res);fzSet(null);S.focusEnd=false;dismissSheet();return}
+  if(f.dataset.form==='cfg-add'){e.preventDefault();const kind=f.dataset.kind,inp=f.querySelector('input'),v=inp.value.trim();if(!v)return;const cats=[...ideaCats()],sts=[...ideaStatuses()],l=kind==='cat'?cats:sts;
+    if(l.some(x=>x.toLowerCase()===v.toLowerCase())){toast(`« ${v} » existe déjà`);return}l.push(v);saveIdeaCfg(cats,sts);renderSheet();const n=document.getElementById('cfg-new-'+kind);if(n)n.focus();return}
   if(f.dataset.form==='carry'){e.preventDefault();const sel=[...f.querySelectorAll('input[name=carry]:checked')].map(x=>x.value.split('|'));if(!sel.length){toast('Sélectionne au moins une tâche');return}carryTasks(sel);dismissSheet();return}
   if(f.dataset.form==='todo'){e.preventDefault();const inp=$('#todo-new');const txt=inp.value.trim();if(!txt)return;const t=S.day||today();saveTodos(t,[...todoItems(t),{id:uid(),text:txt,done:false}]);inp.value='';renderMain(true);const n=$('#todo-new');if(n)n.focus()}});
 document.addEventListener('keydown',e=>{if(e.key==='Tab'&&S.sheet){const p=$('#sheet-panel');const f=[...p.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type=hidden]),select,textarea,[href]')].filter(x=>x.offsetParent!==null);if(f.length){const a=f[0],z=f[f.length-1];if(e.shiftKey&&(document.activeElement===a||document.activeElement===p)){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}}}
@@ -2240,7 +2264,7 @@ const ACT={
     if(v==='pause'&&open<0)pauses.push({from:t,to:null});
     if(v!=='pause'&&open>=0){const end=addDays(t,-1);if(end<pauses[open].from)pauses.splice(open,1);else pauses[open]={...pauses[open],to:end}}
     put('identities',i.id,{...i,status:v,pauses});renderSheet()},
-  'obj-res':a=>{const o=S.data.objectives[a.dataset.id];if(!o)return;put('objectives',o.id,{...o,resType:a.dataset.v});renderSheet()},
+
   'day-sleep':a=>{const t=a.dataset.date||today(),n=+a.dataset.n;setDay(t,{sleep:dayOf(t).sleep===n?null:n});if(S.sheet)renderSheet()},
   'day-mood':a=>{const t=a.dataset.date||today(),v=a.dataset.v;setDay(t,{mood:dayOf(t).mood===v?'':v});if(S.sheet)renderSheet()},
   'qty-step':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;stepQty(k,a.dataset.date||today(),+a.dataset.d,a.dataset.from);if(S.sheet)renderSheet()},
@@ -2268,9 +2292,15 @@ const ACT={
   'stage':a=>{const v=S.data.videos[a.dataset.id];if(!v)return;const i=clamp(stageIdx(v.stage)+(+a.dataset.d),0,STAGES.length-1);setStage(v.id,STAGES[i].k)},
   'loop-add':a=>{const v=S.data.videos[a.dataset.id];if(!v)return;put('videos',v.id,{...v,loops:[...(v.loops||[]),{ctx:'',rev:''}]});renderSheet()},
   'loop-del':a=>{const v=S.data.videos[a.dataset.id];if(!v)return;const l=[...(v.loops||[])];l.splice(+a.dataset.i,1);put('videos',v.id,{...v,loops:l});renderSheet()},
-  'new-idea':()=>{const id=create('ideas',{text:'',category:S.ideaCat!=='Tout'?S.ideaCat:'Question philo',status:'',tier:'',notes:''});openSheet('idea','ideas',id,true)},
+  'new-idea':()=>{const id=create('ideas',{text:'',category:S.ideaCat!=='Tout'?S.ideaCat:(ideaCats()[0]||''),status:'',tier:'',notes:''});openSheet('idea','ideas',id,true)},
+  'new-subject':()=>{const id=create('videos',{title:'',stage:'idee',complexity:'lourde',stageLog:[{stage:'idee',date:today()}],loops:[],titles:['','',''],filters:{},stats:{}});openSheet('video','videos',id,true)},
+  'idea-retain':a=>{retainIdea(a.dataset.id,!!a.dataset.open)},
+  'idea-reset':()=>{S.ideaCat='Tout';S.ideaF={...IDEA_F0};S.ideaQuery='';saveUi();renderMain(true)},
+  'idea-cfg':()=>openSheet('idea-cfg',null,'ideas'),
+  'cfg-del':a=>{const kind=a.dataset.kind,v=a.dataset.v,f=kind==='cat'?'category':'status';const cats=ideaCats().filter(x=>kind!=='cat'||x!==v),sts=ideaStatuses().filter(x=>kind!=='st'||x!==v);saveIdeaCfg(cats,sts);let n=0;for(const i of ideas())if((i[f]||'')===v){put('ideas',i.id,{...i,[f]:''});n++}
+    if(kind==='cat'&&S.ideaCat===v)S.ideaCat='Tout';if(kind==='st'&&S.ideaF.status===v)S.ideaF={...S.ideaF,status:''};saveUi();toast(`« ${v} » supprimé${n?` · ${plural(n,'idée')} ${kind==='cat'?'sans catégorie':'sans statut'}`:''}`);renderSheet()},
   'edit-idea':a=>openSheet('idea','ideas',a.dataset.id),
-  'idea-to-video':a=>{const i=S.data.ideas[a.dataset.id];if(!i)return;const vid=create('videos',{title:i.text||'',oeuvre:i.category==='Manga'?i.text:'',subject:i.category==='Manga'?'':i.text,notes:i.notes||'',stage:'idee',complexity:'lourde',stageLog:[{stage:'idee',date:today()}],loops:[],titles:['','',''],filters:{},stats:{},fromIdea:i.id});put('ideas',i.id,{...i,videoId:vid});openSheet('video','videos',vid);toast('Vidéo créée dans le pipeline')},
+  'idea-to-video':a=>{retainIdea(a.dataset.id,true)},
   'arm':a=>{if(a.dataset.armed){ACT[a.dataset.next](a);return}a.dataset.armed='1';a.textContent='Confirmer la suppression';setTimeout(()=>{if(a.isConnected)delete a.dataset.armed},5000)},
   'del-identity':a=>{const id=a.dataset.id;for(const o of list('objectives').filter(o=>o.identityId===id)){krsOf(o.id).forEach(k=>removeKr(k.id));del('objectives',o.id)}del('identities',id);dropSheet()},
   'del-objective':a=>{krsOf(a.dataset.id).forEach(k=>removeKr(k.id));del('objectives',a.dataset.id);dropSheet()},
