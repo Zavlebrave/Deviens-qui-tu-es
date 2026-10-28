@@ -372,7 +372,13 @@ button.row:hover .t,.row-l:hover .t{text-decoration:underline;text-decoration-co
 .vc-o{font-size:12px;color:var(--muted)}
 .vc-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px}
 .vc-move{display:flex;justify-content:space-between;align-items:center;gap:6px}
-.vc-move .step{width:30px;height:30px;font-size:16px}
+.vc-move .step{width:30px;height:30px;font-size:16px;flex:none}
+.vc-sel{flex:1;min-width:0;height:32px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-size:13px;padding:0 8px}
+.vc-next{font-size:13px;color:var(--fg)}
+.vc-block{font-size:12px;color:var(--warn)}
+.plist{display:none}
+.pcards{display:grid;gap:10px}
+@media (max-width:819px){.kanban{display:none}.plist{display:block}}
 .gantt-wrap{overflow-x:auto;border-radius:20px;background:var(--surface);margin-top:18px}
 .gantt{position:relative;min-width:max-content}
 .g-row{display:flex}
@@ -947,8 +953,15 @@ function plan(v){if(!v.publishDate)return null;const st=settings();const f=st.co
   for(const p of [...PHASES].reverse()){const d=Math.max(1,Math.round((+st.phases[p.k]||0)*f));const start=addDays(end,-d);out[p.k]={start,end};end=start}
   out.packaging={start:out.recherche.start,end:out.ecriture.end};out.start=out.angle.start;return out}
 function deadline(v,p){p=p||plan(v);if(!p)return null;const m={idee:p.angle.start,angle:p.angle.end,recherche:p.recherche.end,ecriture:p.ecriture.end,packaging:p.ecriture.end,voix:p.voix.end,montage:p.montage.end};const d=m[v.stage];return d?addDays(d,-1):null}
+/* F35 : travail restant estimé par phase, en heures ; le temps qui passe ne le réduit pas tout seul */
+const PH_ALL=()=>[...PHASES,{k:'packaging',label:'Titre & miniature'}];
+const phaseDone=(v,k)=>stageIdx(v.stage)>stageIdx(k);
+function remainingHours(v,k){if(v.stage==='publie')return 0;const r=v.remaining||{};if(k)return +r[k]||0;return PH_ALL().reduce((s,ph)=>s+(phaseDone(v,ph.k)?0:(+r[ph.k]||0)),0)}
+/* F36 : « Échéance aujourd'hui » le jour même, puis le retard daté avec les heures restantes estimées */
 function videoStatus(v){if(v.stage==='publie')return{k:'pos',t:'Publiée'};const p=plan(v);if(!p)return{k:'mut',t:'Sans date'};const dl=deadline(v,p);if(!dl)return{k:'mut',t:''};const late=diffDays(dl,today());
-  if(late>0)return{k:'neg',t:`Retard ${late} j`};if(late>-4)return{k:'warn',t:late===0?"Échéance aujourd'hui":`Échéance ${fmtD(dl)}`};return{k:'pos',t:'Dans les temps'}}
+  const rem=remainingHours(v,v.stage)||remainingHours(v);const ph=STAGE_LABEL[v.stage]||'';
+  if(late>0)return{k:'neg',t:`${ph} : ${late} jour${late>1?'s':''} de retard${rem?` · ${fmtN(rem)} h restantes estimées`:''}`};
+  if(late===0)return{k:'warn',t:`Échéance aujourd'hui${rem?` · ${fmtN(rem)} h restantes`:''}`};if(late>-4)return{k:'warn',t:`Échéance le ${fmtD(dl)}`};return{k:'pos',t:'Dans les temps'}}
 function setStage(id,k){const v=S.data.videos[id];if(!v||v.stage===k)return;const n={...v,stage:k,stageLog:[...(v.stageLog||[]),{stage:k,date:today()}],updatedAt:nowIso()};
   if(k==='publie'&&(!n.publishDate||n.publishDate>today()))n.publishDate=today();put('videos',id,n);
   if(k==='publie')toast('Vidéo publiée : tes preuves « vidéos » sont à jour')}
@@ -1349,18 +1362,21 @@ function viewStudio(){
   <section class="stats">${stat('En production',String(prod),'vidéos en cours')}${stat('Sujets retenus',String(videos().filter(v=>v.stage==='idee').length),'dans l’onglet Idées')}${stat('Banque d’idées',String(ideas().length),'idées notées')}</section>
   <div style="margin-top:28px">${pills('studio',S.studio,tabs)}</div>
   ${sub()}`}
-function vCard(v){const st=videoStatus(v),i=stageIdx(v.stage);
+const stageSel=v=>`<select class="vc-sel" data-vstage="${v.id}" aria-label="Changer d’étape : ${esc(v.title||'vidéo')}">${STAGES.map(x=>`<option value="${x.k}" ${x.k===v.stage?'selected':''}>${esc(x.label)}</option>`).join('')}</select>`;
+function vCard(v){const st=videoStatus(v),i=stageIdx(v.stage),dl=v.stage!=='publie'?deadline(v):null,rem=remainingHours(v);
   return `<article class="vcard" draggable="true" data-drag="${v.id}">
   <button class="vc-open" data-act="edit-video" data-id="${v.id}"><span class="vc-t">${esc(v.title||'Sans titre')}</span>${v.oeuvre?`<span class="vc-o">${esc(v.oeuvre)}</span>`:''}</button>
-  <div class="vc-meta">${tag(st)}${v.publishDate&&v.stage!=='publie'?`<span class="muted">${fmtD(v.publishDate)}</span>`:''}${v.stage==='publie'&&v.stats&&v.stats.views?`<span class="muted">${fmtN(v.stats.views)} vues</span>`:''}</div>
-  <div class="vc-move">${i>1?`<button class="step" data-act="stage" data-id="${v.id}" data-d="-1" aria-label="Revenir à ${esc(STAGES[i-1].label)}">‹</button>`:'<span></span>'}<span class="faint sm">${v.complexity?esc(CPLX[v.complexity]):''}</span>${i<STAGES.length-1?`<button class="step" data-act="stage" data-id="${v.id}" data-d="1" aria-label="Passer à ${esc(STAGES[i+1].label)}">›</button>`:'<span></span>'}</div></article>`}
+  ${v.stage!=='publie'?`<span class="vc-next">${v.nextAction?`→ ${esc(v.nextAction)}`:'<span class="faint">Prochaine action à définir</span>'}</span>`:''}
+  <div class="vc-meta">${tag(st)}${dl?`<span class="muted">avant le ${fmtD(dl)}</span>`:''}${rem?`<span class="muted">${fmtN(rem)} h restantes</span>`:''}${v.stage==='publie'&&v.stats&&v.stats.views?`<span class="muted">${fmtN(v.stats.views)} vues</span>`:''}</div>
+  ${v.blocker&&v.stage!=='publie'?`<span class="vc-block">Blocage : ${esc(v.blocker)}</span>`:''}
+  <div class="vc-move">${i>1?`<button class="step" data-act="stage" data-id="${v.id}" data-d="-1" aria-label="Revenir à ${esc(STAGES[i-1].label)}">‹</button>`:'<span></span>'}${stageSel(v)}${i<STAGES.length-1?`<button class="step" data-act="stage" data-id="${v.id}" data-d="1" aria-label="Passer à ${esc(STAGES[i+1].label)}">›</button>`:'<span></span>'}</div></article>`}
 function viewPipeline(){
   const vs=videos();const y=String(new Date().getFullYear());
-  return `<div class="kanban">${STAGES.filter(s=>s.k!=='idee').map(s=>{let col=vs.filter(v=>v.stage===s.k);
-    if(s.k==='publie')col=col.filter(v=>(v.publishDate||'').startsWith(y));
-    col.sort(s.k==='publie'?(a,b)=>(b.publishDate||'').localeCompare(a.publishDate||''):(a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999')||byCreated(a,b));
-    return `<section class="kcol" data-drop="${s.k}"><div class="kcol-h"><b>${s.label}${s.k==='publie'?` ${y}`:''}</b><span>${col.length}</span></div>${col.map(vCard).join('')}${s.k==='angle'?addBtn('new-video','Ajouter'):''}</section>`}).join('')}</div>
-  <p class="hint">Glisse une carte d'une colonne à l'autre, ou utilise ‹ ›. Les sujets pas encore lancés sont dans l'onglet Idées.</p>`}
+  const cols=STAGES.filter(x=>x.k!=='idee').map(x=>{let col=vs.filter(v=>v.stage===x.k);if(x.k==='publie')col=col.filter(v=>(v.publishDate||'').startsWith(y));
+    col.sort(x.k==='publie'?(a,b)=>(b.publishDate||'').localeCompare(a.publishDate||''):(a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999')||byCreated(a,b));return{x,col}});
+  return `<div class="kanban">${cols.map(({x,col})=>`<section class="kcol" data-drop="${x.k}"><div class="kcol-h"><b>${x.label}${x.k==='publie'?` ${y}`:''}</b><span>${col.length}</span></div>${col.map(vCard).join('')}${x.k==='angle'?addBtn('new-video','Ajouter'):''}</section>`).join('')}</div>
+  <div class="plist">${cols.filter(({col})=>col.length).map(({x,col})=>`<section class="sec"><div class="sec-h"><h2>${x.label}${x.k==='publie'?` ${y}`:''}</h2><span class="muted">${col.length}</span></div><div class="pcards">${col.map(vCard).join('')}</div></section>`).join('')||'<p class="empty">Aucune vidéo en production.</p>'}${addBtn('new-video','Nouvelle vidéo')}</div>
+  <p class="hint">Change l’étape d’une vidéo avec la liste de sa carte, ‹ › ou, sur ordinateur, en la glissant d’une colonne à l’autre. Revenir en arrière ne supprime rien. Les sujets pas encore lancés sont dans l’onglet Idées.</p>`}
 function viewGantt(){
   const t=today(),y=new Date().getFullYear(),Y0=`${y}-01-01`,Y1=`${y}-12-31`;
   const rows=videos().filter(v=>v.publishDate&&v.publishDate>=Y0&&v.publishDate<=Y1&&(v.stage!=='publie'||v.publishDate>=addDays(t,-45))).map(v=>({v,p:plan(v)})).sort((a,b)=>a.v.publishDate.localeCompare(b.v.publishDate));
@@ -1565,6 +1581,8 @@ function sheetVideo(id){const v=S.data.videos[id];const p=plan(v);const loops=v.
   ${F('videos',id,'refs','Références',{area:1,rows:3,ph:'Livres, vidéos, articles…'})}
   ${(()=>{const o=list('objectives').find(x=>x.videoId===id&&x.quarter===qKey(today()));const t=videoTemplate();return o?`<div><button class="btn-sec" data-act="edit-objective" data-id="${o.id}">Voir l’objectif « ${esc(o.title)} »</button></div>`:t?`<div><button class="btn-sec" data-act="video-objective" data-id="${id}">Créer l’objectif hebdo (modèle « ${esc(t.name)} »)</button></div>`:''})()}</section>
   <section><h3>Rétroplanning <small>${esc(CPLX[v.complexity||'lourde'])} · ${tag(videoStatus(v))}</small></h3>${planHtml}</section>
+  <section><h3>Travail restant estimé <small>${fmtN(remainingHours(v))} h au total</small></h3><p class="hint" style="margin:4px 0 10px">Ajuste les heures restantes de chaque phase quand tu avances : le temps qui passe ne les réduit pas, et une nouvelle estimation ne repousse pas l’échéance.</p>
+  <div class="form-grid">${PH_ALL().map(ph=>{const done=phaseDone(v,ph.k),val=(v.remaining||{})[ph.k];return `<label class="field"><span>${esc(ph.label)}${done?' · terminée':''}</span><input id="rem-${id}-${ph.k}" type="number" min="0" step="0.5" inputmode="decimal" data-bind="videos:${id}:remaining.${ph.k}" data-type="number" value="${val??''}" placeholder="heures">${done&&+val>0?'<span class="hint tone-warn">Phase terminée : remets ce reste à 0, ou corrige l’étape.</span>':''}</label>`}).join('')}</div></section>
   <section><h3>Angle d'attaque <small>verrouillé avant d'écrire</small></h3>
   ${F('videos',id,'subject','Sujet (1 phrase)',{area:1,rows:2})}
   ${F('videos',id,'angle','Angle d’attaque, formulé comme un paradoxe',{area:1,rows:2,hint:'Le titre peut changer, l’angle non.'})}
@@ -1676,8 +1694,8 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   if(coll==='krs'&&path==='week'&&base.week&&v!==base.week&&!base.done)doc.reschedules=[...(base.reschedules||[]),{from:base.week,to:v||null,at:today()}];
   put(coll,id,doc);
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
-  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled','week','objectiveId','min','max'].includes(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
-document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.bind)bindChange(el)});
+  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled','week','objectiveId','min','max'].includes(path)||/^remaining\./.test(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
+document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.vstage){setStage(el.dataset.vstage,el.value);return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.morning)S.mOpen={d:el.dataset.morning,open:el.open}},true);
 /* Les textes s'enregistrent pendant la saisie (brouillon conservé même si l'app est fermée avant de quitter le champ) */
 const bindT={};
