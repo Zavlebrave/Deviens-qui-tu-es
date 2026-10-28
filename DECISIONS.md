@@ -18,7 +18,7 @@ Ces choix restent à confirmer par Ivan : une décision changée se met à jour 
 | D05 | Une identité en pause ne crée aucune attente pour toute semaine qui chevauche une période de pause. Rien n'est supprimé ni décalé. Les pauses sont datées (`pauses`). | Identités | Lot B |
 | D06 | Sans objet depuis le 28 octobre : une habitude n'est plus rattachée à une identité. Elle est soit un suivi indépendant, soit la preuve d'un objectif. Le champ `identityId` d'une ancienne habitude d'entretien reste stocké mais n'est plus lu. | Habitudes, Identités | Retrait des habitudes d'entretien |
 | D07 | Un minimum ne compte pas comme cible atteinte : aucun taux de 50 % n'est inventé pour une habitude binaire. Il préserve la série et l'incrémente, avec un historique distinct (`mins`). En hebdomadaire, une semaine est continue si cibles + minimums atteignent le quota. | Habitudes, Aujourd'hui | T21, T24 |
-| D08 | Au plus une cible par jour et par habitude. Une justification peut être ajoutée ou corrigée après coup, et la série est recalculée depuis les faits. | Habitudes | T24, T25 |
+| D08 | Au plus une cible par jour et par habitude. La série est recalculée depuis les faits. Les justifications d'absence sont retirées depuis le 29 octobre (voir plus bas) : un jour prévu manqué interrompt la série. | Habitudes | T24, T25 |
 | D09 | Reprendre une tâche la déplace avec le même identifiant et garde sa date d'origine (`from`). Aucune copie. | Aujourd'hui | T03, T04 |
 | D10 | Le fuseau du compte (Réglages, Europe/Paris par défaut) fixe la date métier. Un changement vaut pour l'avenir ; le passé n'est pas déplacé. | Réglages | T47 |
 | D11 | Le rang League of Legends garde son ordre explicite (Fer IV = 0 … Challenger = 30). | Progrès | Lot F |
@@ -132,12 +132,34 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Modèles d'objectif** : un ancien élément de type Habitude n'est plus recréé quand on applique le modèle.
 - **Revue** : en retard sur le trimestre, « Mets l'accent sur » ne cite que des preuves, jamais des habitudes.
 
+## Justifications retirées, « À améliorer » par catégorie, Repartir de zéro (29 octobre 2026)
+
+- **Justifications retirées** : plus de liste « À justifier », de motif (maladie, travail) ni de série gelée.
+  - Un jour prévu non fait reste marqué ✕ « manqué » dans le tableau, dans la Revue et dans Aujourd'hui (« Non réalisé »).
+  - Un manqué interrompt la série.
+  - La pastille « N à justifier » d'Aujourd'hui disparaît.
+  - Les anciennes justifications ne sont plus lues ; la remise à zéro les efface.
+- **« À améliorer » par catégorie** : le retard sur le trimestre tient en une ligne. Les pistes sont ensuite regroupées en lignes repliées :
+  - preuves à rattraper (ou à reprendre la semaine suivante) ;
+  - étapes à finir (ou à replanifier) ;
+  - habitudes à tenir.
+
+  Chaque ligne affiche son compte et ses noms. La déplier montre le détail de chaque piste avec « + Priorité ». L'état replié ou déplié est mémorisé sur l'appareil.
+- **Repartir de zéro** (Réglages) : une confirmation indique la date de départ (aujourd'hui), ce qui est gardé et ce qui est remis à zéro. L'app enregistre ensuite une sauvegarde complète : un fichier JSON, et une copie sur l'appareil, restaurable depuis « Tes données ». Puis elle remet à zéro tout ce qui a été saisi avant aujourd'hui.
+  - **Remis à zéro** : cases d'habitudes et quantités, tâches et matins des jours précédents, revues et semaines sauvegardées, cibles hebdomadaires figées, anciennes justifications.
+  - **Preuves** : quantités à 0, étapes décochées, historique de replanification effacé ; titres, cibles et semaines prévues gardés.
+  - **Indicateurs** : seule la dernière mesure reste, datée du jour de départ.
+  - **Gardés** : identités, objectifs, preuves et cibles, habitudes et leurs réglages, Studio, banque d'idées, modèles et réglages. Ce qui a été saisi le jour même est gardé aussi.
+  - **Date de départ** : enregistrée dans les réglages. Avant elle, aucune habitude n'est attendue ni manquée. Le rythme attendu des preuves démarre ce jour-là, sans retard au départ, et les semaines précédentes ne sont pas sauvegardées automatiquement.
+  - La remise à zéro est un bouton plutôt qu'une action automatique : elle part du compte connecté sur ton appareil, au moment choisi, avec la sauvegarde téléchargée sur cet appareil.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Justifications retirées, « À améliorer » par catégorie, Repartir de zéro** : 28 vérifications automatisées, toutes réussies. Elles couvrent le manqué toujours marqué, la série interrompue, les catégories repliées et « + Priorité ». Pour la remise à zéro : configuration gardée, saisies du jour gardées, preuves à zéro, dernière mesure, absence de retard au départ, sauvegarde, puis restauration complète.
 - **Type de preuve « Habitude » retiré** : 17 vérifications automatisées (migration avec historique intact, priorité du jour convertie, fiches, « Gérer », modèles, Identités), toutes réussies. Le parcours en ligne simulé confirme la suppression côté serveur (22 → 18 preuves).
 - **Habitudes en un geste, quantités et tableau compact** : 82 vérifications automatisées (41 sur ordinateur, 41 sur téléphone), plus 5 vérifications contre le Firebase simulé (quantité envoyée, modifiée, effacée, reçue d'un autre appareil). Toutes réussies.
 - **Aujourd'hui, Revue et habitudes sans identité** : 28 vérifications automatisées, toutes réussies.
