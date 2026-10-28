@@ -61,6 +61,14 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Semaines sauvegardées** : la liste est dans les Réglages et contient aussi la semaine qui vient d'être clôturée. La Revue y renvoie, et la clôture le rappelle avec un bouton « Voir ».
 - **Aujourd'hui** : cartes Ma priorité, Mon état du matin, Mes habitudes, Mes tâches, Studio, Mes 3 priorités de la semaine et Engagements tenus. Pour une habitude avec version minimale, la barre montre deux paliers (minimum, puis cible) et non un pourcentage (D07).
 
+## Identités et pictogrammes (28 octobre 2026)
+
+- **Identités repliables** : chaque identité est une carte qui se replie. Repliée, elle montre son pictogramme, son nom, sa phrase et le taux de la semaine (« 2 / 4 tenus »). « Tout déplier » et « Tout replier » agissent sur toutes. L'état est mémorisé sur l'appareil.
+- **Objectifs** : chacun se replie aussi. Ses liens (« + Preuve », « Modifier l'objectif », « Fiche vidéo ») sont regroupés en bas.
+- **Preuves compactes** : une ligne par preuve sur ordinateur (nom, détail, barre, valeur, contrôles), deux sur téléphone.
+- **Étapes hors période** : en vue Semaine, les étapes à planifier, prévues plus tard ou déjà faites sont rangées dans « Autres étapes », replié par défaut. En vue Trimestre, les étapes faites sont rangées de la même façon.
+- **Pictogrammes** : 65 pictogrammes au trait, dans le style des maquettes, colorés par l'identité sur une pastille teintée, répartis en 5 thèmes. Les emojis déjà enregistrés s'affichent avec leur équivalent (🥊 → gant, 🎬 → clap, 📚 → livre) sans modifier les données ; un emoji sans équivalent reste affiché tel quel.
+
 ## Banque d'idées (28 octobre 2026)
 
 - **Filtres** : catégorie, statut, tier, idée déjà retenue ou non, et tri (score, tier, A → Z, plus récentes). Les filtres actifs sont mis en évidence, et « Réinitialiser » remet tout.
@@ -75,6 +83,7 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Identités et pictogrammes** : 22 vérifications automatisées, toutes réussies.
 - **Résultats retirés et banque d'idées** : 27 vérifications automatisées, toutes réussies.
 - **Priorité liée et semaines sauvegardées** : 32 vérifications automatisées, toutes réussies (quantité, Elo gagné ou perdu, division LoL, habitude au minimum, Pas encore, Rouvrir, Revue, clôture et Réglages, téléphone).
 - **Refonte « Voyageur »** : 40 vérifications automatisées, toutes réussies.

@@ -823,6 +823,84 @@ a.btn-sec{text-decoration:none}
 .cfg-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .cfg-row input{height:42px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2);padding:0 12px;min-width:0}
 @media (max-width:560px){.ifilters .fsel{flex:1 1 calc(50% - 8px)}.ifilters .fsel select{width:100%}}
+.av.pic{color:color-mix(in srgb,var(--c) 82%,#fff);background:color-mix(in srgb,var(--c) 18%,var(--surface))}
+.av.pic svg{width:52%;height:52%}
+.av.xs{width:30px;height:30px;font-size:15px}
+.pi{display:inline-grid;color:color-mix(in srgb,var(--c) 82%,#fff);vertical-align:-4px}.pi svg{width:19px;height:19px}
+.picker{max-height:300px;overflow-y:auto;padding:2px 4px 2px 2px;border-radius:12px}
+.pk-g{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:10px 0 6px}
+.pk-g:first-child{margin-top:0}
+.icons.pk button{display:grid;place-items:center;color:var(--muted);background:var(--surface-2);border:1px solid var(--line)}
+.icons.pk button svg{width:21px;height:21px}
+.icons.pk button:hover{color:var(--fg)}
+.icons.pk button[aria-pressed="true"]{color:var(--accent-2);background:var(--accent-bg);box-shadow:inset 0 0 0 2px var(--accent)}
+.pk-emo{display:flex;align-items:center;gap:10px;margin-top:10px}
+.pk-emo input{width:84px;height:40px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2);text-align:center;font-size:18px}
+.idc-h{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:30px 2px 4px}
+.idc-h h2{font-size:22px;font-weight:600}
+.idc{padding:0;margin-top:12px}
+details.idc[open]>summary{margin-bottom:0}
+.idc>summary{list-style:none;display:grid;grid-template-columns:auto minmax(0,1fr) auto 20px;gap:14px;align-items:center;padding:16px 20px;cursor:pointer;border-radius:18px}
+.idc>summary::-webkit-details-marker,.ob>summary::-webkit-details-marker,.later>summary::-webkit-details-marker{display:none}
+.idc>summary:hover .nm{color:#fff}
+.idc>summary .av{width:50px;height:50px}
+.idc-m{display:flex;flex-direction:column;min-width:0;gap:2px}
+.nm{font-size:19px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stl{font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idc-r{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:14px;white-space:nowrap}
+.idc-r b{font-weight:600}
+.idc[open]>summary .chev,.ob[open]>summary .chev,.later[open]>summary .chev{transform:rotate(180deg)}
+.idc-b{padding:0 20px 18px;border-top:1px solid var(--line)}
+.idc-top{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:12px 0 2px}
+.idc-top .id-sum{margin:0;font-size:14px}
+.id-vis{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.5}
+.id-vis b{color:var(--fg);font-weight:600;margin-right:4px}
+.ob{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:#12171F}
+.ob>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-radius:14px}
+.ob-t{font-weight:600;font-size:15.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ob-b{padding:0 14px 6px}
+.ob-e{padding:4px 0 8px}
+.ob-f{display:flex;gap:4px 16px;flex-wrap:wrap;padding:6px 0 4px;border-top:1px solid var(--line)}
+.add-l{display:inline-flex;align-items:center;gap:6px;color:var(--accent-2);font-size:14px;font-weight:500;min-height:34px}
+.add-l svg{width:14px;height:14px}
+.add-l:hover{color:var(--fg)}
+.idc-add{display:flex;gap:4px 18px;flex-wrap:wrap;margin-top:12px}
+.later{border-top:1px solid var(--line)}
+.later>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 0;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted)}
+.later>summary .hint{font-weight:400;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr{display:grid;grid-template-columns:minmax(0,1fr) minmax(56px,130px) minmax(84px,auto) auto;grid-template-areas:"m b v c";gap:4px 14px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.ob-b>.pr:first-child{border-top:0}
+.pr-m{grid-area:m;display:flex;align-items:center;gap:12px;min-width:0;text-align:left}
+.pr-m .av{width:34px;height:34px;font-size:16px}
+.pr-m .m{display:flex;flex-direction:column;min-width:0}
+.pr-m .t{font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-m .s{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-m:hover .t{text-decoration:underline;text-decoration-color:var(--faint);text-underline-offset:3px}
+.pr-b{grid-area:b}
+.pr-b .bar{height:5px}
+.pr-v{grid-area:v;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;white-space:nowrap}
+.pr-v b{font-size:14.5px;font-weight:600}
+.pr-v span{font-size:12px}
+.pr-c{grid-area:c;display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.pr-c .step{width:32px;height:32px}
+.pr-c .hcheck{width:26px;height:26px}
+.pr-c .pill-mini{height:28px}
+.pr.faded{opacity:.55}
+.pr-f{grid-column:1/-1;margin:6px 0 4px!important}
+@media (max-width:640px){
+  .idc>summary{padding:14px 16px;gap:2px 12px;grid-template-columns:auto minmax(0,1fr) 20px;grid-template-areas:"av m c" "av r c"}
+  .idc>summary>.av{grid-area:av}.idc-m{grid-area:m}.idc>summary>.chev{grid-area:c}
+  .idc-r{grid-area:r;flex-direction:row;align-items:baseline;gap:8px;font-size:13px}
+  .idc>summary .av{width:44px;height:44px}
+  .nm{font-size:17px}
+  .idc-b{padding:0 14px 14px}
+  .ob>summary{padding:10px 12px}
+  .ob-b{padding:0 12px 4px}
+  .pr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"m v" "b c";gap:6px 10px}
+  .pr-b{padding-left:46px;align-self:center}
+  .pr-b:empty{display:none}
+  .pr-c{grid-column:2}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -934,8 +1012,8 @@ const S={
   tab:'today', day:null, quarter:qKey(today()), habitWeek:monday(today()), reviewWeek:monday(today()),
   okrMode:'week', week:monday(today()), qtyOpen:null, studio:'pipeline', ideaCat:'Tout', ideaF:{status:'',tier:'',subj:'',sort:'score'}, ideaQuery:'', allIdeas:false, range:{okr:'q',habits:'m',progress:'t'}, sheet:null, pendingImport:null, fold:{}
 };
-try{const v=JSON.parse(localStorage.getItem('dqte:ui')||'{}');if(v.studio)S.studio=v.studio;if(v.ideaCat!=null)S.ideaCat=v.ideaCat;if(v.ideaF)S.ideaF={...S.ideaF,...v.ideaF};if(v.range)S.range={...S.range,...v.range};if(v.okrMode)S.okrMode=v.okrMode}catch(e){}
-function saveUi(){try{localStorage.setItem('dqte:ui',JSON.stringify({studio:S.studio,ideaCat:S.ideaCat,ideaF:S.ideaF,range:S.range,okrMode:S.okrMode}))}catch(e){}}
+try{const v=JSON.parse(localStorage.getItem('dqte:ui')||'{}');if(v.studio)S.studio=v.studio;if(v.ideaCat!=null)S.ideaCat=v.ideaCat;if(v.ideaF)S.ideaF={...S.ideaF,...v.ideaF};if(v.range)S.range={...S.range,...v.range};if(v.okrMode)S.okrMode=v.okrMode;if(v.fold&&typeof v.fold==='object')S.fold={...v.fold}}catch(e){}
+function saveUi(){try{localStorage.setItem('dqte:ui',JSON.stringify({studio:S.studio,ideaCat:S.ideaCat,ideaF:S.ideaF,range:S.range,okrMode:S.okrMode,fold:S.fold}))}catch(e){}}
 
 /* ---------- Stockage : base en ligne (claude.ai) ou navigateur ---------- */
 let db=null;
@@ -993,7 +1071,95 @@ const proofHabitIds=()=>new Set(list('krs').filter(k=>kindOf(k)==='habit'&&k.hab
 const trackerHabits=()=>{const p=proofHabitIds();return habits().filter(h=>!p.has(h.id))};
 const videos=()=>list('videos');
 const ideas=()=>list('ideas');
-function av(icon,color,cls='',fallback=''){const t=(icon||'').trim();return `<span class="av ${cls} ${t?'':'txt'}" style="--c:${esc(color||'#8E9AAF')}" aria-hidden="true">${t?esc(t):esc((fallback||'·').trim().charAt(0).toUpperCase()||'·')}</span>`}
+/* Pictogrammes au trait, dans le style des maquettes « Voyageur » : tracés 24 × 24, colorés par l'identité sur une pastille teintée.
+   Les emojis déjà enregistrés s'affichent avec le pictogramme équivalent ; un emoji sans équivalent reste tel quel. */
+const PIC_GROUPS=[
+ ['Corps & sport',[
+  ['glove','Boxe','<path d="M17.5 15.5c1-1 1.5-2.4 1.5-4V9a6 6 0 0 0-6-6h-1a5 5 0 0 0-5 5v2.2"/><path d="M7 10.2c-1.7 0-3 1.2-3 2.8 0 1.5 1.2 2.6 3 2.6h4.5c1 0 1.8-.7 1.8-1.7s-.8-1.6-1.8-1.6H9.5"/><path d="M7.5 15.6h10V20a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1z"/><path d="M10 18.3h5"/>'],
+  ['dumbbell','Musculation','<rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><path d="M2.8 10v4M21.2 10v4M8 12h8"/>'],
+  ['pulse','Cardio','<path d="M3 12.5h3.5L9 6.5l4.5 11 2.5-5H21"/>'],
+  ['shoe','Course','<path d="M3.5 17h15.7a1.8 1.8 0 0 0 .4-3.6l-4.4-1-2.4-4.4H9.6l-.7 2.1-3-.6z"/><path d="M3.5 17v2.5h17v-2.3M10.4 10.6l1.5-.9M11.4 12.4l1.5-.9"/>'],
+  ['bike','Vélo','<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="m6 16 3.6-6.5h5.6L18 16M9.6 9.5 8.3 7H6.5M12 16l3.2-6.5"/>'],
+  ['lotus','Méditation','<path d="M12 18.5c-2.6-1.6-3.6-4.2-3.6-6.5S9.9 6.9 12 5c2.1 1.9 3.6 4.7 3.6 7s-1 4.9-3.6 6.5z"/><path d="M12 18.5c-3.2.4-6.6-.8-8.5-3.6 1.4-1.5 3.3-2.2 5-2.2M12 18.5c3.2.4 6.6-.8 8.5-3.6-1.4-1.5-3.3-2.2-5-2.2"/>'],
+  ['heart','Cœur','<path d="M12 20s-7.5-4.4-7.5-10A4.5 4.5 0 0 1 12 7.2 4.5 4.5 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z"/>'],
+  ['drop','Eau','<path d="M12 3.5s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z"/><path d="M9.3 15.2a2.8 2.8 0 0 0 2.4 2.4"/>'],
+  ['apple','Nutrition','<path d="M12 7.6c-1.5-1-3.5-1.3-5-.4-2.6 1.6-2.8 5.6-1.2 8.9 1.2 2.4 3 4.2 4.6 3.6.6-.2 1-.4 1.6-.4s1 .2 1.6.4c1.6.6 3.4-1.2 4.6-3.6 1.6-3.3 1.4-7.3-1.2-8.9-1.5-.9-3.5-.6-5 .4z"/><path d="M12 7.6c0-2 .8-3.4 2.6-4.1"/>'],
+  ['snow','Froid','<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/><path d="m9.6 4.6 2.4 1.9 2.4-1.9M9.6 19.4l2.4-1.9 2.4 1.9"/>'],
+  ['moon','Sommeil','<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/>'],
+  ['sunrise','Matin','<path d="M3.5 18.5h17M7 15a5 5 0 0 1 10 0"/><path d="M12 4.5v3M5.4 8.2l1.8 1.6M18.6 8.2l-1.8 1.6M2.5 15h2M19.5 15h2"/>'],
+  ['pill','Santé','<rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="m9.5 9.5 5 5"/>'],
+  ['scale','Poids','<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 9.6a5.5 5.5 0 0 1 8 0l-2.2 2.2a2.5 2.5 0 0 0-3.6 0z"/>'],
+ ]],
+ ['Création & Studio',[
+  ['clapper','Vidéo','<rect x="3.5" y="9.5" width="17" height="10.5" rx="1.8"/><path d="m3.6 9.4-.5-2.2a1.3 1.3 0 0 1 1-1.6l13.4-3a1.3 1.3 0 0 1 1.6 1l.5 2.2z"/><path d="m8.3 5.2 2.5 3M13.4 4.1l2.5 3"/>'],
+  ['film','Film','<rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 3.5v17M16 3.5v17M4 8h4M4 12h4M4 16h4M16 8h4M16 12h4M16 16h4"/>'],
+  ['pen','Écriture','<path d="M4 20l1-4.5L15.8 4.7a2.1 2.1 0 0 1 3 0l.5.5a2.1 2.1 0 0 1 0 3L8.5 19z"/><path d="M13.6 6.9l3.5 3.5"/>'],
+  ['mic','Voix','<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>'],
+  ['scissors','Montage','<circle cx="6.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/><path d="M8.3 15.7 18 4M15.7 15.7 6 4"/>'],
+  ['image','Miniature','<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4.5 3.5"/>'],
+  ['tag','Titre','<path d="M3.5 12.6V4.5a1 1 0 0 1 1-1h8.1l7.9 7.9a1.5 1.5 0 0 1 0 2.1l-6 6a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8.5" cy="8.5" r="1.5"/>'],
+  ['camera','Photo','<path d="M4 8.5a2 2 0 0 1 2-2h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/>'],
+  ['headphones','Podcast','<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3.5" y="14" width="4" height="6" rx="1.5"/><rect x="16.5" y="14" width="4" height="6" rx="1.5"/>'],
+  ['bulb','Idée','<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2V16h5v-.2c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>'],
+  ['palette','Art','<path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.2 0 1.8-.8 1.8-1.7 0-1.4-1.3-1.8-1.3-3 0-.9.7-1.6 1.6-1.6h2.4a4 4 0 0 0 4-4C20.5 6.8 16.7 3.5 12 3.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7.5" r="1"/><circle cx="14.5" cy="7.5" r="1"/>'],
+  ['music','Musique','<path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'],
+  ['code','Code','<path d="m8.5 7.5-4.5 4.5 4.5 4.5M15.5 7.5l4.5 4.5-4.5 4.5M13.5 5l-3 14"/>'],
+  ['laptop','Ordinateur','<rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M3 18.5h18"/>'],
+ ]],
+ ['Esprit & apprentissage',[
+  ['book','Lecture','<path d="M3.5 5.5c2.6-.9 5.4-.7 8.5 1v13c-3.1-1.7-5.9-1.9-8.5-1z"/><path d="M20.5 5.5c-2.6-.9-5.4-.7-8.5 1v13c3.1-1.7 5.9-1.9 8.5-1z"/>'],
+  ['brain','Mental','<path d="M9 4.5a2.5 2.5 0 0 0-2.5 2.3A2.8 2.8 0 0 0 4.5 10a2.8 2.8 0 0 0 .5 4.3A3 3 0 0 0 8 18.5 2.5 2.5 0 0 0 12 19V5.5A2.4 2.4 0 0 0 9 4.5z"/><path d="M15 4.5a2.5 2.5 0 0 1 2.5 2.3A2.8 2.8 0 0 1 19.5 10a2.8 2.8 0 0 1-.5 4.3 3 3 0 0 1-3 4.2A2.5 2.5 0 0 1 12 19"/><path d="M8.5 9.5c1 0 1.8.8 1.8 1.8M15.5 9.5c-1 0-1.8.8-1.8 1.8"/>'],
+  ['cap','Apprendre','<path d="M2.5 9.5 12 5l9.5 4.5L12 14z"/><path d="M6.5 11.5V16c1.5 1.3 3.3 2 5.5 2s4-.7 5.5-2v-4.5M21.5 9.5v5"/>'],
+  ['globe','Langues','<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.4 3.4 5.2 3.4 8.5s-1.1 6.1-3.4 8.5c-2.3-2.4-3.4-5.2-3.4-8.5S9.7 5.9 12 3.5z"/>'],
+  ['question','Question','<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .9-1 1.6v.6M12 16.9h.01"/>'],
+  ['chess','Échecs','<circle cx="12" cy="6.5" r="2.5"/><path d="M9.5 11h5M10.5 11c0 3-.9 5.1-2.5 6.5h8c-1.6-1.4-2.5-3.5-2.5-6.5M6.5 20.5h11"/>'],
+  ['gamepad','Jeux','<path d="M7.5 8h9a4.5 4.5 0 0 1 4.4 5.4l-.7 3.6a2.4 2.4 0 0 1-4.1 1.2L14 16h-4l-2.1 2.2a2.4 2.4 0 0 1-4.1-1.2l-.7-3.6A4.5 4.5 0 0 1 7.5 8z"/><path d="M8 11v3M6.5 12.5h3M15.5 11.5h.01M17.5 13.5h.01"/>'],
+  ['eye','Observer','<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>'],
+  ['chat','Parole','<path d="M20 11.5c0 4-3.6 7-8 7-1.2 0-2.3-.2-3.3-.6L4 19.5l1.3-3.6A6.7 6.7 0 0 1 4 11.5c0-4 3.6-7 8-7s8 3 8 7z"/>'],
+ ]],
+ ['Travail & argent',[
+  ['rocket','Lancer','<path d="M13.5 15.5 8.5 10.5c2-4.5 5.7-7 11-7.5-.5 5.3-3 9-6 12z"/><path d="M8.5 10.5H5l2.5-3h4M13.5 15.5V19l3-2.5v-4M6.5 15c-1.5.5-2.5 2-2.5 4.5 2.5 0 4-1 4.5-2.5"/><circle cx="15" cy="9" r="1.3"/>'],
+  ['briefcase','Travail','<rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 12.5h17"/>'],
+  ['chart','Croissance','<path d="M4 19.5h16"/><path d="m5.5 15 4-4 3 3 5.5-6"/><path d="M14.5 8H18v3.5"/>'],
+  ['coin','Argent','<circle cx="12" cy="12" r="8.5"/><path d="M14.8 9.2c-.6-.9-1.6-1.4-2.8-1.4-1.6 0-2.8.9-2.8 2.1 0 2.9 5.9 1.4 5.9 4.3 0 1.2-1.3 2.1-3 2.1-1.3 0-2.5-.6-3.1-1.5M12 6.3v1.5M12 16.3v1.5"/>'],
+  ['crown','Leader','<path d="M4 17.5 3 7.5l5 4 4-6 4 6 5-4-1 10z"/><path d="M4.5 20.5h15"/>'],
+  ['calendar','Planning','<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/>'],
+  ['clock','Temps','<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'],
+  ['hourglass','Patience','<path d="M7 3.5h10M7 20.5h10M8 3.5c0 4 2 5.5 4 8.5 2-3 4-4.5 4-8.5M8 20.5c0-4 2-5.5 4-8.5 2 3 4 4.5 4 8.5"/>'],
+  ['check','Tâches','<path d="M10 6.5h10M10 12h10M10 17.5h10"/><path d="m3.5 6.5 1.5 1.5 2.5-2.5M3.5 12l1.5 1.5L7.5 11M3.5 17.5 5 19l2.5-2.5"/>'],
+  ['flag','Jalon','<path d="M5 21V4"/><path d="M5 4.5h11l-2 3.5 2 3.5H5"/>'],
+  ['pin','Épingle','<path d="M9 3.5h6l-1 5 3.5 3.5H6.5L10 8.5z"/><path d="M12 12v8.5"/>'],
+  ['phone','Écrans','<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 17.5h2"/>'],
+ ]],
+ ['Valeurs & vie',[
+  ['target','Objectif','<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>'],
+  ['trophy','Trophée','<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 5.5H5.5v1A3.5 3.5 0 0 0 8.5 10M16 5.5h2.5v1A3.5 3.5 0 0 1 15.5 10M12 13v4M8.5 20.5h7M9.5 20.5c0-2 1.1-3.5 2.5-3.5s2.5 1.5 2.5 3.5"/>'],
+  ['star','Étoile','<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/>'],
+  ['flame','Énergie','<path d="M12 21c-3.6 0-6-2.4-6-5.6 0-3.1 2.2-4.8 3.6-6.6.5 1.4 1.3 2.3 2.4 2.7-.3-3 1-6 3.3-8 .3 2.6 1.5 4.4 2.6 6 1.1 1.5 1.6 3 1.6 4.7 0 3.8-2.9 6.8-7.5 6.8z"/>'],
+  ['bolt','Éclair','<path d="M13.5 3 5.5 13.5H11L10 21l8-10.5h-5.5z"/>'],
+  ['shield','Discipline','<path d="M12 3.5 19 6v5.5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/><path d="m9 12 2 2 4-4"/>'],
+  ['mountain','Défi','<path d="M2.5 19.5 9 8.5l3.5 5.5 2.5-3.5 6.5 9z"/><path d="m7.3 11.4 1.7 1.1 1.6-1.4"/>'],
+  ['compass','Explorer','<circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>'],
+  ['plane','Voyage','<path d="M21 3.5 3 10.5l7 2.5 2.5 7z"/><path d="M21 3.5 10 13"/>'],
+  ['people','Relations','<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8"/><circle cx="16.5" cy="9" r="2.5"/><path d="M16 14.3c2.3 0 4 1.5 4.5 4.2"/>'],
+  ['home','Maison','<path d="M4 10.4 12 4l8 6.4v8.8c0 .7-.6 1.3-1.3 1.3H15v-5.6H9v5.6H5.3c-.7 0-1.3-.6-1.3-1.3z"/>'],
+  ['sprout','Grandir','<path d="M12 20.5V11"/><path d="M12 11c0-3.6-2.6-6-6.5-6 0 3.9 2.5 6 6.5 6zM12 13.5c0-3.3 2.4-5.5 6.5-5.5 0 3.8-2.6 5.5-6.5 5.5z"/>'],
+  ['leaf','Nature','<path d="M5 19c0-8 5-13.5 14.5-14 0 9.5-5.5 14.5-13.5 14.5"/><path d="M5 19 13 11"/>'],
+  ['sun','Soleil','<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>'],
+  ['repeat','Routine','<path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H19"/><path d="m16 3 3 3-3 3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H5"/><path d="m8 21-3-3 3-3"/>'],
+  ['user','Identité','<circle cx="12" cy="8" r="3.7"/><path d="M4.7 20.2c.8-3.7 3.6-5.8 7.3-5.8s6.5 2.1 7.3 5.8"/>'],
+ ]],
+];
+const PIC=Object.fromEntries(PIC_GROUPS.flatMap(([,items])=>items.map(([k,l,d])=>[k,[l,d]])));
+const EMOJI_PIC={'🥊':'glove','🏆':'trophy','🥇':'trophy','💪':'dumbbell','🏋':'dumbbell','🏃':'pulse','👟':'shoe','🚴':'bike','🧘':'lotus','🙏':'lotus','❤':'heart','💧':'drop','🥗':'apple','🍎':'apple','❄':'snow','🥶':'snow','🚿':'snow','😴':'moon','🌙':'moon','🌅':'sunrise','💊':'pill','⚖':'scale',
+  '🎬':'clapper','🎞':'film','✍':'pen','🖊':'pen','📝':'check','🎙':'mic','🎤':'mic','✂':'scissors','🖼':'image','🏷':'tag','📷':'camera','🎧':'headphones','💡':'bulb','🎨':'palette','🎵':'music','🎶':'music','💻':'laptop',
+  '📚':'book','📖':'book','🧠':'brain','🧩':'brain','🎓':'cap','🌍':'globe','❓':'question','♟':'chess','🎮':'gamepad','👁':'eye','🗣':'chat','💬':'chat',
+  '🚀':'rocket','💼':'briefcase','📈':'chart','💰':'coin','💵':'coin','👑':'crown','📅':'calendar','⏰':'clock','⏳':'hourglass','✅':'check','🚩':'flag','📌':'pin','📱':'phone',
+  '🎯':'target','⭐':'star','🌟':'star','🔥':'flame','⚡':'bolt','🛡':'shield','⛰':'mountain','🏔':'mountain','🧭':'compass','✈':'plane','👥':'people','🏠':'home','🌱':'sprout','🍃':'leaf','☀':'sun','🔁':'repeat','👤':'user','😊':'heart'};
+function picKey(icon){const t=String(icon||'').trim();if(!t)return null;if(t.startsWith('i:'))return PIC[t.slice(2)]?t.slice(2):null;return EMOJI_PIC[t.replace(/[\uFE0F\u200D]/g,'')]||null}
+const picSvg=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PIC[k][1]}</svg>`;
+function av(icon,color,cls='',fallback=''){const k=picKey(icon),c=esc(color||'#8E9AAF');if(k)return `<span class="av pic ${cls}" style="--c:${c}" aria-hidden="true">${picSvg(k)}</span>`;const t=String(icon||'').trim();return `<span class="av ${cls} ${t?'':'txt'}" style="--c:${c}" aria-hidden="true">${t?esc(t):esc((fallback||'·').trim().charAt(0).toUpperCase()||'·')}</span>`}
+const picInline=(icon,color)=>{const k=picKey(icon);return k?`<span class="pi" style="--c:${esc(color||'#8E9AAF')}" aria-hidden="true">${picSvg(k)}</span>`:icon?`<span aria-hidden="true">${esc(icon)}</span>`:''};
 
 function krQuarter(kr){if(kr._q)return kr._q;const o=S.data.objectives[kr.objectiveId];return o?o.quarter:qKey(today())}
 function krSpan(kr){const{start,end}=qRange(krQuarter(kr));const c=(kr.createdAt||'').slice(0,10);let s=c&&c>start?c:start;if(s>end)s=start;return{qs:start,s,e:end}}
@@ -1314,7 +1480,7 @@ function prioInfo(t){const d=dayOf(t),p=d.prio;if(!p)return null;const miss={p,m
 function prioCard(t){const x=prioInfo(t),past=t<today();
   if(!x)return `<section class="sec td-prio"><div class="ptop"><p class="kicker">Ma priorité</p></div>${past?'<h2 class="pt dim">Aucune priorité choisie ce jour-là.</h2>':`<h2 class="pt">Quelle action compte le plus aujourd’hui ?</h2><p class="pmeta">Une tâche, une preuve, une habitude ou une action du Studio.</p><div class="pact"><button class="btn btn-go" data-act="prio-pick">Choisir ma priorité</button></div>`}</section>`;
   const i=idOf(x.iid),f=fzGet(),live=f&&f.key===prioKey(t,x.p)&&(f.start||f.acc)?f:null,lk=linkInfo(x.p);
-  const meta=[i&&`${i.icon?`<span aria-hidden="true">${esc(i.icon)}</span> `:''}${esc(i.name||'')}`,x.sub&&esc(x.sub),x.p.dur&&`${x.p.dur} min`].filter(Boolean);
+  const meta=[i&&`${i.icon?picInline(i.icon,i.color)+' ':''}${esc(i.name||'')}`,x.sub&&esc(x.sub),x.p.dur&&`${x.p.dur} min`].filter(Boolean);
   const link=LINKABLE.includes(x.p.kind)&&!x.done&&!x.missing?`<p class="plink"><button class="${lk?'chip lk':'linkish'}" data-act="prio-link-open" data-date="${t}">🔗 ${lk?esc(lk.label):'Lier à une preuve ou un indicateur'}</button></p>`:'';
   const cta=x.missing?'<p class="hint" style="margin-top:10px">L’élément d’origine a été supprimé ou déplacé. Choisis une autre priorité.</p>'
     :x.done?`<div class="pact"><p class="prio-ok">✓ Priorité accomplie${x.p.spent?` en ${fmtMin(x.p.spent)}`:''}</p>${x.p.result?`<p class="pres">${esc(x.p.result)}</p>`:''}<button class="linkish" data-act="prio-reopen" data-date="${t}">Rouvrir</button></div>`
@@ -1360,7 +1526,7 @@ function sheetPrioLink(t){const x=prioInfo(t);if(!x||x.missing)return sheetTop('
   const ps=weekProofs(mon),vid=x.p.kind==='video'?x.p.id:null,sugg=vid?ps.filter(k=>!k.virtual&&(S.data.objectives[k.objectiveId]||{}).videoId===vid):[];
   return sheetTop('Lier à une preuve',esc(x.label))+`<section><p class="note">À la fin de la séance, tu complètes directement ce que tu lies ici : des mots ou des heures, une étape, une habitude, ton Elo ou ton rang.</p></section>
   ${grp('Proposées pour cette vidéo',sugg.map(proof))}
-  ${identities().map(i=>grp(`${i.icon?esc(i.icon)+' ':''}${esc(i.name||'Identité')}`,ps.filter(k=>k.identityId===i.id&&!sugg.includes(k)).map(proof))).join('')}
+  ${identities().map(i=>grp(`${i.icon?picInline(i.icon,i.color)+' ':''}${esc(i.name||'Identité')}`,ps.filter(k=>k.identityId===i.id&&!sugg.includes(k)).map(proof))).join('')}
   ${grp('Indicateurs',metrics().map(m=>{const es=mEntries(m),last=es.length?es[es.length-1][1]:null;return row('metric',m.id,m.icon||'📈',m.name||'Indicateur',last==null?'Aucune mesure':`Dernière mesure : ${mFmt(m,last)}`,'#8C96FF')}))}
   ${cur?`<section><button class="btn-sec" data-act="prio-link-clear" data-date="${t}">Retirer le lien</button></section>`:''}`}
 /* U19 : mode concentration. « Commencer » ouvre une vue réduite à l'action : sa cible, un minuteur facultatif, un lien utile
@@ -1425,7 +1591,7 @@ function sheetFocus(t){const x=prioInfo(t);
 function sheetPrio(t){const mon=monday(t);const items=todoItems(t).filter(i=>!i.done);const hs=habits().filter(h=>visibleOn(h,t)&&t>=hStart(h)&&habitState(h.id,t)!=='target');
   const krs=weekProofs(mon).filter(k=>!k.virtual&&(s=>s!=null&&s<1)(krWeekScore(k,mon)));const wp=weekPriosFor(t).filter(x=>!x.done);
   const vids=videos().filter(v=>v.stage!=='publie'&&v.stage!=='idee').sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999')).slice(0,3);
-  const row=(kind,id,icon,label,sub,extra='')=>`<button class="row" data-act="prio-set" data-kind="${kind}" data-id="${id}" ${extra}>${av(icon,'#8B83FF','sm',label)}<span class="m"><span class="t">${esc(label)}</span>${sub?`<span class="s">${esc(sub)}</span>`:''}</span><span></span></button>`;
+  const row=(kind,id,icon,label,sub,extra='')=>`<button class="row" data-act="prio-set" data-kind="${kind}" data-id="${id}" ${extra}>${av(icon,'#7FA0FF','sm',label)}<span class="m"><span class="t">${esc(label)}</span>${sub?`<span class="s">${esc(sub)}</span>`:''}</span><span></span></button>`;
   const grp=(h,rows)=>rows.length?`<section><h3>${h}</h3><div class="list">${rows.join('')}</div></section>`:'';
   return sheetTop('Priorité du jour',esc(fmtDay(t,true)))+`<section><h3>Une nouvelle tâche</h3><form class="todo-add" data-form="prio-new"><input id="prio-new" placeholder="Ce qui compte le plus aujourd’hui" autocomplete="off" aria-label="Nouvelle tâche prioritaire"><button class="btn sm" type="submit">Choisir</button></form></section>
   ${grp('Tâches du jour',items.map(i=>row('todo',i.id,'📝',i.text,'')))}
@@ -1505,7 +1671,7 @@ function viewOKR(){
     const strip=`<div class="weeks" role="group" aria-label="Semaines de ${qLabel(q)}">${weeksOfQuarter(q).map(m=>{const sc=m>cur?null:weekSummary(m).score;return `<button class="wk ${m===mon?'on':''}" data-act="goto-week" data-mon="${m}" ${m>cur?'disabled':''} aria-label="Semaine ${isoWeek(m).w}"><span>S${isoWeek(m).w}</span><b>${sc==null?'—':pctS(sc)}</b></button>`}).join('')}</div>`;
     top=hero('okr',label,ws.score==null?'—':pctS(ws.score),ws.score==null?'<span class="muted">Aucun engagement prévu</span>':[d1,d2].filter(Boolean).join('<span class="muted">·</span>'))
       +lineChart('okr',{xs:days,act:days.map(d=>d>t?null:weekScoreAt(mon,d)),exp:days.map(d=>weekExpectedAt(mon,d)),fmtX:d=>parse(d).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'short'}),live:mon===cur})
-      +`<p class="hint">La courbe suit ta semaine jour après jour ; les pointillés montrent le rythme attendu selon tes jours prévus (une habitude « X fois par semaine » se juge en fin de semaine). Chaque lundi, tout repart à zéro et la semaine terminée est sauvegardée ici :</p>`+strip;
+      +`<p class="hint">Pointillés : le rythme attendu selon tes jours prévus (une habitude « X fois par semaine » se juge en fin de semaine). Chaque lundi, la semaine repart à zéro ; les semaines passées restent ici :</p>`+strip;
     scoreOf=i=>{const s=ws.per[i.id];return s==null?null:{v:s,d:pw.per[i.id]!=null?s-pw.per[i.id]:null}};
   }else{const sum=qSummary(q),range=S.range.okr;
     if(sum.krs.length){const s=okrSeries(q,range);let y0=0,y1=1;
@@ -1515,9 +1681,9 @@ function viewOKR(){
       top=hero('okr',`Engagements · progression ${qLabel(q)}`,pctS(sum.actual),`${dPts(ch,per)}<span class="muted">·</span>${dPts(sum.actual-sum.expected,`vs attendu (${pctS(sum.expected)})`)}`)+lineChart('okr',{...s,y0,y1})+pills('okr-range',range,[['w','1S'],['m','1M'],['q','Trimestre']]);
     }else top=`<p class="note" style="margin-top:16px">Aucune preuve pour ${qLabel(q)}. Ajoute un objectif sous une identité, puis ses preuves.</p>`;
     scoreOf=i=>{const x=sum.per.find(p=>p.id===i.id);return x&&x.p!=null?{v:x.p,d:x.p-x.e}:null}}
-  const overview=`<section class="sec"><div class="sec-h"><h2>Identités</h2><span class="head-r"><button class="act" data-act="open-templates">Modèles</button><button class="act" data-act="new-identity">Ajouter</button></span></div><div class="list">${ids.map(i=>{const sc=scoreOf(i);const o=objectivesOf(q,i.id)[0];const paused=mode==='week'?idPausedWeek(i.id,mon):i.status==='pause';
-    return `<button class="row" data-act="jump" data-id="${i.id}">${av(i.icon,i.color,'',i.name)}<span class="m"><span class="t">${esc(i.name||'Identité sans nom')}${idBadge(i)}</span><span class="s">${o?esc(objectivesOf(q,i.id).map(x=>x.title||'Objectif').join(' · ')):esc(i.statement||'Aucun objectif ce trimestre')}</span></span><span class="r">${paused?'<span class="muted">En pause</span>':sc==null?'<span class="tone-mut">Aucun engagement prévu</span>':`<b>${mode==='week'?rateHtml(sc.v,mon<cur):pctS(sc.v)}</b>${sc.d!=null?dPts(sc.d):''}`}</span></button>`}).join('')}</div></section>`;
-  return head+top+overview+ids.map(i=>identityBlock(i,q,mode,mon,scoreOf(i))).join('')}
+  const allOpen=ids.every(i=>S.fold['id-'+i.id]);
+  const idsHead=`<div class="idc-h"><h2>Mes identités <small class="muted">${ids.length}</small></h2><span class="head-r"><button class="act" data-act="id-all" data-v="${allOpen?0:1}">${allOpen?'Tout replier':'Tout déplier'}</button><button class="act" data-act="open-templates">Modèles</button><button class="act" data-act="new-identity">+ Identité</button></span></div>`;
+  return head+top+idsHead+ids.map(i=>identityBlock(i,q,mode,mon,scoreOf(i))).join('')}
 const ID_ST={prioritaire:['Prioritaire','prio'],entretenue:['Entretenue','maint'],pause:['En pause','pause']};
 const idBadge=i=>{const st=ID_ST[i.status];return st?`<span class="badge ${st[1]}">${st[0]}</span>`:''};
 /* U21 : ce qui a réellement été fait cette semaine pour l'identité, sans système de points */
@@ -1525,23 +1691,36 @@ const deTitle=t=>/^[aeiouyhàâäéèêëîïôöùûüœæ]/i.test(t)?`d’${t}
 function proofSummary(i,mon){const parts=[];for(const k of weekProofs(mon).filter(k=>k.identityId===i.id)){const v=krWeekValue(k,mon),kind=kindOf(k);if(!(v>0))continue;
     parts.push(kind==='milestone'?krTitle(k):kind==='qty'?`${fmtN(v)}${k.unit?' '+k.unit:''} ${deTitle(krTitle(k))}`:`${fmtN(v)} × ${krTitle(k)}`)}
   return parts.length?`Cette semaine : ${parts.join(', ')}.`:'Aucune preuve encore cette semaine.'}
+/* Une identité = une carte repliable (état mémorisé). Repliée, elle garde l'essentiel : nom, phrase, taux de la semaine. */
 function identityBlock(i,q,mode,mon,sc){
-  const objs=objectivesOf(q,i.id);const beliefs=(i.beliefs||'').split('\n').map(s=>s.trim()).filter(Boolean);const cur=monday(today());
-  const paused=mode==='week'?idPausedWeek(i.id,mon):i.status==='pause';const maint=maintKrs(q).filter(k=>k.identityId===i.id);
-  const rate=paused?'<span class="muted">En pause</span>':sc?`${mode==='week'?rateHtml(sc.v,mon<cur):`<b>${pctS(sc.v)}</b>`} <span class="muted">${mode==='week'?'tenus cette semaine':'du trimestre'}</span>`:'<span class="tone-mut">Aucun engagement prévu</span>';
-  return `<section class="id-sec" id="id-${esc(i.id)}">
-  <div class="id-head">${av(i.icon,i.color,'lg',i.name)}<div><h2>${esc(i.name||'Identité sans nom')}${idBadge(i)}</h2><p class="st">${i.statement?esc(i.statement):'<span class="faint">Écris ta phrase d\'identité</span>'}</p></div><button class="btn-sec" data-act="edit-identity" data-id="${i.id}">Modifier</button></div>
-  ${beliefs.length||i.vision?`<div class="id-meta">${beliefs.map(b=>`<p>${esc(b)}</p>`).join('')}${i.vision?`<p><b>Vision</b>${esc(i.vision)}</p>`:''}</div>`:''}
-  ${paused?`<p class="note id-pause">Identité en pause : aucune attente ${mode==='week'?'cette semaine':'pour l’instant'}. Ses objectifs et son historique sont conservés.</p>`:''}
-  <div class="id-part"><div class="part-h"><h3>Mes engagements</h3><span>${rate}</span></div>
-  ${mode==='week'&&!paused?`<p class="id-sum">${esc(proofSummary(i,mon))}</p>`:''}
-  ${objs.map(o=>`<div class="obj"><div class="obj-h">${o.icon?`<span aria-hidden="true">${esc(o.icon)}</span>`:''}<button data-act="edit-objective" data-id="${o.id}">${esc(o.title||'Objectif sans titre')}</button>${o.videoId&&S.data.videos[o.videoId]?`<button class="pill-mini" data-act="edit-video" data-id="${o.videoId}">Fiche vidéo</button>`:''}</div>
-    ${krsOf(o.id).map(k=>krRow({...k,identityId:i.id},i.color,mode,mon)).join('')}${addBtn('new-kr','Ajouter une preuve',`data-id="${o.id}"`)}</div>`).join('')}
-  ${maint.length?`<div class="obj"><div class="obj-h"><span aria-hidden="true">🔁</span><b>Habitudes d’entretien</b></div>${maint.map(k=>krRow(k,i.color,mode,mon)).join('')}</div>`:''}
-  <div class="obj obj-add">${addBtn('new-objective',`Objectif pour ${qLabel(q)}`,`data-id="${i.id}"`)}${addBtn('new-habit','Habitude d’entretien',`data-id="${i.id}"`)}</div></div></section>`}
+  const objs=objectivesOf(q,i.id),beliefs=(i.beliefs||'').split('\n').map(s=>s.trim()).filter(Boolean),cur=monday(today());
+  const paused=mode==='week'?idPausedWeek(i.id,mon):i.status==='pause',maint=maintKrs(q).filter(k=>k.identityId===i.id);
+  const ss=mode==='week'?weekProofs(mon).filter(k=>k.identityId===i.id).map(k=>krWeekScore(k,mon)).filter(x=>x!=null):[],kept=ss.filter(x=>x>=1).length;
+  const rate=paused?'<span class="muted">En pause</span>':sc?`<b>${mode==='week'?rateHtml(sc.v,mon<cur):pctS(sc.v)}</b><span class="muted">${mode==='week'?`${kept} / ${ss.length} tenu${ss.length>1?'s':''}`:'du trimestre'}</span>`:'<span class="tone-mut">Aucun engagement</span>';
+  const open=S.fold['id-'+i.id]===true||identities().length===1;
+  const sub=i.statement?esc(i.statement):objs.length?esc(objs.map(o=>o.title||'Objectif').join(' · ')):'<span class="faint">Écris ta phrase d’identité</span>';
+  return `<details class="sec idc" id="id-${esc(i.id)}" data-fold="id-${esc(i.id)}" ${open?'open':''}><summary>${av(i.icon,i.color,'lg',i.name)}<span class="idc-m"><span class="nm">${esc(i.name||'Identité sans nom')}${idBadge(i)}</span><span class="stl">${sub}</span></span><span class="idc-r">${rate}</span><span class="chev" aria-hidden="true">${ICON.chevD}</span></summary>
+  <div class="idc-b">
+  <div class="idc-top"><p class="id-sum">${mode==='week'&&!paused?esc(proofSummary(i,mon)):paused?`Identité en pause : aucune attente ${mode==='week'?'cette semaine':'pour l’instant'}. Ses objectifs et son historique sont conservés.`:''}</p><button class="linkish" data-act="edit-identity" data-id="${i.id}">Modifier</button></div>
+  ${i.vision||beliefs.length?`<p class="id-vis">${i.vision?`<b>Vision</b> ${esc(i.vision)}`:''}${i.vision&&beliefs.length?'<br>':''}${beliefs.map(esc).join(' · ')}</p>`:''}
+  ${objs.map(o=>objBlock(o,i,mode,mon)).join('')}
+  ${maint.length?groupBlock('mt-'+i.id,av('i:repeat',i.color,'xs'),'Habitudes d’entretien',maint,i,mode,mon,`<button class="add-l" data-act="new-habit" data-id="${i.id}">${ICON.plus}Habitude d’entretien</button>`):''}
+  <div class="idc-add"><button class="add-l" data-act="new-objective" data-id="${i.id}">${ICON.plus}Objectif pour ${qLabel(q)}</button>${maint.length?'':`<button class="add-l" data-act="new-habit" data-id="${i.id}">${ICON.plus}Habitude d’entretien</button>`}</div></div></details>`}
+/* Un objectif = un bloc repliable. Les étapes hors de la période (à planifier, prévues plus tard, déjà faites) sont rangées à part. */
+function objBlock(o,i,mode,mon){const foot=`<button class="add-l" data-act="new-kr" data-id="${o.id}">${ICON.plus}Preuve</button><button class="add-l" data-act="edit-objective" data-id="${o.id}">Modifier l’objectif</button>${o.videoId&&S.data.videos[o.videoId]?`<button class="add-l" data-act="edit-video" data-id="${o.videoId}">Fiche vidéo</button>`:''}`;
+  return groupBlock('ob-'+o.id,av(o.icon,i.color,'xs',o.title),o.title||'Objectif sans titre',krsOf(o.id).map(k=>({...k,identityId:i.id})),i,mode,mon,foot)}
+function groupBlock(key,icon,title,ks,i,mode,mon,foot){const sun=addDays(mon,6);
+  const main=k=>kindOf(k)!=='milestone'||(mode==='week'?krWeekTarget(k,mon)>0||(k.done&&k.doneAt>=mon&&k.doneAt<=sun):!k.done);
+  const a=ks.filter(main),b=ks.filter(k=>!main(k));
+  const sc=mode==='week'?a.map(k=>krWeekScore(k,mon)).filter(x=>x!=null):[],cnt=mode==='week'?(sc.length?`${sc.filter(x=>x>=1).length} / ${sc.length}`:''):(ks.length?pctS(avg(ks.map(krProgress))):'');
+  const restT=mode==='week'?`Autres étapes · ${b.length}`:`Étapes faites · ${b.length}`;
+  return `<details class="ob" data-fold="${key}" ${S.fold[key]!==false?'open':''}><summary>${icon}<span class="ob-t">${esc(title)}</span>${cnt?`<span class="cnt">${cnt}</span>`:''}<span class="chev" aria-hidden="true">${ICON.chevD}</span></summary>
+  <div class="ob-b">${a.length?a.map(k=>krRow(k,i.color,mode,mon)).join(''):`<p class="hint ob-e">${ks.length?'Rien de prévu sur cette période.':'Aucune preuve pour l’instant.'}</p>`}
+  ${b.length?`<details class="later" data-fold="lt-${key}" ${S.fold['lt-'+key]?'open':''}><summary>${restT}<span class="hint">${mode==='week'?'à planifier, prévues plus tard ou déjà faites':''}</span><span class="chev" aria-hidden="true">${ICON.chevD}</span></summary>${b.map(k=>krRow(k,i.color,mode,mon)).join('')}</details>`:''}
+  <div class="ob-f">${foot}</div></div></details>`}
 function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());const isCur=mon===cur;const actDate=mode==='week'&&mon<cur?addDays(mon,6):today();
   let rb,rs,sub,bp,be=null,col;
-  if(mode==='week'){const t=krWeekTarget(k,mon),r=t>0?krWeekRate(k,mon):null,past=mon<cur,paused=idPausedWeek(k.identityId,mon);sub=paused?'<span class="muted">Identité en pause : pas d’attente cette semaine</span>':weekSub(k,mon);rb=weekVal(k,mon);
+  if(mode==='week'){const t=krWeekTarget(k,mon),r=t>0?krWeekRate(k,mon):null,past=mon<cur,paused=idPausedWeek(k.identityId,mon);sub=paused?'<span class="muted">Identité en pause</span>':weekSub(k,mon);rb=weekVal(k,mon);
     rs=paused||(kind==='milestone'&&!(t>0))?'':rateHtml(r,past);col=toneVar(rateTone(r,past).k);
     if(kind==='milestone'&&k.abandoned&&!k.done){rb='Abandonnée';rs=t>0?'<span class="muted">0 % · compte cette semaine</span>':'';col='var(--faint)'}
     bp=r==null?0:Math.min(1,r);if(isCur&&kind!=='milestone'&&!paused){const x=krWeekExpected(k,mon,today());be=x>0?x:null}}
@@ -1550,11 +1729,11 @@ function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());
   if(kind==='habit'&&habitOf(k)&&(mode==='quarter'||isCur))ctl=habitCtl(habitOf(k),today());
   else if(kind==='qty')ctl=qtyCtl(k,actDate,mode==='week'?mon:krSpan(k).qs)+`<button class="step" data-act="qty-open" data-id="${k.id}" aria-label="Saisir au clavier">${ICON.kb}</button>`;
   else if(kind==='milestone'&&k.abandoned&&!k.done)ctl='';
-  else if(kind==='milestone')ctl=`${!k.done&&k.week!==mon&&mode==='week'?`<button class="pill-mini" data-act="plan-week" data-id="${k.id}" data-mon="${mon}">Cette semaine</button>`:''}<button class="hcheck ${k.done?'on':''}" data-act="kr-done" data-id="${k.id}" data-date="${actDate}" aria-label="${k.done?'Marquer à faire':'Marquer faite'}">${ICON.check}</button>`;
+  else if(kind==='milestone')ctl=`${!k.done&&k.week!==mon&&mode==='week'?`<button class="pill-mini" data-act="plan-week" data-id="${k.id}" data-mon="${mon}">Cette semaine</button>`:''}<button class="hcheck ${k.done?'on':''}" data-act="kr-done" data-id="${k.id}" data-date="${actDate}" aria-label="${k.done?'Marquer à faire':'Marquer faite'} : ${esc(krTitle(k))}">${ICON.check}</button>`;
   else if(kind==='level')ctl=`<button class="step" data-act="kr-step" data-id="${k.id}" data-d="-1" aria-label="Retirer 1">−</button><button class="step" data-act="kr-step" data-id="${k.id}" data-d="1" aria-label="Ajouter 1">+</button>`;
-  const form=kind==='qty'&&S.qtyOpen===k.id?`<form class="qty-form" data-form="qty" data-id="${k.id}" data-date="${actDate}"><input id="qty-${k.id}" type="number" step="any" inputmode="decimal" placeholder="Nombre de ${esc(k.unit||'unités')} à ajouter" aria-label="Quantité à ajouter" required><button class="btn sm" type="submit">Ajouter</button><button class="btn-sec" type="button" data-act="qty-close">Annuler</button></form>`:'';
+  const form=kind==='qty'&&S.qtyOpen===k.id?`<form class="qty-form pr-f" data-form="qty" data-id="${k.id}" data-date="${actDate}"><input id="qty-${k.id}" type="number" step="any" inputmode="decimal" placeholder="Nombre de ${esc(k.unit||'unités')} à ajouter" aria-label="Quantité à ajouter" required><button class="btn sm" type="submit">Ajouter</button><button class="btn-sec" type="button" data-act="qty-close">Annuler</button></form>`:'';
   const faded=kind==='milestone'&&((!k.done&&k.abandoned)||(mode==='week'&&((k.done&&k.doneAt<mon)||(!k.done&&k.week&&k.week>mon))));
-  return `<div class="kr ${faded?'faded':''}"><div class="row"><button class="row-l" ${editAttr(k)}>${av(krIcon(k),color,'sm',krTitle(k))}<span class="m"><span class="t">${esc(krTitle(k))}</span><span class="s">${sub}</span></span></button><span class="r"><b>${rb}</b><span class="muted">${rs}</span></span></div><div class="kr-b">${bar(bp,be,col)}${ctl?`<span class="kr-c">${ctl}</span>`:''}</div>${form}</div>`}
+  return `<div class="pr ${faded?'faded':''}"><button class="pr-m" ${editAttr(k)}>${av(krIcon(k),color,'sm',krTitle(k))}<span class="m"><span class="t">${esc(krTitle(k))}</span><span class="s">${sub}</span></span></button><div class="pr-b">${kind==='milestone'?'':bar(bp,be,col)}</div><span class="pr-v"><b>${rb}</b>${rs?`<span>${rs}</span>`:''}</span><span class="pr-c">${ctl}</span>${form}</div>`}
 
 const objTitleOf=k=>{const o=S.data.objectives[k.objectiveId];return o&&o.title?esc(o.title)+' · ':''};
 /* − retire depuis les saisies les plus récentes de la période (semaine affichée ou trimestre), sans passer sous zéro */
@@ -1653,7 +1832,7 @@ function metricCard(m,range){const es=mEntries(m),t=today();const cid='mc-'+m.id
 function viewProgress(){const ms=metrics(),range=S.range.progress||'t';
   const head=bilanSw()+`<header class="page-head"><h1 class="h1">Progrès</h1><button class="btn sm" data-act="new-metric">Nouvel indicateur</button></header>`;
   const left=PRESETS.filter(p=>!ms.some(m=>m.preset===p.key));
-  const presets=left.length?`<div class="presets">${left.map(p=>`<button class="preset" data-act="metric-preset" data-v="${p.key}"><span class="av sm" aria-hidden="true">${p.icon}</span>${esc(p.name)} <small>${esc(p.hint)}</small></button>`).join('')}</div>`:'';
+  const presets=left.length?`<div class="presets">${left.map(p=>`<button class="preset" data-act="metric-preset" data-v="${p.key}">${av(p.icon,'#7FA0FF','sm')}${esc(p.name)} <small>${esc(p.hint)}</small></button>`).join('')}</div>`:'';
   if(!ms.length)return head+`<div class="empty-state"><h2>Suis ce qui évolue dans le temps</h2><p class="note">Ton poids, ton Elo aux échecs, ton rang sur League of Legends : une valeur que tu mets à jour quand elle change, et sa courbe vers ta cible. Un indicateur observe un résultat ; il ne valide pas d’habitude à ta place.</p>${presets}${addBtn('new-metric','Autre indicateur')}</div>`;
   const sel=S.metricSel&&ms.some(m=>m.id===S.metricSel)?S.metricSel:'all';const shown=sel==='all'?ms:ms.filter(m=>m.id===sel);
   return head+`<p class="eyebrow">Mets à jour une valeur quand elle change : la courbe et l’écart à ta cible suivent.</p>`
@@ -1868,7 +2047,9 @@ const sheetTop=(t,sub)=>`<div class="sheet-top"><div><p class="eyebrow">${sub||'
 const delBtn=(act,id,label)=>`<section><div><button class="btn-sec btn-danger" data-act="arm" data-next="${act}" data-id="${id}">${label}</button></div></section>`;
 const idOptions=()=>[['','— Aucune —'],...identities().map(i=>[i.id,i.name||'Sans nom'])];
 const quarterOptions=()=>{const c=qKey(today());return [-2,-1,0,1,2,3,4].map(n=>{const k=qShift(c,n);return[k,qLabel(k)]})};
-function iconPicker(coll,id,cur){const custom=cur&&!PICTOS.includes(cur)?cur:'';return `<div class="field"><span>Pictogramme</span><div class="icons">${PICTOS.map(e=>`<button data-act="set-icon" data-coll="${coll}" data-id="${id}" data-v="${e}" aria-pressed="${cur===e}" aria-label="${e}">${e}</button>`).join('')}<input id="pic-${coll}-${id}" maxlength="8" placeholder="Autre" value="${esc(custom)}" data-bind="${coll}:${id}:icon" aria-label="Autre pictogramme (emoji)"></div></div>`}
+function iconPicker(coll,id,cur){const ck=picKey(cur),custom=cur&&!String(cur).startsWith('i:')&&!ck?cur:'';
+  return `<div class="field"><span>Pictogramme</span><div class="picker">${PIC_GROUPS.map(([g,items])=>`<p class="pk-g">${g}</p><div class="icons pk">${items.map(([k,l])=>`<button data-act="set-icon" data-coll="${coll}" data-id="${id}" data-v="i:${k}" aria-pressed="${ck===k}" aria-label="${l}" title="${l}">${picSvg(k)}</button>`).join('')}</div>`).join('')}</div>
+  <label class="pk-emo"><span class="hint">Ou un emoji</span><input id="pic-${coll}-${id}" maxlength="8" placeholder="🙂" value="${esc(custom)}" data-bind="${coll}:${id}:icon" aria-label="Pictogramme personnalisé (emoji)"></label></div>`}
 function freqEditor(h){const f=freqOf(h);const days=Array.isArray(h.days)?h.days:[];
   return `<div class="field"><span>Fréquence</span>${pills('freq',f,[['daily','Tous les jours'],['weekly','X fois / semaine'],['days','Jours précis']],`data-id="${h.id}"`)}</div>
   ${f==='weekly'?`<div class="stepper"><button class="step" data-act="perweek" data-id="${h.id}" data-d="-1" aria-label="Moins">−</button><b>${h.perWeek||3} fois par semaine</b><button class="step" data-act="perweek" data-id="${h.id}" data-d="1" aria-label="Plus">+</button></div>`:''}
@@ -2109,7 +2290,7 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
   if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','metricId','minEnabled','week','objectiveId','min','max'].includes(path)||/^remaining\./.test(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.vstage){setStage(el.dataset.vstage,el.value);return}if(el.dataset&&el.dataset.ifilter){S.ideaF={...S.ideaF,[el.dataset.ifilter]:el.value};saveUi();renderMain(true);return}if(el.dataset&&el.dataset.cfg){cfgRename(el.dataset.cfg,el.dataset.old,el.value.trim());return}if(el.dataset&&el.dataset.bind)bindChange(el)});
-document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.fold)S.fold[el.dataset.fold]=el.open},true);
+document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.fold&&S.fold[el.dataset.fold]!==el.open){S.fold[el.dataset.fold]=el.open;saveUi()}},true);
 /* Téléphone : la barre du haut est transparente sur l'image, puis devient opaque dès que la page défile */
 window.addEventListener('scroll',()=>{const m=$('.mtop');if(m)m.classList.toggle('solid',window.scrollY>4)},{passive:true});
 /* Les textes s'enregistrent pendant la saisie (brouillon conservé même si l'app est fermée avant de quitter le champ) */
@@ -2177,7 +2358,8 @@ const ACT={
   'close-review':a=>{const key=a.dataset.key,mon=a.dataset.mon;const base=S.data.reviews[key]||{createdAt:nowIso()};
     put('reviews',key,{...base,week:key,monday:mon,...archiveOf(mon),auto:false,final:addDays(mon,6)<today(),closedAt:nowIso()});toast('Semaine clôturée : elle est dans tes semaines sauvegardées, dans les Réglages.',{label:'Voir',fn:()=>ACT['saved-open']()})},
   'close-sheet':()=>dismissSheet(),
-  'jump':a=>{const el=document.getElementById('id-'+a.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},
+  'jump':a=>{S.fold['id-'+a.dataset.id]=true;saveUi();renderMain(true);setTimeout(()=>{const el=document.getElementById('id-'+a.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},30)},
+  'id-all':a=>{const v=a.dataset.v==='1';for(const i of identities())S.fold['id-'+i.id]=v;saveUi();renderMain(true)},
   'quarter':a=>{S.quarter=qShift(S.quarter,+a.dataset.d);renderMain(true)},
   'okr-range':a=>{S.range.okr=a.dataset.v;saveUi();renderMain(true)},
   'hab-range':a=>{S.range.habits=a.dataset.v;saveUi();renderMain(true)},
