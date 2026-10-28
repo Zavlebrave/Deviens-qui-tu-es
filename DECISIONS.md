@@ -114,9 +114,23 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - Une légende en couleurs remplace la légende en texte.
   - La Revue reprend ce tableau, en lecture seule.
 - **« Gérer »** : la liste des habitudes, avec leurs séries et leurs taux sur 30 jours, quitte la page Habitudes.
-  - Elle est remplacée par une page « Mes habitudes ». Elle liste toutes les habitudes, y compris les preuves d'objectifs, avec leur fréquence et leur type de suivi.
+  - Elle est remplacée par une page « Mes habitudes ». Elle liste toutes les habitudes, avec leur fréquence et leur type de suivi.
   - On y crée une habitude, et on y ouvre chaque fiche. La série et le taux sur 30 jours restent dans la fiche.
 - **Aujourd'hui** : une habitude à quantité affiche « 35/20 » à côté de sa case. Cocher la case enregistre la cible, et la décocher efface la quantité. La fin d'une séance de concentration liée à une telle habitude demande la quantité.
+
+## Type de preuve « Habitude » retiré (28 octobre 2026)
+
+- **Deux types de preuve** : « Comment la mesurer ? » ne propose plus que Quantité et Étape. Une nouvelle preuve est une Quantité par défaut.
+- **Les habitudes se suivent à part**, dans l'onglet Habitudes. Elles ne sont plus liées à une identité ni à un objectif, et ne comptent pas dans le taux d'engagements.
+  - La fiche d'une habitude perd son champ « Objectif ».
+  - Une habitude reste possible comme priorité du jour.
+- **Données existantes** : au premier chargement, chaque preuve « Habitude » est supprimée, et son habitude reste, avec son historique, ses séries et ses justifications.
+  - Une priorité du jour qui visait une de ces preuves vise désormais l'habitude.
+  - Dans les données du 26 octobre, cela concerne Séance d'entraînement, Séance Technique, Séance Full Cardio et Coucher 22H30, toutes de Champion.
+  - Les objectifs Compétition, Préparation physique et Forme physique se retrouvent sans preuve : Champion n'a plus d'engagement tant qu'on ne leur en ajoute pas.
+  - Le taux des semaines passées est recalculé sans ces preuves, sauf pour les semaines déjà figées par la revue.
+- **Modèles d'objectif** : un ancien élément de type Habitude n'est plus recréé quand on applique le modèle.
+- **Revue** : en retard sur le trimestre, « Mets l'accent sur » ne cite que des preuves, jamais des habitudes.
 
 ## Recette
 
@@ -124,6 +138,7 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Type de preuve « Habitude » retiré** : 17 vérifications automatisées (migration avec historique intact, priorité du jour convertie, fiches, « Gérer », modèles, Identités), toutes réussies. Le parcours en ligne simulé confirme la suppression côté serveur (22 → 18 preuves).
 - **Habitudes en un geste, quantités et tableau compact** : 82 vérifications automatisées (41 sur ordinateur, 41 sur téléphone), plus 5 vérifications contre le Firebase simulé (quantité envoyée, modifiée, effacée, reçue d'un autre appareil). Toutes réussies.
 - **Aujourd'hui, Revue et habitudes sans identité** : 28 vérifications automatisées, toutes réussies.
 - **Identités et pictogrammes** : 22 vérifications automatisées, toutes réussies.

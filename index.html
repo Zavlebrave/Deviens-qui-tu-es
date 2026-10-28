@@ -1097,7 +1097,8 @@ const STAGES=[
 const STAGE_LABEL=Object.fromEntries(STAGES.map(s=>[s.k,s.label]));
 const PHASES=[{k:'angle',label:"Verrouiller l'angle"},{k:'recherche',label:'Recherche'},{k:'ecriture',label:'Plan en loops & script'},{k:'voix',label:'Enregistrement voix'},{k:'montage',label:'Montage & mixage'}];
 const CPLX={legere:'Légère',moyenne:'Moyenne',lourde:'Lourde'};
-const KINDS=[['habit','Habitude','Se valide dans Aujourd’hui, les jours que tu choisis.'],['qty','Quantité','Mots, heures… tu ajoutes ce que tu fais.'],['milestone','Étape','Faite ou pas. Se coche dans Identités.']];
+/* Types de preuve. « Habitude » est retiré depuis le 28 octobre : les habitudes se suivent à part, dans l'onglet Habitudes. */
+const KINDS=[['qty','Quantité','Mots, heures… tu ajoutes ce que tu fais.'],['milestone','Étape','Faite ou pas. Se coche dans Identités.']];
 const COLORS=['#FF7A45','#E8B10E','#4C7DFF','#9B6BFF','#19B9A8','#FF5D8F','#6CC56C','#8E9AAF'];
 const PICTOS=['🥊','🏆','💪','🏃','🧘','😴','🌅','🥗','💧','📚','✍️','🎬','🎙️','🎞️','🖼️','💡','🧠','♟️','🎮','💼','💻','🚀','📈','💰','✈️','🎯','🔥','⭐','🗣️','❤️','🎵','🙏'];
 const DEF={phases:{angle:5,recherche:20,ecriture:10,voix:2,montage:10,marge:2},complexity:{legere:.6,moyenne:.8,lourde:1},goals:{'2026':4,'2027':7},capacity:20,hoursPerVideo:45,channel:'Zav le brave',tz:'Europe/Paris'};
@@ -1364,8 +1365,8 @@ const editAttr=k=>k.virtual?`data-act="edit-habit" data-id="${k.habitId}"`:`data
 /* Engagements d'un trimestre : les preuves des objectifs, plus les habitudes d'entretien, rattachées à une identité
    sans objectif (F07). Une habitude sans identité reste un suivi indépendant, hors du taux d'engagements. */
 const maintSince=h=>(h.identitySince||h.createdAt||'2000-01-01').slice(0,10);
-/* Depuis le 28 octobre, une habitude n'est plus rattachée à une identité : plus d'habitudes d'entretien.
-   Une habitude est soit un suivi indépendant, soit la preuve d'un objectif. */
+/* Depuis le 28 octobre, une habitude n'est plus rattachée à une identité ni à un objectif :
+   plus d'habitudes d'entretien ni de preuves « Habitude ». Les habitudes se suivent à part. */
 function maintKrs(){return []}
 const allProofs=q=>[...krsOfQuarter(q),...maintKrs(q)];
 /* Identité en pause (D05) : aucune attente pour une semaine qui chevauche une pause ; rien n'est supprimé ni décalé */
@@ -1381,7 +1382,7 @@ function qSummary(q){const krs=allProofs(q).filter(k=>!idPausedWeek(k.identityId
 let archived=false;
 function archiveOf(mon){const ws=weekSummary(mon);const st=weekStats(mon);const snap={},vals={};for(const k of allProofs(ws.q)){snap[k.id]=krValueAt(k,addDays(mon,6));vals[k.id]={v:krWeekValue(k,mon),t:krWeekTarget(k,mon)}}
   return{snapshot:snap,weekVals:vals,weekScore:ws.score,identityScores:ws.per,habitRate:st.rate,todosDone:st.todosDone}}
-function autoArchive(){if(archived||!ready())return;archived=true;repairHabits();migrateLevels();migratePrios();const starts=[...list('habits'),...list('krs')].map(x=>(x.createdAt||'').slice(0,10)).filter(Boolean).sort();if(!starts.length)return;
+function autoArchive(){if(archived||!ready())return;archived=true;repairHabits();migrateHabitProofs();migrateLevels();migratePrios();const starts=[...list('habits'),...list('krs')].map(x=>(x.createdAt||'').slice(0,10)).filter(Boolean).sort();if(!starts.length)return;
   const first=monday(starts[0]),cur=monday(today());
   for(let i=1;i<=6;i++){const mon=addDays(cur,-7*i);if(mon<first)break;const key=isoWeek(mon).key;const r=S.data.reviews[key];const manual=!!(r&&r.auto===false&&r.closedAt);if(r&&r.snapshot&&(!manual||r.final))continue;
     put('reviews',key,{...(r?clean(r):{}),week:key,monday:mon,createdAt:(r&&r.createdAt)||nowIso(),...archiveOf(mon),auto:!manual,closedAt:manual?r.closedAt:nowIso(),final:true})}}
@@ -1931,15 +1932,13 @@ function sheetHday(hid){const h=S.data.habits[hid];const d=S.hday||today(),t=tod
 function viewHabits(){
   const mon=S.habitWeek,t=today(),hs=trackerHabits(),range=S.range.habits;
   const head=`<header class="page-head"><h1 class="h1">Habitudes</h1><button class="btn-sec hd-cfg" data-act="habits-cfg" aria-label="Gérer mes habitudes">${ICON.settings}<span>Gérer</span></button></header>`;
-  const proofN=habits().length-hs.length;
-  const note=proofN?`<p class="hint" style="margin-top:10px">${proofN>1?`${proofN} habitudes sont des preuves`:'1 habitude est une preuve'} de tes objectifs : elles se cochent dans Aujourd’hui et dans Identités.</p>`:'';
-  if(!hs.length)return head+`<div class="empty-state"><h2>Ton traqueur d’habitudes</h2><p class="note">Les petits gestes de tous les jours : exercices du matin, douche froide, lecture… Ils se cochent ici et dans Aujourd’hui, à part du score de tes identités.</p><button class="btn" data-act="new-habit">Créer une habitude</button>${note}</div>`;
+  if(!hs.length)return head+`<div class="empty-state"><h2>Ton traqueur d’habitudes</h2><p class="note">Les petits gestes de tous les jours : exercices du matin, douche froide, lecture… Ils se cochent ici et dans Aujourd’hui, à part du score de tes identités.</p><button class="btn" data-act="new-habit">Créer une habitude</button></div>`;
   const ws=weekStats(monday(t)),pw=weekStats(addDays(monday(t),-7));
   const n=range==='w'?7:range==='m'?30:90;const xs=[...Array(n)].map((_,i)=>addDays(t,i-n+1));const act=xs.map(dayScore);
   return head+hero('hab','Traqueur tenu cette semaine',ws.rate==null?'—':pctS(ws.rate),ws.rate!=null&&pw.rate!=null&&pw.sched?dPts(ws.rate-pw.rate,'vs semaine dernière'):`<span class="muted">${ws.done} cases cochées sur ${ws.sched} prévues</span>`)
   +lineChart('hab',{xs,act,exp:null})+pills('hab-range',range,[['w','1S'],['m','1M'],['t','3M']])+
   `<section class="sec"><div class="sec-h"><h2>Semaine ${isoWeek(mon).w}</h2>${qnav('hweek',fmtD(mon))}</div>${habitTable(mon,true)||'<p class="empty">Aucune habitude cette semaine-là.</p>'}${hwLegend()}
-  <p class="hint" style="margin-top:8px">Touche une case : une habitude simple se coche, un second appui l’enlève. Minimum et cible, ou quantité : la case ouvre la saisie. 🌙 : ta qualité de sommeil, à part du calcul.</p>${note}</section>
+  <p class="hint" style="margin-top:8px">Touche une case : une habitude simple se coche, un second appui l’enlève. Minimum et cible, ou quantité : la case ouvre la saisie. 🌙 : ta qualité de sommeil, à part du calcul.</p></section>
   ${justifyList(8)}`}
 
 /* ---------- Progrès : ce qui évolue dans le temps (poids, Elo, rang LoL) ---------- */
@@ -2032,13 +2031,13 @@ function weekInsights(mon){const t=today(),isCur=mon===monday(t),sun=addDays(mon
   const nb={};for(const k of weekProofs(mon)){const n=krTitle(k);nb[n]=(nb[n]||0)+1}
   for(const k of weekProofs(mon)){if(idPausedWeek(k.identityId,mon))continue;const kind=kindOf(k),tg=krWeekTarget(k,mon);if(!(tg>0))continue;
     const v=Math.max(0,krWeekValue(k,mon)),r=v/tg,ex=isCur?krWeekExpected(k,mon,t):1,e=ex==null?(isCur?0:1):ex,name=nb[krTitle(k)]>1&&(S.data.objectives[k.objectiveId]||{}).title?`${krTitle(k)} (${S.data.objectives[k.objectiveId].title})`:krTitle(k),u=kind==='qty'?(k.unit||''):'',it={ic:krIcon(k),col:idColor(k.identityId),t:name};
-    if(kind==='milestone'){if(r>=1)good.push({...it,s:'Étape franchie'});else{const late=k.week&&k.week<mon;bad.push({...it,s:late?`En retard · prévue semaine ${isoWeek(k.week).w}`:isCur?'Prévue cette semaine, pas encore faite':'Prévue, pas faite',w:1});tips.push({...it,t:isCur?`Termine « ${name} » d’ici dimanche`:`Replanifie « ${name} », ou réduis son périmètre`,p:`${isCur?'Finir':'Avancer'} : ${name}`,w:1})}continue}
+    if(kind==='milestone'){if(r>=1)good.push({...it,s:'Étape franchie'});else{const late=k.week&&k.week<mon;bad.push({...it,kr:1,s:late?`En retard · prévue semaine ${isoWeek(k.week).w}`:isCur?'Prévue cette semaine, pas encore faite':'Prévue, pas faite',w:1});tips.push({...it,t:isCur?`Termine « ${name} » d’ici dimanche`:`Replanifie « ${name} », ou réduis son périmètre`,p:`${isCur?'Finir':'Avancer'} : ${name}`,w:1})}continue}
     const val=`${fmtN(v)} / ${per(tg,u)}`;
     if(r>=1){good.push({...it,s:`${val} · cible atteinte`});continue}
     if(isCur&&ex==null)continue;
     if(isCur&&r>=e+0.1){good.push({...it,s:`${val} · en avance sur le rythme`});continue}
     if(isCur&&r>=e-0.05)continue;
-    bad.push({...it,s:`${val}${isCur?` · attendu ${fmtN(Math.round(e*tg*10)/10)} à ce jour`:''}`,w:isCur?e-r:1-r});
+    bad.push({...it,kr:1,s:`${val}${isCur?` · attendu ${fmtN(Math.round(e*tg*10)/10)} à ce jour`:''}`,w:isCur?e-r:1-r});
     const rest=Math.round((tg-v)*10)/10;
     if(isCur)tips.push({...it,t:kind==='qty'&&daysLeft>1?`${name} : encore ${per(rest,u)}, soit ${per(Math.ceil(rest/daysLeft*10)/10,u)} par jour d’ici dimanche`:`${name} : encore ${per(rest,u)} d’ici dimanche`,p:`${name} : ${per(rest,u)} d’ici dimanche`,w:e-r});
     else{const nt=krWeekTarget(k,addDays(mon,7));tips.push({...it,t:nt>0?`${name} : vise ${per(nt,u)} la semaine prochaine${kind==='qty'?' (rattrapage inclus)':''}`:`${name} : à reprendre la semaine prochaine`,p:`${name} : ${per(nt>0?nt:tg,u)}`,w:1-r})}}
@@ -2055,12 +2054,12 @@ function weekInsights(mon){const t=today(),isCur=mon===monday(t),sun=addDays(mon
     else{const nx=occurrences(h,addDays(mon,7),addDays(mon,13));if(nx){const goal=Math.min(nx,Math.ceil(ok/exp*nx)+1);tips.push({...it,t:`${it.t} : vise ${goal} sur ${nx} la semaine prochaine (cette semaine ${ok} sur ${exp})`,p:`${it.t} : ${goal} sur ${nx}`,w:miss/exp})}}}
   if(isCur){const q=weekQuarter(mon),sm=qSummary(q);if(sm.krs.length){const pts=Math.round((sm.actual-sm.expected)*100);
     if(pts>=3)good.unshift({ic:'i:chart',col:'#52E397',t:`Trimestre : ${pts} pts d’avance sur le rythme`,s:`${pctS(sm.actual)} fait, ${pctS(sm.expected)} attendu à date`});
-    else if(pts<=-3){const top=bad.filter(x=>x.w>0).sort((a,b)=>b.w-a.w).slice(0,2).map(x=>x.t);tips.unshift({ic:'i:chart',col:'#F99A45',t:`Trimestre : ${-pts} pts de retard sur le rythme${top.length?`. Mets l’accent sur ${top.join(' et ')}`:''}`,w:9})}}}
+    else if(pts<=-3){const top=bad.filter(x=>x.kr&&x.w>0).sort((a,b)=>b.w-a.w).slice(0,2).map(x=>x.t);tips.unshift({ic:'i:chart',col:'#F99A45',t:`Trimestre : ${-pts} pts de retard sur le rythme${top.length?`. Mets l’accent sur ${top.join(' et ')}`:''}`,w:9})}}}
   const st=weekStats(mon);if(st.focusMin)good.push({ic:'i:clock',col:'#7FA0FF',t:`${fmtMin(st.focusMin)} de travail concentré`,s:`${st.priosDone} priorité${st.priosDone>1?'s':''} du jour accomplie${st.priosDone>1?'s':''} sur ${st.priosTotal}`});
   return{good,bad:bad.sort((a,b)=>b.w-a.w),tips:tips.sort((a,b)=>b.w-a.w)}}
-/* Grille des habitudes indépendantes sur la semaine : cible, minimum, absence justifiée, manquement */
+/* Tableau des habitudes de la semaine, en lecture seule */
 function habitWeekGrid(mon){const tb=habitTable(mon,false);
-  if(!tb)return '<p class="empty">Aucune habitude indépendante. Crée-en une dans l’onglet Habitudes : elle apparaîtra ici.</p>';return tb+hwLegend()}
+  if(!tb)return '<p class="empty">Aucune habitude. Crée-en une dans l’onglet Habitudes : elle apparaîtra ici.</p>';return tb+hwLegend()}
 function viewReview(){
   const mon=S.reviewWeek,sun=addDays(mon,6),wk=isoWeek(mon),key=wk.key,rev=S.data.reviews[key]||{},t=today(),isCur=mon===monday(t),past=mon<monday(t);
   const ws=weekStats(mon),sm=weekSummary(mon),pm=weekSummary(addDays(mon,-7)),ins=weekInsights(mon),nSaved=savedWeeks().length,wm=weekMood(mon),nextW=isoWeek(addDays(mon,7)).w;
@@ -2302,9 +2301,7 @@ function sheetObjective(id){const o=S.data.objectives[id];const vids=videos().fi
   <section><div><button class="btn-sec" data-act="save-template" data-id="${id}">Enregistrer comme modèle</button></div></section>
   ${delBtn('del-objective',id,'Supprimer l’objectif et ses preuves')}`}
 function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf(k);const q=krQuarter(k);let extra='';
-  if(kind==='habit'){extra=h?`${freqEditor(h)}${modeEditor(h)}<div class="two"><div class="field"><span>Cette semaine</span><p class="big-n">${fmtN(krWeekValue(k,monday(today())))} / ${fmtN(krWeekTarget(k,monday(today())))}</p></div><div class="field"><span>Trimestre · calculé seul</span><p class="big-n">${fmtN(krValue(k))} / ${fmtN(krTarget(k))}</p></div></div>${weekToggles(h)}
-      ${habits().length>1?F('krs',id,'habitId','Habitude liée',{options:habits().map(x=>[x.id,x.name||'Sans nom'])}):''}`:`<button class="btn sm" data-act="kr-make-habit" data-id="${id}">Créer l'habitude liée</button>`}
-  else if(kind==='qty'){const log=Object.entries(k.log||{}).filter(([,v])=>+v).sort((a,b)=>b[0].localeCompare(a[0]));const mon=monday(today());
+  if(kind==='qty'){const log=Object.entries(k.log||{}).filter(([,v])=>+v).sort((a,b)=>b[0].localeCompare(a[0]));const mon=monday(today());
     extra=`<div class="two">${F('krs',id,'target','Objectif du trimestre',{type:'number',ph:'4000'})}${F('krs',id,'unit','Unité',{ph:'mots, heures…'})}</div>
     ${(x=>x>1.2?'<p class="tone-neg" style="margin:4px 0 8px">Cible dépassée : tu peux t’arrêter ici.</p>':'')(krWeekRate(k,mon))}
     <div class="two">${F('krs',id,'weekTarget','Objectif par semaine',{type:'number',ph:`${fmtN(krWeekTarget({...k,weekTarget:null},mon))} (calculé)`,hint:'Laisse vide : le reste à faire est réparti sur les semaines restantes.'})}${F('krs',id,'step','Pas des boutons − / +',{type:'number',ph:'1',hint:'Ex. 100 : chaque + ajoute 100 mots.'})}</div>
@@ -2320,13 +2317,6 @@ function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf
   ${delBtn('del-kr',id,h&&h.fromKr===id?'Supprimer la preuve et son habitude':'Supprimer cette preuve')}`}
 /* Encadré « Comment ça marche » de la fiche preuve : où elle apparaît, comment elle avance */
 function howTo(k){const kind=kindOf(k);const step=(ok,n,html)=>`<li class="${ok?'ok':'todo'}"><i aria-hidden="true">${ok?ICON.check:n}</i><span>${html}</span></li>`;
-  if(kind==='habit'){const h=habitOf(k);const f=h&&freqOf(h);const days=h?(h.days||[]):[];const hasDays=!!h&&(f!=='days'||days.length>0);const nd=h&&nextDue(h,today());const mon=monday(today());
-    const when=!h?'les jours que tu auras choisis':f==='weekly'?`chaque jour, jusqu’à ce que tu l’aies faite ${h.perWeek||3} fois dans la semaine`:f==='daily'?'tous les jours':days.length?`<b>uniquement le${days.length>1?'s':''} ${esc(daysLong(h))}</b>. Les autres jours, elle est cachée&nbsp;: c’est normal`:'aucun jour pour l’instant';
-    return `<div class="howto"><h4>Comment ça marche</h4><ol>
-    ${step(!!h,1,h?`<b>Habitude activée</b>&nbsp;: « ${esc(h.name||krTitle(k))} » existe et compte pour cette preuve.`:`<b>Habitude pas encore activée</b>&nbsp;: touche « Créer l’habitude liée » ci-dessous. Tant qu’elle ne l’est pas, la preuve n’apparaît nulle part.`)}
-    ${step(hasDays,2,h?(hasDays?`<b>Quand</b>&nbsp;: ${f==='weekly'?`${h.perWeek||3} fois par semaine`:f==='daily'?'tous les jours':`${days.length>1?'les':'le'} ${esc(daysLong(h))}`}. Tu changes ça juste en dessous.`:'<b>Choisis au moins un jour</b> juste en dessous.'):'<b>Choisis ses jours</b>&nbsp;: tous les jours, X fois par semaine ou des jours précis.')}
-    ${step(false,3,`<b>Elle apparaît dans Aujourd’hui → Habitudes</b> ${when}. Glisse-la vers la droite pour la valider.${nd?` <b>Prochaine fois&nbsp;: ${nd===today()?'aujourd’hui':esc(fmtDay(nd,true))}</b>.`:''}`)}
-    </ol><p>Chaque validation compte 1. Tu peux aussi la cocher dans Identités avec le rond ✓.${h?` Cette semaine&nbsp;: ${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))}. Trimestre&nbsp;: ${fmtN(krValue(k))} / ${fmtN(krTarget(k))}, calculé à partir des jours choisis.`:''}</p></div>`}
   const T={qty:['Sur sa ligne dans Identités&nbsp;: <b>−</b> et <b>+</b> (le pas se règle ci-dessous), ou le clavier pour un grand nombre. Aussi dans Revue → Quantités à ajouter. Elle n’apparaît pas dans Aujourd’hui.','Chaque saisie s’additionne. L’objectif de la semaine se calcule à partir de ce qu’il reste à faire dans le trimestre.'],
     milestone:['Sur sa ligne dans Identités (rond ✓), ou avec la case « Faite » ci-dessous. Elle n’apparaît pas dans Aujourd’hui.','0 ou 100 %. Donne-lui une semaine prévue&nbsp;: elle comptera dans le score de cette semaine.'],
     level:['Sur sa ligne dans Identités, avec <b>−</b> et <b>+</b>, ou dans « Valeur actuelle » ci-dessous. Elle n’apparaît pas dans Aujourd’hui.','Elle avance du point de départ vers l’objectif. Chaque changement est daté.'],
@@ -2359,17 +2349,12 @@ function sheetAbandon(id){const k=S.data.krs[id];const o=S.data.objectives[k.obj
   <div class="field" style="margin-top:14px"><span>La replanifier ou réduire son périmètre permettrait-il de la conserver ?</span><div class="prio-a" style="margin-top:4px"><button class="btn-sec" data-act="ab-alt">Replanifier ou réduire</button></div></div>
   <div class="prio-a" style="margin-top:22px"><button class="btn-sec" data-act="close-sheet">Annuler</button><button class="btn" data-act="ab-next">Continuer vers l’abandon</button></div></section>`}
 /* « Gérer mes habitudes » : la liste et les réglages, à part du tableau de la semaine */
-function sheetHabitsCfg(){const pid=proofHabitIds(),all=habits(),tr=all.filter(h=>!pid.has(h.id)),pr=all.filter(h=>pid.has(h.id));
-  const objOf=h=>{const k=list('krs').filter(k=>k.habitId===h.id&&kindOf(k)==='habit').sort((a,b)=>String(krQuarter(b)||'').localeCompare(String(krQuarter(a)||'')))[0];const o=k&&S.data.objectives[k.objectiveId];return o?(o.title||'Objectif'):''};
-  const row=(h,proof)=>`<button class="row" data-act="edit-habit" data-id="${h.id}">${av(h.icon,habitColor(h),'sm',h.name)}<span class="m"><span class="t">${esc(h.name||'Sans nom')}</span><span class="s">${esc([freqLabel(h),hModeTxt(h),proof&&objOf(h)?`preuve de « ${objOf(h)} »`:''].filter(Boolean).join(' · '))}</span></span><span class="r chev">${ICON.right}</span></button>`;
+function sheetHabitsCfg(){const row=h=>`<button class="row" data-act="edit-habit" data-id="${h.id}">${av(h.icon,habitColor(h),'sm',h.name)}<span class="m"><span class="t">${esc(h.name||'Sans nom')}</span><span class="s">${esc(`${freqLabel(h)} · ${hModeTxt(h)}`)}</span></span><span class="r chev">${ICON.right}</span></button>`;
   return sheetTop('Mes habitudes','Réglages')+`<section><p class="hint">Touche une habitude pour régler son nom, son pictogramme, ses jours et son type de suivi : fait / pas fait, minimum et cible, ou quantité. Sa série et sa réussite sur 30 jours sont dans sa fiche.</p>
-  <div class="list" style="margin-top:12px">${tr.map(h=>row(h)).join('')||'<p class="empty">Aucune habitude indépendante.</p>'}</div>${addBtn('new-habit','Nouvelle habitude')}</section>
-  ${pr.length?`<section><h3>Preuves de tes objectifs</h3><p class="hint" style="margin:4px 0 10px">Elles se cochent dans Aujourd’hui et dans Identités, pas dans le tableau des habitudes.</p><div class="list">${pr.map(h=>row(h,1)).join('')}</div></section>`:''}`}
-function sheetHabit(id){const h=S.data.habits[id];const r=rate30(h);const q=qKey(today());
-  const kr=list('krs').find(k=>k.habitId===id&&kindOf(k)==='habit'&&krQuarter(k)===q);const objs=objectivesOf(q);
-  const link=`<label class="field"><span>Objectif de ${qLabel(q)} (facultatif)</span><select id="hobj-${id}" data-link="habit-obj" data-id="${id}">${[['','Aucun : reste dans ton traqueur d’habitudes'],...objs.map(o=>[o.id,`${(idOf(o.identityId)||{}).name?idOf(o.identityId).name+' · ':''}${o.title||'Sans titre'}`])].map(([v,l])=>`<option value="${esc(v)}" ${(kr?kr.objectiveId:'')===v?'selected':''}>${esc(l)}</option>`).join('')}</select><span class="hint">Sans objectif : suivi indépendant dans ton traqueur d’habitudes. Rattachée à un objectif : preuve de cet objectif, qui compte dans les engagements de son identité. Son historique et sa série sont conservés dans tous les cas.</span></label>`;
+  <div class="list" style="margin-top:12px">${habits().map(row).join('')||'<p class="empty">Aucune habitude pour l’instant.</p>'}</div>${addBtn('new-habit','Nouvelle habitude')}</section>`}
+function sheetHabit(id){const h=S.data.habits[id];
   return sheetTop(esc(h.name||'Nouvelle habitude'),'Habitude')+`<section>${iconPicker('habits',id,h.icon)}
-  ${F('habits',id,'name','Habitude',{ph:'Se coucher avant 21 h 30'})}${freqEditor(h)}${modeEditor(h)}${weekToggles(h)}${link}
+  ${F('habits',id,'name','Habitude',{ph:'Se coucher avant 21 h 30'})}${freqEditor(h)}${modeEditor(h)}${weekToggles(h)}
   <p class="hint">${streakTxt(h)} · ${rate30Txt(h)}</p></section>
   ${delBtn('del-habit',id,'Supprimer cette habitude')}`}
 function sheetVideo(id){const v=S.data.videos[id];const p=plan(v);const loops=v.loops||[];const t=today();const f=v.filters||{};
@@ -2421,12 +2406,11 @@ const curQ=()=>S.tab==='okr'?(S.okrMode==='quarter'?S.quarter:weekQuarter(S.week
 function applyTemplate(tid,{identityId,videoId}={}){const t=S.data.templates[tid];if(!t)return null;const v=videoId&&S.data.videos[videoId];
   const oid=create('objectives',{title:v?`${t.objTitle||'Vidéo'} ${v.title||''}`.trim():(t.objTitle||t.name||''),icon:t.icon||'',identityId:identityId||t.identityId||'',quarter:curQ(),videoId:videoId||'',fromTemplate:tid});
   const base=Date.now();
-  (t.items||[]).forEach((it,i)=>{const kind=it.kind||'milestone';const kid=uid();
-    put('krs',kid,{title:it.title||'',icon:it.icon||'',objectiveId:oid,kind,target:kind==='milestone'?1:kind==='habit'?null:(+it.target||null),unit:it.unit||'',weekTarget:+it.weekTarget||null,step:+it.step||null,done:false,log:{},start:0,current:0,createdAt:new Date(base+(i+1)*1000).toISOString()});
-    if(kind==='habit'){const hid=makeHabitForKr(kid);const h=hid&&S.data.habits[hid];if(h&&it.freq)put('habits',hid,{...h,freq:it.freq,days:it.days||[],perWeek:it.perWeek||3})}});
+  (t.items||[]).filter(it=>it.kind!=='habit').forEach((it,i)=>{const kind=it.kind||'milestone';const kid=uid();
+    put('krs',kid,{title:it.title||'',icon:it.icon||'',objectiveId:oid,kind,target:kind==='milestone'?1:kind==='habit'?null:(+it.target||null),unit:it.unit||'',weekTarget:+it.weekTarget||null,step:+it.step||null,done:false,log:{},start:0,current:0,createdAt:new Date(base+(i+1)*1000).toISOString()});});
   return oid}
 function templateFromObjective(oid){const o=S.data.objectives[oid];if(!o)return;
-  const items=krsOf(oid).map(k=>{const kind=kindOf(k)==='videos'?'milestone':kindOf(k);const h=habitOf(k);const it={title:krTitle(k),icon:krIcon(k),kind,unit:k.unit||''};
+  const items=krsOf(oid).filter(k=>kindOf(k)!=='habit').map(k=>{const kind=kindOf(k)==='videos'?'milestone':kindOf(k);const h=habitOf(k);const it={title:krTitle(k),icon:krIcon(k),kind,unit:k.unit||''};
     if(kind==='qty'||kind==='level')it.target=+k.target||null;if(kind==='qty'&&+k.weekTarget>0)it.weekTarget=+k.weekTarget;if(kind==='qty'&&+k.step>0)it.step=+k.step;if(kind==='habit'&&h){it.freq=freqOf(h);it.days=h.days||[];it.perWeek=h.perWeek||3}return it});
   const vid=!!o.videoId;const id=create('templates',{name:vid?'Vidéo longue':(o.title||'Modèle'),objTitle:vid?'Vidéo':(o.title||''),icon:o.icon||'',identityId:o.identityId||'',video:vid,items});
   openSheet('template','templates',id);toast('Modèle enregistré')}
@@ -2501,7 +2485,7 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   put(coll,id,doc);
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
   if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','metricId','minEnabled','week','objectiveId','min','max'].includes(path)||/^remaining\./.test(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
-document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.vstage){setStage(el.dataset.vstage,el.value);return}if(el.dataset&&el.dataset.ifilter){S.ideaF={...S.ideaF,[el.dataset.ifilter]:el.value};saveUi();renderMain(true);return}if(el.dataset&&el.dataset.cfg){cfgRename(el.dataset.cfg,el.dataset.old,el.value.trim());return}if(el.dataset&&el.dataset.bind)bindChange(el)});
+document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.vstage){setStage(el.dataset.vstage,el.value);return}if(el.dataset&&el.dataset.ifilter){S.ideaF={...S.ideaF,[el.dataset.ifilter]:el.value};saveUi();renderMain(true);return}if(el.dataset&&el.dataset.cfg){cfgRename(el.dataset.cfg,el.dataset.old,el.value.trim());return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.fold&&S.fold[el.dataset.fold]!==el.open){S.fold[el.dataset.fold]=el.open;saveUi()}},true);
 /* Téléphone : la barre du haut est transparente sur l'image, puis devient opaque dès que la page défile */
 window.addEventListener('scroll',()=>{const m=$('.mtop');if(m)m.classList.toggle('solid',window.scrollY>4)},{passive:true});
@@ -2549,15 +2533,17 @@ document.addEventListener('pointerout',e=>{const hit=e.target.closest&&e.target.
 /* ---------- Actions ---------- */
 function create(coll,data){const id=uid();put(coll,id,{...data,createdAt:nowIso()});return id}
 function makeHabitForKr(kid){const k=S.data.krs[kid];if(!k)return null;const o=S.data.objectives[k.objectiveId]||{};const hid=create('habits',{name:(k.title||'').trim(),identityId:o.identityId||'',freq:'daily',days:[],perWeek:3,icon:k.icon||'',fromKr:kid});put('krs',kid,{...k,kind:'habit',habitId:hid,target:null});return hid}
-function linkHabit(hid,oid){const h=S.data.habits[hid];if(!h)return;const q=qKey(today());const ex=list('krs').find(k=>k.habitId===hid&&kindOf(k)==='habit'&&krQuarter(k)===q);
-  if(!oid){if(ex){del('krs',ex.id);if(h.fromKr===ex.id)put('habits',hid,{...h,fromKr:null})}}
-  else if(ex)put('krs',ex.id,{...ex,objectiveId:oid});
-  else create('krs',{title:'',icon:'',objectiveId:oid,kind:'habit',habitId:hid,target:null});
-  setTimeout(renderSheet,0)}
 /* L'habitude créée pour une preuve disparaît avec elle ; si elle a déjà été cochée, elle reste dans Habitudes */
 function dropOwnHabit(k){const h=habitOf(k);if(!h||h.fromKr!==k.id)return;if(hDates(h.id).length){put('habits',h.id,{...h,fromKr:''});toast(`« ${h.name||'Habitude'} » reste dans Habitudes : elle a déjà des validations`)}else del('habits',h.id)}
 function repairHabits(){for(const h of list('habits')){const k=h.fromKr&&S.data.krs[h.fromKr];if(!k||kindOf(k)==='habit'||k.habitId!==h.id)continue;
     if(hDates(h.id).length)put('habits',h.id,{...h,fromKr:''});else del('habits',h.id);put('krs',k.id,{...k,habitId:''})}}
+/* Type « Habitude » retiré : la preuve est supprimée, son habitude reste avec son historique et sa série.
+   Une priorité du jour qui visait la preuve vise désormais l'habitude. */
+function migrateHabitProofs(){const ks=list('krs').filter(k=>kindOf(k)==='habit');if(!ks.length)return;const map={};
+  for(const k of ks){const h=habitOf(k);if(h){map[k.id]=h.id;if(h.fromKr||h.identityId)put('habits',h.id,{...h,fromKr:'',identityId:''})}del('krs',k.id)}
+  for(const d of list('days')){const p=d.prio;if(!p)continue;let np=p;
+    if(p.kind==='kr'&&map[p.id])np={...np,kind:'habit',id:map[p.id]};if(p.link&&p.link.kind==='kr'&&map[p.link.id])np={...np,link:{kind:'habit',id:map[p.link.id]}};
+    if(np!==p)put('days',d.id,{...d,prio:np})}}
 function migrateLevels(){for(const k of list('krs').filter(k=>kindOf(k)==='level')){const o=S.data.objectives[k.objectiveId]||{};const c=(k.createdAt||nowIso()).slice(0,10);const h={...(k.history||{})};
     if(+k.start&&!Object.keys(h).some(d=>d<=c))h[c]=+k.start;if(!Object.keys(h).length&&k.current!=null&&k.current!=='')h[today()]=+k.current;
     put('metrics','lv-'+k.id,{name:k.title||'Indicateur',icon:k.icon||'📈',type:'number',unit:k.unit||'',target:+k.target||null,identityId:o.identityId||'',history:h,createdAt:k.createdAt||nowIso(),fromKr:k.id});removeKr(k.id)}}
@@ -2651,7 +2637,7 @@ const ACT={
     if(v==='habit'&&!habitOf(k))makeHabitForKr(k.id);
     else{if(v!=='habit')dropOwnHabit(k);put('krs',k.id,{...k,kind:v,habitId:v==='habit'?k.habitId:'',target:v==='habit'?null:v==='milestone'?1:(['qty','level'].includes(kindOf(k))?k.target:null)})}
     renderSheet()},
-  'kr-make-habit':a=>{makeHabitForKr(a.dataset.id);renderSheet()},
+  
   'set-icon':a=>{const c=a.dataset.coll,id=a.dataset.id;const d=S.data[c][id];if(!d)return;const v=d.icon===a.dataset.v?'':a.dataset.v;put(c,id,{...d,icon:v});if(c==='krs'){const h=S.data.habits[d.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,icon:v})}renderSheet()},
   'day-energy':a=>{const t=a.dataset.date||today(),n=+a.dataset.n;setDay(t,{energy:dayOf(t).energy===n?null:n});if(S.sheet)renderSheet()},
   'prog-range':a=>{S.range.progress=a.dataset.v;saveUi();renderMain(true)},
@@ -2688,7 +2674,7 @@ const ACT={
   'tpl-item-del':a=>{const t=S.data.templates[a.dataset.id];if(!t)return;const it=[...(t.items||[])];it.splice(+a.dataset.i,1);put('templates',t.id,{...t,items:it});renderSheet()},
   'del-template':a=>{del('templates',a.dataset.id);dropSheet()},
   'edit-objective':a=>openSheet('objective','objectives',a.dataset.id),
-  'new-kr':a=>{const id=create('krs',{title:'',icon:'',objectiveId:a.dataset.id,kind:'habit',start:0,target:null,current:0,unit:''});makeHabitForKr(id);openSheet('kr','krs',id,true)},
+  'new-kr':a=>{const id=create('krs',{title:'',icon:'',objectiveId:a.dataset.id,kind:'qty',start:0,target:null,current:0,unit:'',log:{}});openSheet('kr','krs',id,true)},
   'edit-kr':a=>openSheet('kr','krs',a.dataset.id),
   'new-habit':()=>{const id=create('habits',{name:'',icon:'',freq:'daily',days:[],perWeek:3});openSheet('habit','habits',id,true)},
   'edit-habit':a=>openSheet('habit','habits',a.dataset.id),
