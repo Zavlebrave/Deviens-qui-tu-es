@@ -42,6 +42,9 @@ Tes données sont stockées dans Firebase sous `users/<ton identifiant>/…`. El
 - **Android** : Chrome → menu ⋮ → **Installer l'application**.
 - **Ordinateur** : Chrome ou Edge → icône **Installer** dans la barre d'adresse.
 
+## Cahier des charges
+Les évolutions du « Book développeur v1 » sont appliquées. Les décisions prises pour les points ouverts (D01 à D15), la couverture des exigences et les limites connues sont consignées dans `DECISIONS.md`.
+
 ## Faire évoluer l'app
 - Demande la modification à Claude dans une session Claude Code avec ce dépôt attaché. Claude modifie `index.html` et pousse le changement sur GitHub.
 - GitHub Pages republie l'app tout seul en une minute environ. Tes appareils prennent la nouvelle version à la prochaine ouverture.

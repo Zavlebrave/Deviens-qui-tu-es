@@ -541,6 +541,14 @@ body{font-size:16px}
 .m-add{font-size:15px;font-weight:700;margin-top:18px}
 .mgoal .tag{white-space:normal;text-align:right}
 .rv-sync{font-size:12px}
+.imp{margin-top:14px;padding:16px;border-radius:14px;background:var(--surface-2);display:grid;gap:12px}
+.imp table{width:100%;border-collapse:collapse;font-size:14px}
+.imp th,.imp td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+.imp th:first-child,.imp td:first-child{text-align:left}
+.imp th{color:var(--muted);font-weight:600;font-size:12px}
+.imp-err{color:var(--neg)}
+.imp-err li{margin:4px 0}
+#sheet-panel:focus{outline:none}
 .today-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0 16px;align-items:start}
 @media (min-width:1100px){.today-grid{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
 details.sec>summary{list-style:none;cursor:pointer;margin-bottom:0}
@@ -598,7 +606,7 @@ details.sec:not([open])>summary h2::after{transform:rotate(-90deg)}
   <main id="main"><div class="boot"><p>Ouverture de ton espace…</p></div></main>
   <nav class="tabbar" id="tabbar" aria-label="Navigation"></nav>
 </div>
-<div class="sheet" id="sheet" hidden><div class="sheet-bg" data-act="close-sheet"></div><div class="sheet-panel" id="sheet-panel" role="dialog" aria-modal="true"></div></div>
+<div class="sheet" id="sheet" hidden><div class="sheet-bg" data-act="close-sheet"></div><div class="sheet-panel" id="sheet-panel" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 
 <script>
 /* ---------- Utilitaires ---------- */
@@ -697,6 +705,12 @@ function syncState(){if(S.mode==='local')return['local','Enregistré sur cet app
   if(!SYNC.online)return['off',SYNC.inflight?'Hors connexion · en attente de synchronisation':'Hors connexion · enregistré sur cet appareil','Hors connexion'];
   if(SYNC.inflight)return['wait','En attente de synchronisation','En attente'];return['ok','Synchronisé','Synchronisé']}
 function renderSync(){const[k,l,sh]=syncState();document.querySelectorAll('[data-sync]').forEach(el=>{el.classList.remove('s-ok','s-wait','s-off','s-err','s-local');el.classList.add('store-state','s-'+k);const a=el.querySelector('.lg'),b=el.querySelector('.sh'),btn=el.querySelector('button');if(a)a.textContent=l;if(b)b.textContent=sh;if(btn)btn.hidden=k!=='err'})}
+/* F38 : une écriture partielle (incrément, ajout ou retrait dans une liste) se fusionne côté serveur ;
+   deux appareils qui ajoutent chacun une quantité conservent les deux ajouts */
+function track(pr,c,id){SYNC.inflight++;renderSync();Promise.resolve(pr).then(()=>{delete SYNC.failed[c+'/'+id]},e=>{const cur=S.data[c][id];SYNC.failed[c+'/'+id]={c,id,d:cur?clean(cur):null};dbError(e)}).finally(()=>{SYNC.inflight--;renderSync()})}
+function setLocal(c,id,doc){S.data[c]={...S.data[c],[id]:{...doc,id}};S.ver++;schedule()}
+function incLog(kid,d,n){const k=S.data.krs[kid];if(!k||!n)return;const r3=x=>Math.round(x*1000)/1000;const log={...(k.log||{})};log[d]=r3((+log[d]||0)+n);const doc={...clean(k),log,updatedAt:nowIso()};setLocal('krs',kid,doc);
+  const ref=db&&db.collection('krs').doc(kid);if(ref&&ref.inc)track(ref.inc('log.'+d,n,{updatedAt:doc.updatedAt}),'krs',kid);else if(db)queueWrite('krs',kid,doc);else saveLocal('krs')}
 function retrySync(){const f=SYNC.failed;SYNC.failed={};for(const{c,id,d} of Object.values(f))queueWrite(c,id,d);renderSync()}
 window.addEventListener('online',()=>{SYNC.online=true;renderSync()});window.addEventListener('offline',()=>{SYNC.online=false;renderSync()});
 function dbError(e){const c=e&&e.code;if(c==='quota_exceeded')toast("Stockage plein : supprime d'anciennes données ou exporte-les.");else if(c==='invalid_argument')toast("Cette modification n'a pas pu être enregistrée.");else if(c==='revoked')toast("L'accès en écriture a été retiré pour cette session.");else toast('Enregistrement impossible pour le moment, réessaie dans un instant.')}
@@ -882,7 +896,10 @@ function habitMin(hid,s){const m=S.data.habitlog[s.slice(0,7)];return !!(m&&m.mi
 const habitState=(hid,s)=>habitDone(hid,s)?'target':habitMin(hid,s)?'min':'none';
 function setHabitState(hid,s,state){const k=s.slice(0,7);const base=S.data.habitlog[k];const doc=base?JSON.parse(JSON.stringify(clean(base))):{month:k,days:{}};doc.days=doc.days||{};doc.mins=doc.mins||{};
   const rm=m=>{m[s]=(m[s]||[]).filter(x=>x!==hid);if(!m[s].length)delete m[s]};rm(doc.days);rm(doc.mins);
-  if(state==='target')doc.days[s]=[...(doc.days[s]||[]),hid];if(state==='min')doc.mins[s]=[...(doc.mins[s]||[]),hid];put('habitlog',k,doc)}
+  if(state==='target')doc.days[s]=[...(doc.days[s]||[]),hid];if(state==='min')doc.mins[s]=[...(doc.mins[s]||[]),hid];
+  const ref=db&&db.collection('habitlog').doc(k);
+  if(ref&&ref.arr){setLocal('habitlog',k,doc);track(ref.arr([['days',s,'remove',hid],['mins',s,'remove',hid],...(state==='target'?[['days',s,'union',hid]]:state==='min'?[['mins',s,'union',hid]]:[])],{month:k}),'habitlog',k)}
+  else put('habitlog',k,doc)}
 function toggleHabit(hid,s){setHabitState(hid,s,habitDone(hid,s)?'none':'target')}
 /* Validation en un geste, avec un retour bref et « Annuler » qui restaure l'état précédent partout (F21, U12) */
 function applyHabit(hid,d,state){const h=S.data.habits[hid];if(!h)return;const prev=habitState(hid,d);if(prev===state)return;setHabitState(hid,d,state);
@@ -1191,11 +1208,11 @@ function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());
 const objTitleOf=k=>{const o=S.data.objectives[k.objectiveId];return o&&o.title?esc(o.title)+' · ':''};
 /* − retire depuis les saisies les plus récentes de la période (semaine affichée ou trimestre), sans passer sous zéro */
 const qtyCtl=(k,date,from)=>{const st=fmtN(qtyStep(k)),u=esc(k.unit||'');return `<span class="qsteps"><button class="step" data-act="qty-step" data-id="${k.id}" data-d="-1" data-date="${date}" data-from="${from}" aria-label="Retirer ${st} ${u}">−</button><button class="step" data-act="qty-step" data-id="${k.id}" data-d="1" data-date="${date}" data-from="${from}" aria-label="Ajouter ${st} ${u}">+</button></span>`};
-function stepQty(k,d,dir,from){const r3=x=>Math.round(x*1000)/1000;const n=qtyStep(k);const log={...(k.log||{})};
-  if(dir>0)log[d]=r3((+log[d]||0)+n);
-  else{let rest=n;for(const day of Object.keys(log).filter(x=>x>=(from||'0000')&&x<=d&&+log[x]>0).sort().reverse()){const take=Math.min(rest,+log[day]);log[day]=r3(+log[day]-take);rest=r3(rest-take);if(!log[day])delete log[day];if(!rest)break}
-    if(rest===n){toast('Rien à retirer sur cette période');return}}
-  put('krs',k.id,{...k,log,updatedAt:nowIso()})}
+function stepQty(k,d,dir,from){const r3=x=>Math.round(x*1000)/1000;const n=qtyStep(k);
+  if(dir>0){incLog(k.id,d,n);return}
+  const log=k.log||{};let rest=n;const takes=[];for(const day of Object.keys(log).filter(x=>x>=(from||'0000')&&x<=d&&+log[x]>0).sort().reverse()){const take=Math.min(rest,+log[day]);takes.push([day,take]);rest=r3(rest-take);if(!rest)break}
+  if(!takes.length){toast('Rien à retirer sur cette période');return}
+  for(const[day,take] of takes)incLog(k.id,day,-take)}
 
 /* ---------- Vue : Habitudes ---------- */
 function cellHtml(h,d,t){const st=habitState(h.id,d),fut=d>t||d<hStart(h),weekly=freqOf(h)==='weekly',sched=weekly||fixedOn(h,d),j=weekly?null:justOf(h.id,d);let cls='',ic=ICON.check,lab='à faire';
@@ -1444,7 +1461,7 @@ function viewSettings(){
     <section class="sec"><div class="sec-h"><h2>Tes données</h2><span class="store-state" data-sync><i></i><span class="lg"></span><span class="sh"></span><button data-act="sync-retry" hidden>Réessayer</button></span></div>
       <p class="note">Exporte tout en un fichier JSON : une sauvegarde, ou le moyen d'emporter ton espace ailleurs.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn sm" data-act="export">Exporter</button><label class="btn-sec" for="import-file" style="cursor:pointer">Importer un fichier</label><input id="import-file" type="file" accept=".json,application/json" hidden></div>
-      ${S.pendingImport?`<div style="margin-top:14px;display:flex;flex-direction:column;gap:10px"><p>Ce fichier contient ${S.pendingImport.count} éléments. L'import remplace ceux qui ont le même identifiant.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm" data-act="import-go">Confirmer l'import</button><button class="btn-sec" data-act="import-cancel">Annuler</button></div></div>`:''}
+      ${importPanel()}${backupInfo()}
     </section>
     <section class="sec"><div class="sec-h"><h2>Compte</h2></div><p class="note">Connecté avec ${esc((window.DQ_BACKEND&&window.DQ_BACKEND.user)||'ton compte')}. Tes données sont synchronisées entre ton téléphone et ton ordinateur, et restent disponibles hors connexion.</p><div style="margin-top:12px"><button class="btn-sec" data-act="sign-out">Se déconnecter</button></div></section>
   </div>`}
@@ -1469,7 +1486,8 @@ function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
   const fn={abandon:sheetAbandon,hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
-function openSheet(kind,coll,id,isNew){const from=S.sheet&&S.sheet.kind;if(S.sheet)closeSheet(true);S.sheet={kind,coll,id,isNew:!!isNew};navPush(from==='pick');$('#sheet-panel').scrollTop=0;renderSheet();if(isNew){const el=$('#sheet-panel [data-bind$=":title"],#sheet-panel [data-bind$=":name"],#sheet-panel [data-bind$=":text"]');if(el)setTimeout(()=>el.focus(),60)}}
+function trigSel(el){if(!el||!el.dataset||!el.dataset.act)return null;return `[data-act="${el.dataset.act}"]${el.dataset.id?`[data-id="${el.dataset.id}"]`:''}`}
+function openSheet(kind,coll,id,isNew){const from=S.sheet&&S.sheet.kind;if(!S.sheet){const ae=document.activeElement;S.sheetTrig=ae&&!ae.closest('#sheet')?trigSel(ae.closest('[data-act]')):null}if(S.sheet)closeSheet(true);S.sheet={kind,coll,id,isNew:!!isNew};navPush(from==='pick');$('#sheet-panel').scrollTop=0;renderSheet();if(!isNew)setTimeout(()=>{const p=$('#sheet-panel');if(p&&!p.contains(document.activeElement))p.focus({preventScroll:true})},30);if(isNew){const el=$('#sheet-panel [data-bind$=":title"],#sheet-panel [data-bind$=":name"],#sheet-panel [data-bind$=":text"]');if(el)setTimeout(()=>el.focus(),60)}}
 /* Historique : chaque onglet et chaque fiche ouverte devient une page. Le bouton retour du téléphone ferme la fiche
    ou revient à l'écran précédent au lieu de quitter l'app. */
 let navLock=false;
@@ -1482,13 +1500,13 @@ function dismissSheet(){if(sheetOnTop())history.back();else closeSheet()}
 function dropSheet(){S.sheet=null;closeSheet();if(sheetOnTop())history.back()}
 window.addEventListener('popstate',e=>{const st=e.state;navLock=true;try{
     const want=st&&st.dq?st.sheet:null;const cur=S.sheet;
-    if(cur&&!(want&&want.kind===cur.kind&&want.id===(cur.id||null)))closeSheet(true);
+    if(cur&&!(want&&want.kind===cur.kind&&want.id===(cur.id||null))){closeSheet(true);if(!want&&S.sheetTrig){S.refocus=S.sheetTrig;S.sheetTrig=null}}
     const nd=st&&st.dq?st.day||null:null;const dayChanged=nd!==S.day;S.day=nd;
     if(st&&st.dq&&st.tab&&st.tab!==S.tab){S.tab=st.tab;renderShell();renderMain(true);window.scrollTo(0,0)}
     else if(dayChanged&&S.tab==='today'){renderMain(true);window.scrollTo(0,0)}
     if(want&&!S.sheet)openSheet(want.kind,want.coll,want.id);
     schedule()}finally{navLock=false}});
-function closeSheet(silent){const s=S.sheet;S.sheet=null;$('#sheet').hidden=true;$('#sheet-panel').innerHTML='';
+function closeSheet(silent){const s=S.sheet;S.sheet=null;$('#sheet').hidden=true;$('#sheet-panel').innerHTML='';if(!silent&&S.sheetTrig){S.refocus=S.sheetTrig;S.sheetTrig=null}
   if(s&&s.isNew&&s.coll){const d=S.data[s.coll][s.id];if(d&&!String(d.title||d.name||d.text||'').trim()){if(s.coll==='krs')removeKr(s.id);else del(s.coll,s.id)}}
   if(!silent)schedule()}
 function sheetIdentity(id){const i=S.data.identities[id];return sheetTop(esc(i.name||'Nouvelle identité'),'Identité')+`
@@ -1663,6 +1681,7 @@ function renderMain(force){
   const keep=ae&&ae.id&&main.contains(ae)?ae.id:null;
   const fn={today:viewToday,okr:viewOKR,habits:viewHabits,progress:viewProgress,review:viewReview,studio:viewStudio,settings:viewSettings}[S.tab]||viewToday;
   main.innerHTML=fn();renderSync();
+  if(S.refocus&&!S.sheet){const el=main.querySelector(S.refocus);S.refocus=null;if(el)el.focus({preventScroll:true})}
   if(!archived)setTimeout(autoArchive,0);
   ensurePlan();
   if(S.tab==='studio'&&S.studio==='idees')filterIdeas();
@@ -1701,13 +1720,16 @@ document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.d
 const bindT={};
 document.addEventListener('input',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.bind&&(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&['text','url','search',''].includes(el.type)))){const k=el.id||el.dataset.bind;clearTimeout(bindT[k]);bindT[k]=setTimeout(()=>{if(el.isConnected)bindChange(el)},700)}});
 document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}});
-document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty'){e.preventDefault();const k=S.data.krs[f.dataset.id];const inp=f.querySelector('input[type=number]');const amt=+inp.value;if(!k||inp.value===''||!isFinite(amt)||!amt)return;const dIn=f.querySelector('input[name=date]');const d=(dIn&&dIn.value)||f.dataset.date||today();const log={...(k.log||{})};log[d]=(+log[d]||0)+amt;put('krs',k.id,{...k,log,updatedAt:nowIso()});toast(`${signed(amt,k.unit||'')} · ${krTitle(k)}`);if(S.sheet)renderSheet();else{S.qtyOpen=null;renderMain(true)}return}if(f.dataset.form==='metric'){e.preventDefault();const m=S.data.metrics[f.dataset.id];if(!m)return;const el=f.elements;const d=(el.date&&el.date.value)||today();let v;
+document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty'){e.preventDefault();const k=S.data.krs[f.dataset.id];const inp=f.querySelector('input[type=number]');const amt=+inp.value;if(!k||inp.value===''||!isFinite(amt)||!amt)return;const dIn=f.querySelector('input[name=date]');const d=(dIn&&dIn.value)||f.dataset.date||today();
+    if(amt<0){const m=monday(d);if(krWeekValue(k,m)+amt<0){toast('Correction impossible : le total de la semaine deviendrait négatif');return}}
+    incLog(k.id,d,amt);toast(`${signed(amt,k.unit||'')} · ${krTitle(k)}`);if(S.sheet)renderSheet();else{S.qtyOpen=null;renderMain(true)}return}if(f.dataset.form==='metric'){e.preventDefault();const m=S.data.metrics[f.dataset.id];if(!m)return;const el=f.elements;const d=(el.date&&el.date.value)||today();let v;
     if(m.type==='rank')v=rankVal(+el.tier.value,+el.div.value);else{if(el.v.value==='')return;v=+el.v.value;if(!isFinite(v))return}
     setMetric(m,d,v);toast(`${m.name||'Indicateur'} · ${mFmt(m,v)}`);if(document.activeElement)document.activeElement.blur();renderMain(true);return}
   if(f.dataset.form==='prio-new'){e.preventDefault();const inp=$('#prio-new');const txt=inp.value.trim();if(!txt)return;const t=S.day||today();const id=uid();saveTodos(t,[...todoItems(t),{id,text:txt,done:false}]);setDay(t,{prio:{kind:'todo',id,label:txt},prioDone:false});dismissSheet();return}
   if(f.dataset.form==='carry'){e.preventDefault();const sel=[...f.querySelectorAll('input[name=carry]:checked')].map(x=>x.value.split('|'));if(!sel.length){toast('Sélectionne au moins une tâche');return}carryTasks(sel);dismissSheet();return}
   if(f.dataset.form==='todo'){e.preventDefault();const inp=$('#todo-new');const txt=inp.value.trim();if(!txt)return;const t=S.day||today();saveTodos(t,[...todoItems(t),{id:uid(),text:txt,done:false}]);inp.value='';renderMain(true);const n=$('#todo-new');if(n)n.focus()}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet)dismissSheet();if(e.key==='Enter'&&S.sheet&&e.target.tagName==='INPUT'&&e.target.type!=='file')e.target.blur()});
+document.addEventListener('keydown',e=>{if(e.key==='Tab'&&S.sheet){const p=$('#sheet-panel');const f=[...p.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type=hidden]),select,textarea,[href]')].filter(x=>x.offsetParent!==null);if(f.length){const a=f[0],z=f[f.length-1];if(e.shiftKey&&(document.activeElement===a||document.activeElement===p)){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}}}
+  if(e.key==='Escape'&&S.sheet)dismissSheet();if(e.key==='Enter'&&S.sheet&&e.target.tagName==='INPUT'&&e.target.type!=='file')e.target.blur()});
 
 /* ---------- Glissement des habitudes & lecture des courbes ---------- */
 document.addEventListener('pointerdown',e=>{const fg=e.target.closest&&e.target.closest('.swipe-fg');if(!fg||e.button>0)return;sw={fg,el:fg.parentElement,x:e.clientX,y:e.clientY,id:e.pointerId,drag:false,dx:0}});
@@ -1866,8 +1888,11 @@ const ACT={
   'sign-out':()=>{if((SYNC.inflight||Object.keys(SYNC.failed).length)&&!confirm('Des modifications ne sont pas encore synchronisées. Si tu te déconnectes maintenant, elles pourraient être perdues. Te déconnecter quand même ?'))return;if(window.DQ_BACKEND&&window.DQ_BACKEND.signOut)window.DQ_BACKEND.signOut()},
   'sync-retry':()=>retrySync(),
   'bilan':a=>{if(S.sheet)closeSheet(true);setTab(a.dataset.v)},
-  'import-go':()=>runImport(),
-  'import-cancel':()=>{S.pendingImport=null;renderMain(true)}
+  'imp-mode':a=>{if(S.imp){S.imp.mode=a.dataset.v;renderMain(true)}},
+  'imp-take':a=>{if(S.imp){S.imp.take=a.dataset.v;renderMain(true)}},
+  'imp-go':a=>{if(a.disabled)return;a.disabled=true;applyImport()},
+  'imp-cancel':()=>{S.imp=null;renderMain(true)},
+  'backup-restore':()=>restoreBackupPreview()
 };
 document.addEventListener('click',e=>{if(Date.now()-swAt<350&&e.target.closest('.swipe')){e.preventDefault();return}const a=e.target.closest('[data-act]');if(!a||a.tagName==='A')return;const f=ACT[a.dataset.act];if(f){e.preventDefault();f(a,e)}});
 
@@ -1877,15 +1902,64 @@ document.addEventListener('dragend',e=>{const c=e.target.closest&&e.target.close
 document.addEventListener('dragover',e=>{const col=e.target.closest&&e.target.closest('[data-drop]');if(!col)return;e.preventDefault();document.querySelectorAll('.kcol.over').forEach(x=>{if(x!==col)x.classList.remove('over')});col.classList.add('over')});
 document.addEventListener('drop',e=>{const col=e.target.closest&&e.target.closest('[data-drop]');if(!col)return;e.preventDefault();col.classList.remove('over');const id=e.dataTransfer.getData('text/plain');if(id&&S.data.videos[id])setStage(id,col.dataset.drop)});
 
-/* ---------- Export / import ---------- */
-async function exportData(){const data=Object.fromEntries(COLLS.map(c=>[c,Object.fromEntries(Object.entries(S.data[c]).map(([k,v])=>[k,clean(v)]))]));const json=JSON.stringify({app:'deviens-qui-tu-es',version:2,exportedAt:nowIso(),data},null,2);const name=`deviens-qui-tu-es-${today()}.json`;
+/* ---------- Export / import (F41-F44) ---------- */
+const SCHEMA=3;
+const COLL_FR={settings:'Réglages',identities:'Identités',objectives:'Objectifs',krs:'Preuves',habits:'Habitudes',habitlog:'Suivi des habitudes (mois)',todos:'Tâches (jours)',days:'Matins',metrics:'Indicateurs',plans:'Cibles hebdomadaires',justifs:'Justifications',reviews:'Revues',videos:'Vidéos',ideas:'Idées',templates:'Modèles'};
+const DATE_FIELDS={todos:['date'],days:['date'],reviews:['monday'],plans:['monday'],justifs:['date'],videos:['publishDate'],krs:['week','doneAt']};
+const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
+function snapshotData(){return{app:'deviens-qui-tu-es',schemaVersion:SCHEMA,version:SCHEMA,exportedAt:nowIso(),data:Object.fromEntries(COLLS.map(c=>[c,Object.fromEntries(Object.entries(S.data[c]).map(([k,v])=>[k,clean(v)]))]))}}
+async function saveJson(obj,name){const json=JSON.stringify(obj,null,2);
   if(window.claude&&typeof window.claude.use==='function'){let dl=null;try{dl=await window.claude.use('downloads')}catch(e){}
-    if(dl){try{await dl.save({filename:name,data:json});toast('Export enregistré')}catch(e){if(e&&e.code!=='declined')toast("L'export n'a pas pu être enregistré")}return}}
-  try{const url=URL.createObjectURL(new Blob([json],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)}catch(e){toast("L'export n'est pas disponible ici")}}
-function readImport(el){const file=el.files&&el.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);const d=j.data||j;let count=0;for(const c of COLLS)if(d[c]&&typeof d[c]==='object')count+=Object.keys(d[c]).length;if(!count)throw new Error('vide');S.pendingImport={data:d,count};renderMain(true)}catch(e){toast("Ce fichier n'est pas un export valide de l'application")}el.value=''};r.readAsText(file)}
-async function runImport(){const d=S.pendingImport&&S.pendingImport.data;if(!d)return;S.pendingImport=null;let n=0;
-  for(const c of COLLS){const m=d[c];if(!m||typeof m!=='object')continue;for(const[id,doc] of Object.entries(m)){if(!doc||typeof doc!=='object')continue;const cd=clean(doc);S.data[c]={...S.data[c],[id]:{...cd,id}};if(db){try{await db.collection(c).doc(id).set(cd)}catch(e){dbError(e);break}}n++}if(!db)saveLocal(c)}
-  S.ver++;toast(`${n} éléments importés`);schedule()}
+    if(dl){try{await dl.save({filename:name,data:json});return true}catch(e){return false}}}
+  try{const url=URL.createObjectURL(new Blob([json],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);return true}catch(e){return false}}
+/* F41 : export complet, avec la version de schéma et la date ; aucun secret d'authentification */
+async function exportData(){toast(await saveJson(snapshotData(),`deviens-qui-tu-es-${today()}.json`)?'Export enregistré':"L'export n'est pas disponible ici")}
+/* F42 : un fichier invalide ne modifie rien ; le message dit ce qui ne va pas */
+function validateImport(j){const errs=[];if(!j||typeof j!=='object'||Array.isArray(j))return{errs:['Le fichier ne contient pas de données lisibles.']};
+  if(j.app&&j.app!=='deviens-qui-tu-es')errs.push('Ce fichier vient d’une autre application.');
+  const ver=+(j.schemaVersion||j.version||1);if(ver>SCHEMA)errs.push(`Ce fichier utilise une version plus récente (${ver}) que l’application (${SCHEMA}). Mets l’application à jour avant d’importer.`);
+  const d=j.data&&typeof j.data==='object'?j.data:j;const unknown=Object.keys(d).filter(c=>!COLLS.includes(c)&&!['app','version','schemaVersion','exportedAt','data'].includes(c));let count=0;
+  for(const c of COLLS){const m=d[c];if(m==null)continue;if(typeof m!=='object'||Array.isArray(m)){errs.push(`${COLL_FR[c]} : format inattendu.`);continue}
+    for(const[id,doc] of Object.entries(m)){if(!id||id.includes('/')){errs.push(`${COLL_FR[c]} : identifiant invalide « ${id} ».`);continue}if(!doc||typeof doc!=='object'||Array.isArray(doc)){errs.push(`${COLL_FR[c]} « ${id} » : élément illisible.`);continue}count++;
+      for(const f of DATE_FIELDS[c]||[])if(doc[f]!=null&&doc[f]!==''&&!DATE_RE.test(String(doc[f]).slice(0,10)))errs.push(`${COLL_FR[c]} « ${doc.title||doc.name||id} » : date invalide (${f} = ${doc[f]}).`);
+      if(c==='metrics'&&doc.history&&typeof doc.history==='object')for(const[k,v] of Object.entries(doc.history)){if(!DATE_RE.test(k))errs.push(`Indicateur « ${doc.name||id} » : date invalide « ${k} ».`);else if(v!==null&&v!==''&&!isFinite(+v))errs.push(`Indicateur « ${doc.name||id} » : valeur non numérique le ${k}.`)}
+      if(c==='metrics'&&numOrNull(doc.min)!=null&&numOrNull(doc.max)!=null&&+doc.min>+doc.max)errs.push(`Indicateur « ${doc.name||id} » : minimum supérieur au maximum.`);
+      if(c==='krs'&&doc.log&&typeof doc.log==='object')for(const[k,v] of Object.entries(doc.log))if(!DATE_RE.test(k)||!isFinite(+v))errs.push(`Preuve « ${doc.title||id} » : saisie invalide (${k}).`)}}
+  if(!count&&!errs.length)errs.push('Le fichier ne contient aucun élément.');
+  return{errs,data:d,unknown,count}}
+const sortKeys=v=>Array.isArray(v)?v.map(sortKeys):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,sortKeys(v[k])])):v;
+const sameDoc=(a,b)=>JSON.stringify(sortKeys(clean(a)))===JSON.stringify(sortKeys(clean(b)));
+function importReport(d){const rows=[];for(const c of COLLS){const m=d[c];if(!m||typeof m!=='object')continue;let nw=0,mod=0,same=0;for(const[id,doc] of Object.entries(m)){const cur=S.data[c][id];if(!cur)nw++;else if(sameDoc(cur,doc))same++;else mod++}rows.push({c,nw,mod,same,del:Object.keys(S.data[c]).filter(id=>!(id in m)).length})}return rows}
+function prepareImport(j,source){const v=validateImport(j);S.imp=v.errs.length?{errs:v.errs}:{data:v.data,rows:importReport(v.data),unknown:v.unknown,mode:source==='backup'?'replace':'merge',take:'keep',source};renderMain(true)}
+function readImport(el){const file=el.files&&el.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{let j;try{j=JSON.parse(r.result)}catch(e){S.imp={errs:['Ce fichier n’est pas un JSON lisible : il est peut-être abîmé ou ce n’est pas un export de l’application.']};renderMain(true);el.value='';return}prepareImport(j,'file');el.value=''};r.readAsText(file)}
+/* F43 : fusion ou remplacement, avec récapitulatif des ajouts, modifications et suppressions avant confirmation */
+function importPanel(){const im=S.imp;if(!im)return '';
+  if(im.errs)return `<div class="imp"><b class="imp-err">Import impossible : aucune donnée n’a été modifiée.</b><ul class="imp-err">${im.errs.slice(0,8).map(e=>`<li>${esc(e)}</li>`).join('')}</ul>${im.errs.length>8?`<p class="hint">… et ${im.errs.length-8} autres problèmes.</p>`:''}<div><button class="btn-sec" data-act="imp-cancel">Fermer</button></div></div>`;
+  const rep=im.mode==='replace';const tot=k=>im.rows.reduce((s,x)=>s+x[k],0);const writes=tot('nw')+(rep||im.take==='file'?tot('mod'):0),dels=rep?tot('del'):0;
+  return `<div class="imp"><b>${im.source==='backup'?'Restaurer la sauvegarde':'Aperçu de l’import'}</b>
+  <table><thead><tr><th>Catégorie</th><th>Nouveaux</th><th>Modifiés</th><th>Identiques</th>${rep?'<th>Supprimés</th>':''}</tr></thead><tbody>${im.rows.map(x=>`<tr><td>${esc(COLL_FR[x.c])}</td><td>${x.nw}</td><td>${x.mod}</td><td>${x.same}</td>${rep?`<td>${x.del}</td>`:''}</tr>`).join('')}</tbody></table>
+  ${im.unknown&&im.unknown.length?`<p class="hint">Ignoré (inconnu de l’application) : ${esc(im.unknown.join(', '))}.</p>`:''}
+  <div class="field"><span>Mode</span>${pills('imp-mode',im.mode,[['merge','Fusionner'],['replace','Remplacer']])}</div>
+  ${rep?`<p class="hint">Remplacer : les catégories présentes dans le fichier prennent exactement son contenu. ${dels} élément${dels>1?'s':''} absent${dels>1?'s':''} du fichier ser${dels>1?'ont':'a'} supprimé${dels>1?'s':''}.</p>`:`<p class="hint">Fusionner : les nouveaux éléments sont ajoutés, rien n’est supprimé. Pour un même élément modifié des deux côtés :</p>${pills('imp-take',im.take,[['keep','Garder ma version'],['file','Prendre celle du fichier']])}`}
+  <p><b>${writes} élément${writes>1?'s':''} écrit${writes>1?'s':''}${dels?`, ${dels} supprimé${dels>1?'s':''}`:''}.</b> Une sauvegarde de tes données actuelles est enregistrée juste avant.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm" data-act="imp-go">Sauvegarder puis ${im.source==='backup'?'restaurer':'importer'}</button><button class="btn-sec" data-act="imp-cancel">Annuler</button></div></div>`}
+function backupInfo(){let b=null;try{b=JSON.parse(localStorage.getItem('dqte:backup')||'null')}catch(e){}if(!b||!b.exportedAt)return '';return `<p class="hint" style="margin-top:12px">Sauvegarde d’avant import du ${fmtD(b.exportedAt.slice(0,10),true)} sur cet appareil · <button class="act" data-act="backup-restore">Restaurer</button></p>`}
+function restoreBackupPreview(){let b=null;try{b=JSON.parse(localStorage.getItem('dqte:backup')||'null')}catch(e){}if(!b){toast('Aucune sauvegarde sur cet appareil');return}prepareImport(b,'backup')}
+function opsFor(d,mode,take){const ops=[];for(const c of COLLS){const m=d[c];if(!m||typeof m!=='object')continue;for(const[id,doc] of Object.entries(m)){const cur=S.data[c][id];if(cur&&sameDoc(cur,doc))continue;if(!cur||mode==='replace'||take==='file')ops.push({c,id,d:clean(doc)})}
+    if(mode==='replace')for(const id of Object.keys(S.data[c]))if(!(id in m))ops.push({c,id,d:null})}return ops}
+function applyOpsLocal(ops){for(const o of ops){const n={...S.data[o.c]};if(o.d===null)delete n[o.id];else n[o.id]={...o.d,id:o.id};S.data[o.c]=n}S.ver++}
+/* F44 : sauvegarde récupérable avant l'import ; en cas d'échec, l'état précédent est restauré intégralement */
+async function applyImport(){const im=S.imp;if(!im||im.errs)return;S.imp=null;
+  const backup=snapshotData();try{localStorage.setItem('dqte:backup',JSON.stringify(backup))}catch(e){}await saveJson(backup,`sauvegarde-avant-import-${today()}.json`);
+  const ops=opsFor(im.data,im.mode,im.take);const w=ops.filter(o=>o.d).length,dl=ops.length-w;
+  if(!ops.length){toast('Rien à importer : tout est déjà à jour');renderMain(true);return}
+  applyOpsLocal(ops);schedule();
+  if(!db){for(const c of COLLS)saveLocal(c);toast(`Import terminé : ${w} écrit${w>1?'s':''}${dl?`, ${dl} supprimé${dl>1?'s':''}`:''}`);return}
+  if(!db.commit){for(const o of ops)queueWrite(o.c,o.id,o.d);toast(`Import en cours : ${w} éléments`);return}
+  toast(SYNC.online?'Import en cours…':'Import enregistré sur cet appareil : en attente de synchronisation');SYNC.inflight++;renderSync();
+  try{await db.commit(ops);toast(`Import terminé : ${w} écrit${w>1?'s':''}${dl?`, ${dl} supprimé${dl>1?'s':''}`:''}`)}
+  catch(e){const back=opsFor(backup.data,'replace','file');applyOpsLocal(back);schedule();try{await db.commit(back);toast('L’import a échoué : tes données d’avant ont été restaurées.')}catch(e2){toast('L’import a échoué. Restaure la sauvegarde téléchargée depuis Réglages.')}}
+  finally{SYNC.inflight--;renderSync()}}
 
 /* ---------- Démarrage ---------- */
 window.addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1);const t=TABS.find(x=>x.hash===h);const k=t?t.k:h==='reglages'?'settings':null;if(k&&k!==S.tab){if(S.sheet)closeSheet(true);S.tab=k;renderShell();renderMain(true)}});
@@ -1895,7 +1969,7 @@ window.addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1);c
 <script type="module">
 // Connexion à Firebase : compte e-mail/mot de passe + base Firestore (données sous users/<ton id>/…)
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import {initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,deleteDoc,onSnapshot,query,where} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,deleteDoc,updateDoc,onSnapshot,query,where,writeBatch,increment,arrayUnion,arrayRemove} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,signOut} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 const B=window.DQ_BACKEND,$=id=>document.getElementById(id);B.loaded=true;
 const showAuth=(msg,err)=>{$('auth').hidden=false;if(msg)$('auth-msg').textContent=msg;$('auth-err').textContent=err||''};
@@ -1909,8 +1983,15 @@ if(cfg.apiKey){
   const makeApi=uid=>{const wrap=(c,qq)=>({
       where:(f,op,v)=>wrap(c,query(qq,where(f,op,v))),
       onSnapshot:(next,err)=>onSnapshot(qq,s=>next({docs:s.docs.map(d=>({id:d.id,exists:true,data:()=>d.data()}))}),e=>err&&err({code:e.code==='permission-denied'?'revoked':'unavailable',message:e.message})),
-      doc:id=>{const r=doc(fs,'users',uid,c,id);return{set:d=>setDoc(r,d),delete:()=>deleteDoc(r)}}});
-    return{collection:c=>wrap(c,collection(fs,'users',uid,c))}};
+      doc:id=>{const r=doc(fs,'users',uid,c,id);return{set:d=>setDoc(r,d),delete:()=>deleteDoc(r),
+        // incrément côté serveur : deux ajouts concurrents s'additionnent
+        inc:(path,v,extra)=>updateDoc(r,{[path]:increment(v),...(extra||{})}),
+        // ajout / retrait dans des listes ; les deux écritures partent ensemble pour garder le cache local cohérent
+        arr:(ops,extra)=>{const rem={},add={};for(const[m,k,op,v] of ops){const t=op==='union'?add:rem;(t[m]=t[m]||{})[k]=op==='union'?arrayUnion(v):arrayRemove(v)}
+          const ps=[];if(Object.keys(rem).length)ps.push(setDoc(r,{...(extra||{}),...rem},{merge:true}));if(Object.keys(add).length)ps.push(setDoc(r,{...(extra||{}),...add},{merge:true}));return Promise.all(ps)}}}});
+    // import : écritures groupées par lots atomiques
+    const commit=async ops=>{for(let i=0;i<ops.length;i+=400){const b=writeBatch(fs);for(const o of ops.slice(i,i+400)){const r=doc(fs,'users',uid,o.c,o.id);if(o.d===null)b.delete(r);else b.set(r,o.d)}await b.commit()}};
+    return{collection:c=>wrap(c,collection(fs,'users',uid,c)),commit}};
   onAuthStateChanged(auth,u=>{
     if(u){$('auth').hidden=true;B.user=u.email;if(!started){started=true;B._resolve(makeApi(u.uid))}}
     else{if(started){location.reload();return}showAuth()}});
