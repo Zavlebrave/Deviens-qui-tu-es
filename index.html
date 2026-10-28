@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#111318">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -49,31 +49,20 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Quicksand:wght@600;700&display=swap">
 <style>
-/* Layout: Trade Republic grammar. Pure black ground, one calm column of flat lists,
-   a big number with its delta and a line chart at the top of each screen, round
-   pictogram avatars, pill buttons. Green and red only carry performance. */
+/* Direction visuelle sombre (book v1, U08-U10) : fond charbon, surfaces légèrement différenciées,
+   accent indigo pour les actions et la sélection. Le vert, l'orange et le rouge ne portent que des statuts.
+   Le thème reste sombre quel que soit le réglage du système (D13). */
 :root{
-  --bg:#000000; --surface:#0D0D0F; --surface-2:#1B1B1E; --surface-3:#2A2A2E; --line:#1A1A1D;
-  --fg:#FFFFFF; --muted:#8E8E93; --faint:#545458;
-  --pos:#21CE73; --neg:#FF4D43; --warn:#F5A524;
-  --accent:#FFFFFF; --accent-ink:#000000;
+  --bg:#111318; --surface:#1B1E27; --surface-2:#242837; --surface-3:#30354A; --line:#2A2F3D;
+  --fg:#F3F4F8; --muted:#B7BDCC; --faint:#7F879A;
+  --pos:#4DD49B; --neg:#FF707C; --warn:#FFB454;
+  --accent:#8B83FF; --accent-ink:#111318;
   --ph-angle:#8E9AAF; --ph-recherche:#4C7DFF; --ph-ecriture:#9B6BFF; --ph-packaging:#E8B10E; --ph-voix:#19B9A8; --ph-montage:#FF7A45;
   --f:"Geist",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  --ft:"Quicksand","Geist",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   color-scheme:dark;
-}
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
-  --bg:#FFFFFF; --surface:#F6F6F7; --surface-2:#EEEEF0; --surface-3:#E2E2E6; --line:#EFEFF1;
-  --fg:#000000; --muted:#6E6E73; --faint:#AEAEB2;
-  --pos:#00A657; --neg:#E5342A; --warn:#C27A00;
-  --accent:#000000; --accent-ink:#FFFFFF; color-scheme:light;
-}}
-:root[data-theme="light"]{
-  --bg:#FFFFFF; --surface:#F6F6F7; --surface-2:#EEEEF0; --surface-3:#E2E2E6; --line:#EFEFF1;
-  --fg:#000000; --muted:#6E6E73; --faint:#AEAEB2;
-  --pos:#00A657; --neg:#E5342A; --warn:#C27A00;
-  --accent:#000000; --accent-ink:#FFFFFF; color-scheme:light;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -210,7 +199,7 @@ button.row:hover .t,.row-l:hover .t{text-decoration:underline;text-decoration-co
 .swipe[data-dir="l"] .swipe-bg{justify-content:flex-end;color:var(--muted);background:var(--surface-2)}
 .swipe.go .swipe-bg{background:var(--pos);color:#000}
 .swipe.back .swipe-bg{background:var(--neg);color:#fff}
-.swipe-fg{position:relative;background:var(--bg);touch-action:pan-y;transition:transform .22s cubic-bezier(.2,.8,.2,1);padding:0 4px;cursor:grab}
+.swipe-fg{position:relative;background:var(--surface);touch-action:pan-y;transition:transform .22s cubic-bezier(.2,.8,.2,1);padding:0 4px;cursor:grab}
 .hcheck{width:30px;height:30px;border-radius:50%;border:2px solid var(--surface-3);display:grid;place-items:center;color:transparent;flex:none}
 .hcheck svg{width:16px;height:16px}
 .hcheck.on{background:var(--pos);border-color:var(--pos);color:#000}
@@ -350,7 +339,7 @@ button.row:hover .t,.row-l:hover .t{text-decoration:underline;text-decoration-co
 .tgrid{border-collapse:separate;border-spacing:0 4px;width:100%}
 .tgrid th,.tgrid td{padding:2px;text-align:center;font-weight:400}
 .tgrid thead th{padding-bottom:6px}
-.tgrid .tg-day{position:sticky;left:0;z-index:1;background:var(--bg);text-align:left;padding-right:10px;white-space:nowrap}
+.tgrid .tg-day{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;padding-right:10px;white-space:nowrap}
 .tgrid .tg-day b{display:block;font-size:13px;font-weight:600;color:var(--muted)}
 .tgrid .tg-day small{font-size:11px;color:var(--faint)}
 .tgrid tr.today .tg-day b{color:var(--fg)}
@@ -372,7 +361,7 @@ button.row:hover .t,.row-l:hover .t{text-decoration:underline;text-decoration-co
 .kcol-h{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 6px}
 .kcol-h b{font-size:14px;font-weight:700}
 .kcol-h span{font-size:13px;color:var(--muted);font-weight:600}
-.vcard{background:var(--bg);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.vcard{background:var(--surface-2);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .vcard[draggable="true"]{cursor:grab}
 .vcard.dragging{opacity:.4}
 .vc-open{text-align:left;display:flex;flex-direction:column;gap:3px}
@@ -439,9 +428,9 @@ table.data th:nth-child(-n+2),table.data td:nth-child(-n+2){text-align:left}
 /* Sheet */
 .sheet{position:fixed;inset:0;z-index:50;display:flex;justify-content:flex-end}
 .sheet-bg{position:absolute;inset:0;background:color-mix(in srgb,#000 62%,transparent)}
-.sheet-panel{position:relative;width:min(580px,100%);height:100%;overflow-y:auto;background:var(--bg);border-left:1px solid var(--line);padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(48px + env(safe-area-inset-bottom,0px));padding-left:24px;padding-right:max(24px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:26px}
+.sheet-panel{position:relative;width:min(580px,100%);height:100%;overflow-y:auto;background:var(--surface);border-left:1px solid var(--line);padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(48px + env(safe-area-inset-bottom,0px));padding-left:24px;padding-right:max(24px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:26px}
 @media (max-width:640px){.sheet{align-items:flex-end}.sheet-panel{height:94%;border-left:0;border-radius:22px 22px 0 0;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}}
-.sheet-top{display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:calc(-16px - env(safe-area-inset-top,0px));background:var(--bg);padding-block:10px;z-index:3}
+.sheet-top{display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:calc(-16px - env(safe-area-inset-top,0px));background:var(--surface);padding-block:10px;z-index:3}
 .sheet-top h2{font-size:22px;font-weight:700;letter-spacing:-.02em;overflow-wrap:anywhere}
 .sheet section{display:flex;flex-direction:column;gap:14px}
 .sheet section > h3{font-size:17px;font-weight:700;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
@@ -464,7 +453,7 @@ table.data th:nth-child(-n+2),table.data td:nth-child(-n+2){text-align:left}
 .howto h4{margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .howto ol{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .howto li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:start;font-size:14px;line-height:1.45;color:var(--muted)}
-.howto li > i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600;background:var(--bg);color:var(--fg)}
+.howto li > i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600;background:var(--surface);color:var(--fg)}
 .howto li.ok > i{background:var(--pos);color:#000}
 .howto li > i svg{width:14px;height:14px}
 .howto b{color:var(--fg);font-weight:600}
@@ -492,6 +481,32 @@ table.data th:nth-child(-n+2),table.data td:nth-child(-n+2){text-align:left}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:999px;font-size:14px;font-weight:600;max-width:calc(100% - 32px)}
 .boot{display:flex;flex-direction:column;gap:10px;padding:60px 0;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.sheet-panel{animation:slide .24s cubic-bezier(.2,.8,.2,1)}@keyframes slide{from{transform:translateY(16px);opacity:.5}to{transform:none;opacity:1}}}
+
+/* ---------- Refonte sombre : cartes, typographie, contrôles ---------- */
+body{font-size:16px}
+.h1,.brand,h2,h3,.empty-state h2,.sheet-top h2{font-family:var(--ft)}
+.h1{font-size:30px;font-weight:700;letter-spacing:-.01em}
+.sec h2{font-size:21px;font-weight:700;letter-spacing:0}
+.sec{margin-top:16px;padding:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+@media (max-width:560px){.sec{padding:16px}}
+.cols,.set-grid{gap:0 16px}
+.hero-v{font-size:clamp(34px,7vw,46px)}
+.btn,.btn-sec{border-radius:12px}
+.pills button{border-radius:10px}
+.pills button[aria-pressed="true"]{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.field input,.field select,.field textarea{border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.sheet-panel{border-left:1px solid var(--line)}
+.toast{background:var(--surface-2);color:var(--fg);border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:16px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.toast button{color:var(--accent);font-weight:700;min-height:32px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.store-state.s-ok i{background:var(--pos)} .store-state.s-wait i{background:var(--warn)} .store-state.s-off i,.store-state.s-local i{background:var(--muted)} .store-state.s-err i{background:var(--neg)}
+.store-state button{color:var(--accent);font-weight:700;font-size:12px}
+.side .store-state .sh,.mtop .store-state .lg{display:none}
+.mtop .store-state{padding:0;margin-left:auto;margin-right:4px}
+.mobile-only{display:none}
+@media (max-width:819px){.mobile-only{display:block}.tabbar{grid-template-columns:repeat(5,minmax(0,1fr))}.tabbar button{font-size:11px}}
+.bilan-sw{margin:0 0 12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <div class="app">
@@ -499,12 +514,13 @@ table.data th:nth-child(-n+2),table.data td:nth-child(-n+2){text-align:left}
     <div class="brand">Deviens qui tu es</div>
     <nav class="nav" id="nav"></nav>
     <div class="side-foot">
-      <div class="store-state" id="store-state"><i></i><span>Connexion…</span></div>
+      <div class="store-state" id="store-state" data-sync><i></i><span class="lg">Connexion…</span><span class="sh"></span><button data-act="sync-retry" hidden>Réessayer</button></div>
       <div class="nav"><button data-act="tab" data-tab="settings" id="nav-settings"></button></div>
     </div>
   </aside>
   <div class="mtop">
     <div class="brand">Deviens qui tu es</div>
+    <div class="store-state" data-sync role="status"><i></i><span class="lg"></span><span class="sh"></span><button data-act="sync-retry" hidden>Réessayer</button></div>
     <button class="icon-btn" data-act="tab" data-tab="settings" aria-label="Réglages" id="m-settings"></button>
   </div>
   <main id="main"><div class="boot"><p>Ouverture de ton espace…</p></div></main>
@@ -521,7 +537,10 @@ const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const pad=n=>String(n).padStart(2,'0');
 const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
-const today=()=>ymd(new Date());
+/* La date métier se calcule dans le fuseau du compte (Réglages) : même jour et même lundi sur tous les appareils */
+const DEF_TZ='Europe/Paris';const TZF={};
+function today(){let tz=DEF_TZ;try{tz=(S.data.settings.main||{}).tz||DEF_TZ}catch(e){}
+  try{const f=TZF[tz]||(TZF[tz]=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}));return f.format(new Date())}catch(e){return ymd(new Date())}}
 const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)};
 const diffDays=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
 const maxD=(a,b)=>a>b?a:b, minD=(a,b)=>a<b?a:b;
@@ -575,7 +594,7 @@ const CPLX={legere:'Légère',moyenne:'Moyenne',lourde:'Lourde'};
 const KINDS=[['habit','Habitude','Se valide dans Aujourd’hui, les jours que tu choisis.'],['qty','Quantité','Mots, heures… tu ajoutes ce que tu fais.'],['milestone','Étape','Faite ou pas. Se coche dans Identités.']];
 const COLORS=['#FF7A45','#E8B10E','#4C7DFF','#9B6BFF','#19B9A8','#FF5D8F','#6CC56C','#8E9AAF'];
 const PICTOS=['🥊','🏆','💪','🏃','🧘','😴','🌅','🥗','💧','📚','✍️','🎬','🎙️','🎞️','🖼️','💡','🧠','♟️','🎮','💼','💻','🚀','📈','💰','✈️','🎯','🔥','⭐','🗣️','❤️','🎵','🙏'];
-const DEF={phases:{angle:5,recherche:20,ecriture:10,voix:2,montage:10,marge:2},complexity:{legere:.6,moyenne:.8,lourde:1},goals:{'2026':4,'2027':7},capacity:20,hoursPerVideo:45,channel:'Zav le brave'};
+const DEF={phases:{angle:5,recherche:20,ecriture:10,voix:2,montage:10,marge:2},complexity:{legere:.6,moyenne:.8,lourde:1},goals:{'2026':4,'2027':7},capacity:20,hoursPerVideo:45,channel:'Zav le brave',tz:'Europe/Paris'};
 const COLLS=['settings','identities','objectives','krs','habits','habitlog','todos','days','metrics','reviews','videos','ideas','templates'];
 
 /* ---------- Etat ---------- */
@@ -597,7 +616,17 @@ function saveLocal(c){try{localStorage.setItem('dqte:'+c,JSON.stringify(Object.f
 function put(c,id,data){if(!id){console.error('Écriture sans identifiant ignorée',c);return}const doc=clean(data);S.data[c]={...S.data[c],[id]:{...doc,id}};S.ver++;schedule();if(db)queueWrite(c,id,doc);else saveLocal(c)}
 function del(c,id){if(!id)return;const n={...S.data[c]};delete n[id];S.data[c]=n;S.ver++;schedule();if(db)queueWrite(c,id,null);else saveLocal(c)}
 function queueWrite(c,id,data){const k=c+'/'+id;const q=writeQ[k]||(writeQ[k]={running:false,next:undefined});q.next=data;if(!q.running)flush(k,c,id)}
-async function flush(k,c,id){const q=writeQ[k];q.running=true;while(q.next!==undefined){const d=q.next;q.next=undefined;try{const ref=db.collection(c).doc(id);if(d===null)await ref.delete();else await ref.set(d)}catch(e){dbError(e)}}q.running=false}
+/* Une écriture n'est « synchronisée » qu'une fois confirmée par le serveur ; hors connexion elle reste en attente */
+const SYNC={inflight:0,failed:{},online:navigator.onLine!==false};
+async function flush(k,c,id){const q=writeQ[k];q.running=true;while(q.next!==undefined){const d=q.next;q.next=undefined;SYNC.inflight++;renderSync();
+    try{const ref=db.collection(c).doc(id);if(d===null)await ref.delete();else await ref.set(d);delete SYNC.failed[k]}catch(e){SYNC.failed[k]={c,id,d};dbError(e)}finally{SYNC.inflight--;renderSync()}}q.running=false}
+function syncState(){if(S.mode==='local')return['local','Enregistré sur cet appareil','Sur cet appareil'];if(S.mode!=='cloud')return['wait','Connexion…','Connexion…'];
+  if(Object.keys(SYNC.failed).length)return['err','Impossible de synchroniser','Erreur'];
+  if(!SYNC.online)return['off',SYNC.inflight?'Hors connexion · en attente de synchronisation':'Hors connexion · enregistré sur cet appareil','Hors connexion'];
+  if(SYNC.inflight)return['wait','En attente de synchronisation','En attente'];return['ok','Synchronisé','Synchronisé']}
+function renderSync(){const[k,l,sh]=syncState();document.querySelectorAll('[data-sync]').forEach(el=>{el.className='store-state s-'+k;const a=el.querySelector('.lg'),b=el.querySelector('.sh'),btn=el.querySelector('button');if(a)a.textContent=l;if(b)b.textContent=sh;if(btn)btn.hidden=k!=='err'})}
+function retrySync(){const f=SYNC.failed;SYNC.failed={};for(const{c,id,d} of Object.values(f))queueWrite(c,id,d);renderSync()}
+window.addEventListener('online',()=>{SYNC.online=true;renderSync()});window.addEventListener('offline',()=>{SYNC.online=false;renderSync()});
 function dbError(e){const c=e&&e.code;if(c==='quota_exceeded')toast("Stockage plein : supprime d'anciennes données ou exporte-les.");else if(c==='invalid_argument')toast("Cette modification n'a pas pu être enregistrée.");else if(c==='revoked')toast("L'accès en écriture a été retiré pour cette session.");else toast('Enregistrement impossible pour le moment, réessaie dans un instant.')}
 async function initStore(){
   let api=null;
@@ -997,7 +1026,7 @@ function metricCard(m,range){const es=mEntries(m),t=today();const cid='mc-'+m.id
   ${li>=0?lineChart(cid,{xs,act,exp:tgt!=null?xs.map(()=>tgt):null,y0,y1,fmtV:v=>mFmt(m,v),good:dir&&diff?diff*dir>0:null,expLabel:'objectif'}):''}
   ${goal}${metricForm(m,es)}</section>`}
 function viewProgress(){const ms=metrics(),range=S.range.progress||'t';
-  const head=`<header class="page-head"><h1 class="h1">Progrès</h1><button class="btn sm" data-act="new-metric">Nouvel indicateur</button></header>`;
+  const head=bilanSw()+`<header class="page-head"><h1 class="h1">Progrès</h1><button class="btn sm" data-act="new-metric">Nouvel indicateur</button></header>`;
   const left=PRESETS.filter(p=>!ms.some(m=>m.preset===p.key));
   const presets=left.length?`<div class="presets">${left.map(p=>`<button class="preset" data-act="metric-preset" data-v="${p.key}"><span class="av sm" aria-hidden="true">${p.icon}</span>${esc(p.name)} <small>${esc(p.hint)}</small></button>`).join('')}</div>`:'';
   if(!ms.length)return head+`<div class="empty-state"><h2>Suis ce qui évolue dans le temps</h2><p class="note">Ton poids, ton Elo aux échecs, ton rang sur League of Legends : une valeur que tu mets à jour quand elle change, et sa courbe vers ton objectif. Touche une suggestion pour commencer.</p>${presets}${addBtn('new-metric','Autre indicateur')}</div>`;
@@ -1022,7 +1051,7 @@ function viewReview(){
   const fld=(f,label,ph)=>`<label class="field"><span>${label}</span><textarea id="rv-${f}" data-bind="reviews:${key}:${f}" placeholder="${ph}">${esc(rev[f]||'')}</textarea></label>`;
   const hist=list('reviews').filter(r=>r.closedAt&&r.id!==key).sort((a,b)=>b.id.localeCompare(a.id)).slice(0,12);
   const saved=rev.closedAt?`<span class="tag pos">${rev.auto?'Sauvegardée':'Clôturée'} le ${fmtD(rev.closedAt.slice(0,10))}</span>`:'';const closed=rev.closedAt&&rev.auto===false;const wm=weekMood(mon);
-  return `<header class="page-head"><h1 class="h1">Revue · semaine ${wk.w}</h1>${qnav('rweek',fmtD(mon))}</header>
+  return bilanSw()+`<header class="page-head"><h1 class="h1">Revue · semaine ${wk.w}</h1>${qnav('rweek',fmtD(mon))}</header>
   <p class="eyebrow">Du ${fmtD(mon)} au ${fmtD(sun)}</p>
   ${hero('rv','Score de la semaine',sm.score==null?'—':pctS(sm.score),sm.score!=null&&pm.score!=null?dPts(sm.score-pm.score,'vs semaine précédente'):'<span class="muted">premier score de la série</span>')}
   <section class="stats">${stat('Habitudes tenues',ws.rate==null?'—':pctS(ws.rate),`${ws.done} votes sur ${ws.sched}`)}${stat('To-do cochées',`${ws.todosDone}<small> / ${ws.todosTotal}</small>`,ws.todosTotal?pctS(ws.todosDone/ws.todosTotal):'Aucune tâche')}${stat('Studio',String(ws.moves.length),ws.moves.length>1?'étapes franchies':'étape franchie')}</section>
@@ -1112,6 +1141,8 @@ function viewStats(){
   <section class="sec"><div class="sec-h"><h2>Détail</h2></div><div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Vidéo</th><th>Durée</th><th>Vues</th><th>Rétention</th><th>CTR</th><th>Abonnés</th></tr></thead><tbody>${pub.map(v=>`<tr><td>${fmtD(v.publishDate,true)}</td><td><button class="link" data-act="edit-video" data-id="${v.id}">${esc(v.title||'Sans titre')}</button></td><td>${esc(v.length||'—')}</td><td>${val(v,'views')}</td><td>${val(v,'retention',' %')}</td><td>${val(v,'ctr',' %')}</td><td>${val(v,'subs')}</td></tr>`).join('')}</tbody></table></div></section>`}
 
 /* ---------- Vue : Réglages ---------- */
+const TZS=[['Europe/Paris','Paris'],['Europe/Brussels','Bruxelles'],['Europe/Zurich','Zurich'],['Europe/London','Londres'],['Africa/Douala','Douala'],['Africa/Abidjan','Abidjan'],['Africa/Dakar','Dakar'],['Africa/Casablanca','Casablanca'],['America/Montreal','Montréal'],['America/New_York','New York']];
+function tzOptions(cur){let dev='';try{dev=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}const o=[...TZS];for(const z of [dev,cur])if(z&&!o.some(x=>x[0]===z))o.push([z,z.replace(/_/g,' ')]);return o.map(([v,l])=>[v,`${l}${v===dev?' (cet appareil)':''}`])}
 function viewSettings(){
   const st=settings();const b=p=>`data-bind="settings:main:${p}" data-type="number"`;const y=new Date().getFullYear();
   return `<header class="page-head"><h1 class="h1">Réglages</h1></header>
@@ -1124,11 +1155,15 @@ function viewSettings(){
       <div class="form-grid"><label class="field"><span>Vidéos à publier en ${y}</span><input id="goal-${y}" type="number" min="0" value="${st.goals[y]??''}" ${b('goals.'+y)}></label><label class="field"><span>Nom de la chaîne</span><input id="st-channel" value="${esc(st.channel)}" data-bind="settings:main:channel"></label><label class="field"><span>Heures dispo / semaine</span><input id="st-cap" type="number" min="0" value="${st.capacity}" ${b('capacity')}></label><label class="field"><span>Heures par vidéo</span><input id="st-hpv" type="number" min="1" value="${st.hoursPerVideo}" ${b('hoursPerVideo')}></label></div>
       <p class="hint" style="margin-top:10px">Capacité : environ ${Math.floor((+st.capacity||0)*52/Math.max(1,+st.hoursPerVideo||45))} vidéos par an si tout ton temps disponible va au studio.</p>
     </section>
+    <section class="sec"><div class="sec-h"><h2>Calendrier</h2></div>
+      ${F('settings','main','tz','Fuseau horaire',{options:tzOptions(st.tz)})}
+      <p class="hint" style="margin-top:8px">Le jour, le lundi et les échéances se calculent dans ce fuseau, sur tous tes appareils. Un changement vaut pour la suite : le passé ne bouge pas.</p>
+    </section>
     <section class="sec"><div class="sec-h"><h2>Modèles d’objectif</h2><button class="act" data-act="new-template">Nouveau</button></div>
       ${templates().length?`<div class="list">${templates().map(t=>`<button class="row" data-act="edit-template" data-id="${t.id}">${av(t.icon,idColor(t.identityId),'sm',t.name)}<span class="m"><span class="t">${esc(t.name||'Modèle sans nom')}</span><span class="s">${plural((t.items||[]).length,'preuve')}${t.video?' · modèle vidéo':''}</span></span><span></span></button>`).join('')}</div>`:'<p class="empty">Aucun modèle. Ouvre un objectif et touche « Enregistrer comme modèle ».</p>'}
       <p class="hint" style="margin-top:8px">Utilise un modèle avec « + Objectif » sous une identité, ou depuis la fiche d’une vidéo du Studio.</p>
     </section>
-    <section class="sec"><div class="sec-h"><h2>Tes données</h2><span class="store-state ${S.mode==='cloud'?'cloud':''}"><i></i>${S.mode==='cloud'?'En ligne, sur tous tes appareils':'Locale, dans ce navigateur'}</span></div>
+    <section class="sec"><div class="sec-h"><h2>Tes données</h2><span class="store-state" data-sync><i></i><span class="lg"></span><span class="sh"></span><button data-act="sync-retry" hidden>Réessayer</button></span></div>
       <p class="note">Exporte tout en un fichier JSON : une sauvegarde, ou le moyen d'emporter ton espace ailleurs.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn sm" data-act="export">Exporter</button><label class="btn-sec" for="import-file" style="cursor:pointer">Importer un fichier</label><input id="import-file" type="file" accept=".json,application/json" hidden></div>
       ${S.pendingImport?`<div style="margin-top:14px;display:flex;flex-direction:column;gap:10px"><p>Ce fichier contient ${S.pendingImport.count} éléments. L'import remplace ceux qui ont le même identifiant.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm" data-act="import-go">Confirmer l'import</button><button class="btn-sec" data-act="import-cancel">Annuler</button></div></div>`:''}
@@ -1306,12 +1341,16 @@ function sheetTemplate(id){const t=S.data.templates[id];const items=t.items||[];
 let rq=false,pending=false;
 let sw=null,swAt=0;
 function schedule(){if(rq)return;rq=true;requestAnimationFrame(()=>{rq=false;renderMain()})}
+/* Téléphone : cinq entrées ; Bilan regroupe Progrès et Revue (book, chapitre 3) */
+const MTABS=['today','okr','habits','studio','bilan'];
+const isBilan=k=>k==='progress'||k==='review';
 function renderShell(){
   $('#nav').innerHTML=TABS.map(t=>`<button data-act="tab" data-tab="${t.k}" ${S.tab===t.k?'aria-current="page"':''}>${ICON[t.k]}<span>${t.label}</span></button>`).join('');
   $('#nav-settings').outerHTML=`<button data-act="tab" data-tab="settings" id="nav-settings" ${S.tab==='settings'?'aria-current="page"':''}>${ICON.settings}<span>Réglages</span></button>`;
-  $('#tabbar').innerHTML=TABS.map(t=>`<button data-act="tab" data-tab="${t.k}" ${S.tab===t.k?'aria-current="page"':''}>${ICON[t.k]}<span>${t.short}</span></button>`).join('');
+  $('#tabbar').innerHTML=MTABS.map(k=>k==='bilan'?`<button data-act="tab" data-tab="${S.lastBilan||'review'}" ${isBilan(S.tab)?'aria-current="page"':''}>${ICON.review}<span>Bilan</span></button>`:(t=>`<button data-act="tab" data-tab="${t.k}" ${S.tab===t.k?'aria-current="page"':''}>${ICON[t.k]}<span>${t.short}</span></button>`)(TABS.find(x=>x.k===k))).join('');
   $('#m-settings').innerHTML=ICON.settings;
-  const ss=$('#store-state');ss.className='store-state'+(S.mode==='cloud'?' cloud':'');ss.querySelector('span').textContent=S.mode==='cloud'?'Synchronisé':S.mode==='local'?'Sauvegarde locale':'Connexion…'}
+  renderSync()}
+const bilanSw=()=>`<div class="bilan-sw mobile-only">${pills('bilan',S.tab,[['review','Revue'],['progress','Progrès']])}</div>`;
 function renderMain(force){
   const main=$('#main');const ae=document.activeElement;
   if(!force&&((sw&&sw.drag)||(ae&&main.contains(ae)&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&ae.type!=='checkbox'&&ae.type!=='file'))){pending=true;return}
@@ -1323,9 +1362,13 @@ function renderMain(force){
   if(S.tab==='studio'&&S.studio==='idees')filterIdeas();
   if(keep){const el=document.getElementById(keep);if(el)el.focus()}}
 document.addEventListener('focusout',()=>{if(pending){pending=false;setTimeout(()=>{const ae=document.activeElement;if(!(ae&&$('#main').contains(ae)&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)))renderMain()},0)}});
-function setTab(k){S.tab=k;renderShell();renderMain(true);window.scrollTo(0,0);navPush()}
+function setTab(k){S.tab=k;if(isBilan(k))S.lastBilan=k;renderShell();renderMain(true);window.scrollTo(0,0);navPush()}
 function filterIdeas(){const q=S.ideaQuery.trim().toLowerCase();document.querySelectorAll('#idea-list .idea').forEach(el=>{el.hidden=!!q&&!el.dataset.text.includes(q)})}
-let toastT;function toast(m){let el=$('.toast');if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el)}el.textContent=m;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true},2800)}
+/* Message bref, avec une action facultative (ex. « Annuler ») */
+let toastT;function toast(m,act){let el=$('.toast');if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el)}
+  el.textContent='';const sp=document.createElement('span');sp.textContent=m;el.appendChild(sp);
+  if(act){const b=document.createElement('button');b.type='button';b.textContent=act.label;b.addEventListener('click',()=>{el.hidden=true;act.fn()});el.appendChild(b)}
+  el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true},act?6000:2800)}
 
 /* ---------- Liaison des champs ---------- */
 function setPath(o,path,v){const ks=path.split('.');let c=o;for(let i=0;i<ks.length-1;i++){const k=ks[i],nk=ks[i+1];if(c[k]==null||typeof c[k]!=='object')c[k]=/^\d+$/.test(nk)?[]:{};c=c[k]}c[ks[ks.length-1]]=v}
@@ -1471,7 +1514,9 @@ const ACT={
   'del-video':a=>{del('videos',a.dataset.id);dropSheet()},
   'del-idea':a=>{del('ideas',a.dataset.id);dropSheet()},
   'export':()=>exportData(),
-  'sign-out':()=>{if(window.DQ_BACKEND&&window.DQ_BACKEND.signOut)window.DQ_BACKEND.signOut()},
+  'sign-out':()=>{if((SYNC.inflight||Object.keys(SYNC.failed).length)&&!confirm('Des modifications ne sont pas encore synchronisées. Si tu te déconnectes maintenant, elles pourraient être perdues. Te déconnecter quand même ?'))return;if(window.DQ_BACKEND&&window.DQ_BACKEND.signOut)window.DQ_BACKEND.signOut()},
+  'sync-retry':()=>retrySync(),
+  'bilan':a=>{if(S.sheet)closeSheet(true);setTab(a.dataset.v)},
   'import-go':()=>runImport(),
   'import-cancel':()=>{S.pendingImport=null;renderMain(true)}
 };
