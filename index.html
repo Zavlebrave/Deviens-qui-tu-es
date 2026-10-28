@@ -499,7 +499,7 @@ body{font-size:16px}
 .pills button[aria-pressed="true"]{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
 .field input,.field select,.field textarea{border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
 .sheet-panel{border-left:1px solid var(--line)}
-.toast{background:var(--surface-2);color:var(--fg);border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:16px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.toast{background:var(--surface-2);color:var(--fg);border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:16px;box-shadow:0 8px 24px rgba(0,0,0,.35);left:0;right:0;margin-inline:auto;transform:none;width:fit-content}
 .toast button{color:var(--accent);font-weight:700;min-height:32px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .store-state.s-ok i{background:var(--pos)} .store-state.s-wait i{background:var(--warn)} .store-state.s-off i,.store-state.s-local i{background:var(--muted)} .store-state.s-err i{background:var(--neg)}
@@ -521,6 +521,24 @@ body{font-size:16px}
 .id-sum{font-size:14px;color:var(--muted);margin-top:6px}
 .id-pause{margin-top:12px;color:var(--warn)}
 .res-ed{display:grid;gap:12px}
+.hmc{display:flex;gap:6px;align-items:center}
+.hmin{height:30px;padding:0 10px;border-radius:10px;border:2px solid var(--surface-3);font-size:12px;font-weight:700;color:var(--muted)}
+.hmin.on{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+.cell.min{background:color-mix(in srgb,var(--warn) 22%,transparent);box-shadow:inset 0 0 0 2px var(--warn);color:var(--warn)}
+.cell.just{background:var(--surface-2);box-shadow:inset 0 0 0 2px var(--muted);color:var(--fg)}
+.cell.miss{background:transparent;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--neg) 55%,transparent);color:var(--neg)}
+.cell b{font-size:12px;font-weight:800;line-height:1}
+.days.wk button.min{background:color-mix(in srgb,var(--warn) 30%,transparent);color:var(--fg)}
+.hday{display:grid;gap:8px}
+.opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 16px;border-radius:14px;background:var(--surface-2);text-align:left;min-height:52px}
+.opt b{font-weight:700} .opt span{font-size:13px;color:var(--muted)}
+.opt.on{box-shadow:inset 0 0 0 2px var(--accent)}
+.jrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.jrow .m{display:flex;flex-direction:column;min-width:0}
+.jbtns{grid-column:2;display:flex;gap:6px;flex-wrap:wrap}
+.jbtns .pill-mini[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--accent)}
+.hcheck,.step{position:relative}
+.hcheck::after,.step::after{content:"";position:absolute;inset:-7px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -610,7 +628,7 @@ const KINDS=[['habit','Habitude','Se valide dans Aujourd’hui, les jours que tu
 const COLORS=['#FF7A45','#E8B10E','#4C7DFF','#9B6BFF','#19B9A8','#FF5D8F','#6CC56C','#8E9AAF'];
 const PICTOS=['🥊','🏆','💪','🏃','🧘','😴','🌅','🥗','💧','📚','✍️','🎬','🎙️','🎞️','🖼️','💡','🧠','♟️','🎮','💼','💻','🚀','📈','💰','✈️','🎯','🔥','⭐','🗣️','❤️','🎵','🙏'];
 const DEF={phases:{angle:5,recherche:20,ecriture:10,voix:2,montage:10,marge:2},complexity:{legere:.6,moyenne:.8,lourde:1},goals:{'2026':4,'2027':7},capacity:20,hoursPerVideo:45,channel:'Zav le brave',tz:'Europe/Paris'};
-const COLLS=['settings','identities','objectives','krs','habits','habitlog','todos','days','metrics','plans','reviews','videos','ideas','templates'];
+const COLLS=['settings','identities','objectives','krs','habits','habitlog','todos','days','metrics','plans','justifs','reviews','videos','ideas','templates'];
 
 /* ---------- Etat ---------- */
 const S={
@@ -811,14 +829,55 @@ function occurrences(h,a,b){if(b<a)return 0;const f=freqOf(h);const n=diffDays(a
 let memo={ver:-1,dates:{}};
 function hDates(hid){if(memo.ver!==S.ver)memo={ver:S.ver,dates:{}};if(!memo.dates[hid]){const arr=[];for(const m of Object.values(S.data.habitlog))for(const[d,ids] of Object.entries(m.days||{}))if((ids||[]).includes(hid))arr.push(d);memo.dates[hid]=arr.sort()}return memo.dates[hid]}
 const habitCount=(hid,a,b)=>hDates(hid).filter(d=>d>=a&&d<=b).length;
+let memoM={ver:-1,dates:{}};
+function hMinDates(hid){if(memoM.ver!==S.ver)memoM={ver:S.ver,dates:{}};if(!memoM.dates[hid]){const arr=[];for(const m of Object.values(S.data.habitlog))for(const[d,ids] of Object.entries(m.mins||{}))if((ids||[]).includes(hid))arr.push(d);memoM.dates[hid]=arr.sort()}return memoM.dates[hid]}
+const minCount=(hid,a,b)=>hMinDates(hid).filter(d=>d>=a&&d<=b).length;
 function habitDone(hid,s){const m=S.data.habitlog[s.slice(0,7)];return !!(m&&m.days&&(m.days[s]||[]).includes(hid))}
-function toggleHabit(hid,s){const k=s.slice(0,7);const base=S.data.habitlog[k];const doc=base?JSON.parse(JSON.stringify(clean(base))):{month:k,days:{}};doc.days=doc.days||{};const arr=doc.days[s]||[];doc.days[s]=arr.includes(hid)?arr.filter(x=>x!==hid):[...arr,hid];if(!doc.days[s].length)delete doc.days[s];put('habitlog',k,doc)}
+/* Une journée d'habitude : non réalisée, minimum réalisé (mins) ou cible atteinte (days) — au plus une cible par jour (D08) */
+function habitMin(hid,s){const m=S.data.habitlog[s.slice(0,7)];return !!(m&&m.mins&&(m.mins[s]||[]).includes(hid))}
+const habitState=(hid,s)=>habitDone(hid,s)?'target':habitMin(hid,s)?'min':'none';
+function setHabitState(hid,s,state){const k=s.slice(0,7);const base=S.data.habitlog[k];const doc=base?JSON.parse(JSON.stringify(clean(base))):{month:k,days:{}};doc.days=doc.days||{};doc.mins=doc.mins||{};
+  const rm=m=>{m[s]=(m[s]||[]).filter(x=>x!==hid);if(!m[s].length)delete m[s]};rm(doc.days);rm(doc.mins);
+  if(state==='target')doc.days[s]=[...(doc.days[s]||[]),hid];if(state==='min')doc.mins[s]=[...(doc.mins[s]||[]),hid];put('habitlog',k,doc)}
+function toggleHabit(hid,s){setHabitState(hid,s,habitDone(hid,s)?'none':'target')}
+/* Validation en un geste, avec un retour bref et « Annuler » qui restaure l'état précédent partout (F21, U12) */
+function applyHabit(hid,d,state){const h=S.data.habits[hid];if(!h)return;const prev=habitState(hid,d);if(prev===state)return;setHabitState(hid,d,state);
+  const msg=state==='target'?(h.minEnabled?'Cible atteinte':'Validé'):state==='min'?'Minimum réalisé':'Validation retirée';
+  try{if(state!=='none'&&navigator.vibrate)navigator.vibrate(12)}catch(e){}
+  toast(`${h.name||'Habitude'} · ${msg}`,{label:'Annuler',fn:()=>setHabitState(hid,d,prev)})}
+function habitCtl(h,d){const st=habitState(h.id,d),nm=esc(h.name||'');
+  const tgt=`<button class="hcheck ${st==='target'?'on':''}" data-act="habit-set" data-id="${h.id}" data-date="${d}" data-v="target" aria-pressed="${st==='target'}" aria-label="${h.minEnabled?'Cible atteinte':'Valider'} : ${nm}">${ICON.check}</button>`;
+  return h.minEnabled?`<span class="hmc"><button class="hmin ${st==='min'?'on':''}" data-act="habit-set" data-id="${h.id}" data-date="${d}" data-v="min" aria-pressed="${st==='min'}" aria-label="Minimum réalisé : ${nm}">Min</button>${tgt}</span>`:tgt}
 const hStart=h=>(h.createdAt||'2000-01-01').slice(0,10);
 const weekCount=(h,mon)=>habitCount(h.id,mon,addDays(mon,6));
 function weekExpected(h,mon){const sun=addDays(mon,6);if(hStart(h)>sun)return 0;return freqOf(h)==='weekly'?(h.perWeek||3):occurrences(h,maxD(mon,hStart(h)),sun)}
-function streakTxt(h){const t=today();
-  if(freqOf(h)==='weekly'){let mon=monday(t),n=0;if(weekCount(h,mon)<(h.perWeek||3))mon=addDays(mon,-7);for(let i=0;i<120&&addDays(mon,6)>=hStart(h);i++){if(weekCount(h,mon)>=(h.perWeek||3)){n++;mon=addDays(mon,-7)}else break}return `série ${n} sem.`}
-  let s=t;if(fixedOn(h,s)&&!habitDone(h.id,s))s=addDays(s,-1);let n=0;for(let i=0;i<500&&s>=hStart(h);i++){if(!fixedOn(h,s)){s=addDays(s,-1);continue}if(habitDone(h.id,s)){n++;s=addDays(s,-1)}else break}return `série ${n} j`}
+/* Série recalculée à partir des faits (F23-F25) : cible ou minimum = continuité et +1 (D07) ; absence justifiée = série gelée ;
+   absence non justifiée = interruption. Les jours non prévus ne comptent pas. Unité : jours, fois (jours précis) ou semaines. */
+const justOf=(hid,key)=>S.data.justifs[hid+'_'+key];
+function streakOf(h){const t=today(),st=hStart(h),pw=h.perWeek||3;let n=0,frozen=false,first=true;
+  if(freqOf(h)==='weekly'){const ok=m=>{const sun=addDays(m,6);return habitCount(h.id,m,sun)+minCount(h.id,m,sun)>=pw};let mon=monday(t);if(ok(mon)){n++;first=false}mon=addDays(mon,-7);
+    for(let i=0;i<260&&addDays(mon,6)>=st;i++,mon=addDays(mon,-7)){if(ok(mon)){n++;first=false;continue}const j=justOf(h.id,mon);if(j&&j.reason){if(first)frozen=true;continue}break}
+    return{n,frozen,unit:n>1?'semaines':'semaine'}}
+  let d=t;if(fixedOn(h,d)&&habitState(h.id,d)==='none')d=addDays(d,-1);
+  for(let i=0;i<900&&d>=st;i++,d=addDays(d,-1)){if(!fixedOn(h,d))continue;if(habitState(h.id,d)!=='none'){n++;first=false;continue}const j=justOf(h.id,d);if(j&&j.reason){if(first)frozen=true;continue}break}
+  return{n,frozen,unit:freqOf(h)==='daily'?(n>1?'jours':'jour'):'fois'}}
+function streakTxt(h){const x=streakOf(h);return `🔥 ${x.n} ${x.unit}${x.frozen?' · gelée':''}`}
+/* Taux de réussite sur les occasions prévues ; minimums et absences justifiées sont affichés à part */
+function rate30Txt(h){const t=today();const a=maxD(addDays(t,-29),hStart(h));const exp=occurrences(h,a,t);if(!exp)return '30 derniers jours : rien de prévu';const c=habitCount(h.id,a,t),mi=minCount(h.id,a,t);
+  const js=list('justifs').filter(j=>j.habitId===h.id&&j.reason&&j.date>=a&&j.date<=t).length;
+  return `30 derniers jours : ${pctS(Math.min(1,c/exp))} (${c} sur ${exp} prévu${exp>1?'s':''})${mi?` · ${plural(mi,'minimum')}`:''}${js?` · ${js} absence${js>1?'s':''} justifiée${js>1?'s':''}`:''}`}
+/* F24 : manquements à justifier, regroupés (14 derniers jours ; semaines terminées pour « X fois par semaine ») */
+function missedList(){const t=today(),from=addDays(t,-14),out=[];
+  for(const h of habits()){const st=hStart(h);
+    if(freqOf(h)==='weekly'){for(let mon=monday(addDays(t,-21));mon<monday(t);mon=addDays(mon,7)){if(addDays(mon,6)<st)continue;const sun=addDays(mon,6),c=habitCount(h.id,mon,sun),mi=minCount(h.id,mon,sun);if(c+mi<(h.perWeek||3)&&!justOf(h.id,mon))out.push({h,key:mon,scope:'week',c})}}
+    else for(let d=maxD(from,st);d<t;d=addDays(d,1))if(fixedOn(h,d)&&habitState(h.id,d)==='none'&&!justOf(h.id,d))out.push({h,key:d,scope:'day'})}
+  return out.sort((x,y)=>y.key.localeCompare(x.key))}
+const JUST=[['maladie','Maladie / blessure'],['travail','Travail'],['none','Non justifié']];
+const justBtns=(h,key,scope,cur)=>`<div class="jbtns" role="group" aria-label="Motif">${JUST.map(([v,l])=>`<button class="pill-mini" data-act="just-set" data-v="${v}" data-h="${h.id}" data-d="${key}" data-scope="${scope}" aria-pressed="${cur===v}">${l}</button>`).join('')}</div>`;
+function justifyList(limit){const ms=missedList();if(!ms.length)return '';
+  return `<section class="sec"><div class="sec-h"><h2>À justifier <small class="muted">${ms.length}</small></h2></div><p class="hint">Engagements manqués récemment. Maladie / blessure ou travail gèlent la série sans créditer de réalisation ; sans motif accepté, elle s’interrompt.</p>
+  ${ms.slice(0,limit).map(x=>`<div class="jrow">${av(x.h.icon,idColor(x.h.identityId),'sm',x.h.name)}<div class="m"><b>${esc(x.h.name||'Habitude')}</b><span class="hint">${x.scope==='week'?`Semaine ${isoWeek(x.key).w} : ${x.c} sur ${x.h.perWeek||3}`:esc(fmtDay(x.key,true))}</span></div>${justBtns(x.h,x.key,x.scope,'')}</div>`).join('')}
+  ${ms.length>limit?`<p class="hint" style="margin-top:8px">… et ${ms.length-limit} autre${ms.length-limit>1?'s':''}.</p>`:''}</section>`}
 function rate30(h){const t=today();const a=maxD(addDays(t,-29),hStart(h));const exp=occurrences(h,a,t);if(!exp)return null;return Math.min(1,habitCount(h.id,a,t)/exp)}
 function dayScore(d){let den=0,dn=0;for(const h of trackerHabits()){if(d<hStart(h))continue;const done=habitDone(h.id,d);if(freqOf(h)==='weekly'){den+=(h.perWeek||3)/7;if(done)dn+=1}else if(fixedOn(h,d)){den++;if(done)dn++}}return den?Math.min(1,dn/den):null}
 function weekStats(mon){const t=today();let sc=0,dn=0;const votes={};const tk=new Set(trackerHabits().map(h=>h.id));
@@ -885,10 +944,10 @@ const hero=(id,label,v,d)=>`<div class="hero"><p class="eyebrow">${label}</p><di
 
 /* Ligne d'habitude à glisser */
 function swipeRow(h,d){const on=habitDone(h.id,d);const i=idOf(h.identityId);
-  const sub=freqOf(h)==='weekly'?`${weekCount(h,monday(d))}/${h.perWeek||3} cette semaine`:streakTxt(h);
+  const st=habitState(h.id,d);const sub=`${st==='min'?'<span class="tone-warn">Minimum réalisé</span> · ':''}${freqOf(h)==='weekly'?`${weekCount(h,monday(d))}/${h.perWeek||3} cette semaine · `:''}${streakTxt(h)}`;
   return `<div class="swipe ${on?'done':''}" data-swipe="${h.id}" data-date="${d}" data-done="${on?1:0}"><div class="swipe-bg">${on?'Annuler':'✓ Fait'}</div>
   <div class="swipe-fg row">${av(h.icon,idColor(h.identityId),'',h.name)}<div class="m"><span class="t">${esc(h.name||'Habitude sans nom')}</span><span class="s">${i?esc(i.name)+' · ':''}${sub}</span></div>
-  <button class="hcheck ${on?'on':''}" data-act="habit-toggle" data-id="${h.id}" data-date="${d}" aria-label="${on?'Annuler':'Valider'} ${esc(h.name)}">${ICON.check}</button></div></div>`}
+  ${habitCtl(h,d)}</div></div>`}
 
 /* ---------- Vue : Aujourd'hui ---------- */
 /* Aujourd'hui affiche le jour choisi : les flèches remontent dans les jours passés pour les revoir ou les corriger */
@@ -910,7 +969,7 @@ function viewToday(){
   </section>
   ${remind}${morningCard(t)}
   <div class="cols">
-    <section class="sec"><div class="sec-h"><h2>Habitudes</h2><span class="hint">Glisse vers la droite pour valider</span></div>
+    <section class="sec"><div class="sec-h"><h2>Habitudes</h2>${(n=>n?`<button class="act" data-act="tab" data-tab="habits">${n} à justifier</button>`:'<span class="hint">Touche le rond pour valider</span>')(past?0:missedList().length)}</div>
       ${hs.length?`<div class="list">${hs.map(h=>swipeRow(h,t)).join('')}</div>`:`<p class="empty">${past?'Aucune habitude prévue ce jour-là.':'Aucune habitude aujourd\'hui. Ajoute-en une dans l’onglet Habitudes.'}</p>`}
     </section>
     <section class="sec"><div class="sec-h"><h2>To-do</h2>${carry.length?`<button class="act" data-act="carry">Reprendre ${plural(carry.length,'tâche')} d'hier</button>`:''}</div>
@@ -1027,7 +1086,7 @@ function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());
     bp=r==null?0:Math.min(1,r);if(isCur&&kind!=='milestone'&&!paused){const x=krWeekExpected(k,mon,today());be=x>0?x:null}}
   else{const st=krStatus(k);rb=kind==='milestone'?(k.done?'Faite':'À faire'):`${fmtN(krValue(k))} / ${fmtN(krTarget(k))}`;rs=pctS(krProgress(k));sub=`${tag(st)} · ${quarterSub(k)}`;bp=krProgress(k);be=krExpectedAt(k,today());col=toneVar(st.k)}
   let ctl='';
-  if(kind==='habit'&&habitOf(k)&&(mode==='quarter'||isCur)){const on=habitDone(k.habitId,today());ctl=`<button class="hcheck ${on?'on':''}" data-act="habit-toggle" data-id="${k.habitId}" data-date="${today()}" aria-label="${on?'Annuler':'Valider'} aujourd'hui">${ICON.check}</button>`}
+  if(kind==='habit'&&habitOf(k)&&(mode==='quarter'||isCur))ctl=habitCtl(habitOf(k),today());
   else if(kind==='qty')ctl=qtyCtl(k,actDate,mode==='week'?mon:krSpan(k).qs)+`<button class="step" data-act="qty-open" data-id="${k.id}" aria-label="Saisir au clavier">${ICON.kb}</button>`;
   else if(kind==='milestone')ctl=`${!k.done&&k.week!==mon&&mode==='week'?`<button class="pill-mini" data-act="plan-week" data-id="${k.id}" data-mon="${mon}">Cette semaine</button>`:''}<button class="hcheck ${k.done?'on':''}" data-act="kr-done" data-id="${k.id}" data-date="${actDate}" aria-label="${k.done?'Marquer à faire':'Marquer faite'}">${ICON.check}</button>`;
   else if(kind==='level')ctl=`<button class="step" data-act="kr-step" data-id="${k.id}" data-d="-1" aria-label="Retirer 1">−</button><button class="step" data-act="kr-step" data-id="${k.id}" data-d="1" aria-label="Ajouter 1">+</button>`;
@@ -1045,6 +1104,17 @@ function stepQty(k,d,dir,from){const r3=x=>Math.round(x*1000)/1000;const n=qtySt
   put('krs',k.id,{...k,log,updatedAt:nowIso()})}
 
 /* ---------- Vue : Habitudes ---------- */
+function cellHtml(h,d,t){const st=habitState(h.id,d),fut=d>t||d<hStart(h),weekly=freqOf(h)==='weekly',sched=weekly||fixedOn(h,d),j=weekly?null:justOf(h.id,d);let cls='',ic=ICON.check,lab='à faire';
+  if(st==='target'){cls='on';lab='cible atteinte'}else if(st==='min'){cls='min';ic='<b>½</b>';lab='minimum réalisé'}else if(j&&j.reason){cls='just';ic='<b>J</b>';lab='absence justifiée'}
+  else if(!sched){cls='off';lab='jour non prévu'}else if(!weekly&&!fut&&d<t){cls='miss';ic=ICON.x;lab='manqué'}
+  return `<button class="cell ${cls}" ${fut?'disabled':''} data-act="hday-open" data-id="${h.id}" data-date="${d}" aria-label="${esc(h.name)}, ${fmtD(d)} : ${lab}">${ic}</button>`}
+function sheetHday(hid){const h=S.data.habits[hid];const d=S.hday||today(),t=today();const st=habitState(hid,d),weekly=freqOf(h)==='weekly',key=weekly?monday(d):d,j=justOf(hid,key);
+  const canJust=weekly?(addDays(key,6)<t&&habitCount(hid,key,addDays(key,6))+minCount(hid,key,addDays(key,6))<(h.perWeek||3)):(d<t&&fixedOn(h,d)&&st==='none');
+  const opt=(v,l,sub)=>`<button class="opt ${st===v?'on':''}" data-act="hday-set" data-id="${hid}" data-v="${v}" aria-pressed="${st===v}"><b>${l}</b>${sub?`<span>${esc(sub)}</span>`:''}</button>`;
+  return sheetTop(esc(h.name||'Habitude'),esc(fmtDay(d,true)))+`<section><div class="hday">${opt('target',h.minEnabled?'✓ Cible atteinte':'✓ Fait',h.targetLabel)}${h.minEnabled?opt('min','½ Minimum réalisé',h.minLabel):''}${opt('none','Pas fait')}</div>
+  ${!weekly&&!fixedOn(h,d)?'<p class="hint" style="margin-top:10px">Jour non prévu : le cocher compte quand même pour la semaine.</p>':''}</section>
+  ${canJust||(j&&j.reason!==undefined)?`<section><h3>${weekly?`Semaine ${isoWeek(key).w} manquée`:'Manqué'} : justifier ?</h3><p class="hint" style="margin:6px 0 10px">Deux motifs seulement. Une absence justifiée gèle ta série sans la casser ; elle ne compte pas comme réalisée.</p>${justBtns(h,key,weekly?'week':'day',j?(j.reason||'none'):'')}
+  ${j?F('justifs',hid+'_'+key,'note','Note (facultatif)',{area:1,rows:2,ph:'Une précision, si tu veux'}):''}</section>`:''}`}
 function viewHabits(){
   const mon=S.habitWeek,t=today(),hs=trackerHabits(),range=S.range.habits;const days=[...Array(7)].map((_,i)=>addDays(mon,i));
   const head=`<header class="page-head"><h1 class="h1">Habitudes</h1><button class="btn sm" data-act="new-habit">Nouvelle habitude</button></header>`;
@@ -1055,13 +1125,14 @@ function viewHabits(){
   const n=range==='w'?7:range==='m'?30:90;const xs=[...Array(n)].map((_,i)=>addDays(t,i-n+1));const act=xs.map(dayScore);
   const grid=`<div class="tgrid-wrap"><table class="tgrid"><thead><tr><th class="tg-day">Jour</th>${hs.map(h=>`<th><button class="tg-h" data-act="edit-habit" data-id="${h.id}" title="${esc(h.name||'')}" aria-label="${esc(h.name||'Habitude')}">${esc(h.icon||(h.name||'?').charAt(0).toUpperCase())}</button></th>`).join('')}<th class="tg-sl" title="Qualité du sommeil">🌙</th></tr></thead><tbody>
     ${days.map(d=>{const fut=d>t;const sc=fut?null:dayScore(d);const sl=sleepOf(dayOf(d).sleep);return `<tr class="${d===t?'today':''}"><th class="tg-day"><button data-act="goto-day" data-date="${d}" ${fut?'disabled':''} aria-label="Ouvrir le ${fmtD(d)} dans Aujourd’hui"><b>${DAYS[wd(d)]} ${parse(d).getDate()}</b><small>${sc==null?'&nbsp;':pctS(sc)}</small></button></th>
-      ${hs.map(h=>{const on=habitDone(h.id,d),fx=freqOf(h)==='weekly'||fixedOn(h,d);return `<td><button class="cell ${on?'on':''} ${!fx&&!on?'off':''}" ${fut||d<hStart(h)?'disabled':''} data-act="habit-toggle" data-id="${h.id}" data-date="${d}" aria-label="${esc(h.name)} le ${fmtD(d)}">${ICON.check}</button></td>`}).join('')}
+      ${hs.map(h=>`<td>${cellHtml(h,d,t)}</td>`).join('')}
       <td class="tg-sl" title="${sl?`Sommeil ${esc(sl[2].toLowerCase())}`:''}">${sl?sl[1]:'<span class="faint">·</span>'}</td></tr>`}).join('')}</tbody></table></div>`;
-  const rows=hs.map(h=>{const r=rate30(h);return `<button class="row" data-act="edit-habit" data-id="${h.id}">${av(h.icon,idColor(h.identityId),'sm',h.name)}<span class="m"><span class="t">${esc(h.name||'Sans nom')}</span><span class="s">${esc(freqLabel(h))} · ${streakTxt(h)}</span></span><span class="r"><b>${r==null?'—':pctS(r)}</b><span class="muted">30 j</span></span></button>`}).join('');
+  const rows=hs.map(h=>{const r=rate30(h);return `<button class="row" data-act="edit-habit" data-id="${h.id}">${av(h.icon,idColor(h.identityId),'sm',h.name)}<span class="m"><span class="t">${esc(h.name||'Sans nom')}</span><span class="s">${esc(freqLabel(h))}${h.minEnabled?' · avec minimum':''} · ${streakTxt(h)}</span></span><span class="r"><b>${r==null?'—':pctS(r)}</b><span class="muted">30 j</span></span></button>`}).join('');
   return head+hero('hab','Traqueur tenu cette semaine',ws.rate==null?'—':pctS(ws.rate),ws.rate!=null&&pw.rate!=null&&pw.sched?dPts(ws.rate-pw.rate,'vs semaine dernière'):`<span class="muted">${ws.done} cases cochées sur ${ws.sched} prévues</span>`)
   +lineChart('hab',{xs,act,exp:null})+pills('hab-range',range,[['w','1S'],['m','1M'],['t','3M']])+
   `<section class="sec"><div class="sec-h"><h2>Semaine ${isoWeek(mon).w}</h2>${qnav('hweek',fmtD(mon))}</div>${grid}
-  <p class="hint" style="margin-top:8px">Touche une case pour cocher ou décocher ce jour-là. Pointillés : jour non prévu, que tu peux cocher quand même. 🌙 : ta qualité de sommeil, notée le matin dans Aujourd’hui.</p></section>
+  <p class="hint" style="margin-top:8px">Touche une case pour saisir ce jour-là. ✓ cible atteinte · ½ minimum · J absence justifiée · ✕ manqué · pointillés : jour non prévu. 🌙 : ta qualité de sommeil, notée le matin, à part du calcul des habitudes.</p></section>
+  ${justifyList(8)}
   <section class="sec"><div class="sec-h"><h2>Mes habitudes</h2><span class="hint">série · réussite sur 30 jours</span></div><div class="list">${rows}</div>${addBtn('new-habit','Nouvelle habitude')}${note}</section>`}
 
 /* ---------- Progrès : ce qui évolue dans le temps (poids, Elo, rang LoL) ---------- */
@@ -1262,7 +1333,7 @@ function freqEditor(h){const f=freqOf(h);const days=Array.isArray(h.days)?h.days
   ${f==='days'?`<div class="days">${DAYS.map((d,i)=>`<button data-act="habit-day" data-id="${h.id}" data-d="${i}" aria-pressed="${days.includes(i)}">${d}</button>`).join('')}</div>`:''}`}
 function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
   if(s.kind==='pick'){const panel=$('#sheet-panel');panel.innerHTML=sheetPick(s.id);$('#sheet').hidden=false;return}
-  const fn={identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
+  const fn={hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
 function openSheet(kind,coll,id,isNew){const from=S.sheet&&S.sheet.kind;if(S.sheet)closeSheet(true);S.sheet={kind,coll,id,isNew:!!isNew};navPush(from==='pick');$('#sheet-panel').scrollTop=0;renderSheet();if(isNew){const el=$('#sheet-panel [data-bind$=":title"],#sheet-panel [data-bind$=":name"],#sheet-panel [data-bind$=":text"]');if(el)setTimeout(()=>el.focus(),60)}}
@@ -1305,7 +1376,7 @@ function sheetObjective(id){const o=S.data.objectives[id];const vids=videos().fi
   <section><div><button class="btn-sec" data-act="save-template" data-id="${id}">Enregistrer comme modèle</button></div></section>
   ${delBtn('del-objective',id,'Supprimer l’objectif et ses preuves')}`}
 function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf(k);const q=krQuarter(k);let extra='';
-  if(kind==='habit'){extra=h?`${freqEditor(h)}<div class="two"><div class="field"><span>Cette semaine</span><p class="big-n">${fmtN(krWeekValue(k,monday(today())))} / ${fmtN(krWeekTarget(k,monday(today())))}</p></div><div class="field"><span>Trimestre · calculé seul</span><p class="big-n">${fmtN(krValue(k))} / ${fmtN(krTarget(k))}</p></div></div>${weekToggles(h)}
+  if(kind==='habit'){extra=h?`${freqEditor(h)}${minEditor(h)}<div class="two"><div class="field"><span>Cette semaine</span><p class="big-n">${fmtN(krWeekValue(k,monday(today())))} / ${fmtN(krWeekTarget(k,monday(today())))}</p></div><div class="field"><span>Trimestre · calculé seul</span><p class="big-n">${fmtN(krValue(k))} / ${fmtN(krTarget(k))}</p></div></div>${weekToggles(h)}
       ${habits().length>1?F('krs',id,'habitId','Habitude liée',{options:habits().map(x=>[x.id,x.name||'Sans nom'])}):''}`:`<button class="btn sm" data-act="kr-make-habit" data-id="${id}">Créer l'habitude liée</button>`}
   else if(kind==='qty'){const log=Object.entries(k.log||{}).filter(([,v])=>+v).sort((a,b)=>b[0].localeCompare(a[0]));const mon=monday(today());
     extra=`<div class="two">${F('krs',id,'target','Objectif du trimestre',{type:'number',ph:'4000'})}${F('krs',id,'unit','Unité',{ph:'mots, heures…'})}</div>
@@ -1336,13 +1407,15 @@ function howTo(k){const kind=kindOf(k);const step=(ok,n,html)=>`<li class="${ok?
   if(!T)return '';
   return `<div class="howto"><h4>Comment ça marche</h4><dl><dt>Où la remplir</dt><dd>${T[0]}</dd><dt>Comment elle avance</dt><dd>${T[1]}</dd></dl></div>`}
 /* Rattraper un oubli : un bouton par jour de la semaine en cours */
-function weekToggles(h){const t=today(),mon=monday(t);return `<div class="field"><span>Cette semaine · touche un jour pour le cocher</span><div class="days wk">${[...Array(7)].map((_,i)=>{const d=addDays(mon,i),on=habitDone(h.id,d);return `<button data-act="habit-toggle" data-id="${h.id}" data-date="${d}" aria-pressed="${on}" ${d>t||d<hStart(h)?'disabled':''} aria-label="${esc(h.name||'Habitude')} le ${fmtD(d)}">${DAYS[i]}</button>`}).join('')}</div></div>`}
+function weekToggles(h){const t=today(),mon=monday(t);return `<div class="field"><span>Cette semaine · touche un jour pour le saisir</span><div class="days wk">${[...Array(7)].map((_,i)=>{const d=addDays(mon,i),st=habitState(h.id,d);return `<button class="${st==='min'?'min':''}" data-act="${h.minEnabled?'hday-open':'habit-toggle'}" data-id="${h.id}" data-date="${d}" aria-pressed="${st==='target'}" ${d>t||d<hStart(h)?'disabled':''} aria-label="${esc(h.name||'Habitude')} le ${fmtD(d)}">${DAYS[i]}</button>`}).join('')}</div></div>`}
+function minEditor(h){return `<div class="checks"><label><input type="checkbox" id="hmin-${h.id}" data-bind="habits:${h.id}:minEnabled" ${h.minEnabled?'checked':''}><span><b>Activer une version minimale</b>Pour les jours difficiles : le minimum garde ta série, sans compter comme cible atteinte.</span></label></div>
+  ${h.minEnabled?`<div class="two">${F('habits',h.id,'minLabel','Version minimale',{ph:'2 minutes de lecture'})}${F('habits',h.id,'targetLabel','Cible',{ph:'20 minutes de lecture'})}</div>`:''}`}
 function sheetHabit(id){const h=S.data.habits[id];const r=rate30(h);const q=qKey(today());
   const kr=list('krs').find(k=>k.habitId===id&&kindOf(k)==='habit'&&krQuarter(k)===q);const objs=objectivesOf(q,h.identityId);
   const link=`<label class="field"><span>Objectif de ${qLabel(q)} (facultatif)</span><select id="hobj-${id}" data-link="habit-obj" data-id="${id}">${[['','Aucun : reste dans ton traqueur d’habitudes'],...objs.map(o=>[o.id,o.title||'Sans titre'])].map(([v,l])=>`<option value="${esc(v)}" ${(kr?kr.objectiveId:'')===v?'selected':''}>${esc(l)}</option>`).join('')}</select><span class="hint">Sans objectif : habitude d’entretien de son identité, ou suivi indépendant si elle n’a pas d’identité. Rattachée à un objectif : preuve de cet objectif. Son historique et sa série sont conservés dans tous les cas.</span></label>`;
   return sheetTop(esc(h.name||'Nouvelle habitude'),'Habitude')+`<section>${iconPicker('habits',id,h.icon)}
-  ${F('habits',id,'name','Habitude',{ph:'Se coucher avant 21 h 30'})}${F('habits',id,'identityId','Identité (facultatif)',{options:idOptions(),hint:'Avec une identité, elle compte dans ses engagements (habitude d’entretien). Sans identité, elle reste un suivi indépendant.'})}${freqEditor(h)}${weekToggles(h)}${link}
-  <p class="hint">${streakTxt(h)} · 30 derniers jours : ${r==null?'—':pctS(r)}</p></section>
+  ${F('habits',id,'name','Habitude',{ph:'Se coucher avant 21 h 30'})}${F('habits',id,'identityId','Identité (facultatif)',{options:idOptions(),hint:'Avec une identité, elle compte dans ses engagements (habitude d’entretien). Sans identité, elle reste un suivi indépendant.'})}${freqEditor(h)}${minEditor(h)}${weekToggles(h)}${link}
+  <p class="hint">${streakTxt(h)} · ${rate30Txt(h)}</p></section>
   ${delBtn('del-habit',id,'Supprimer cette habitude')}`}
 function sheetVideo(id){const v=S.data.videos[id];const p=plan(v);const loops=v.loops||[];const t=today();const f=v.filters||{};
   const planHtml=p?`<ul class="plan-t">${[...PHASES.map(ph=>({k:ph.k,l:ph.label,a:p[ph.k]})),{k:'packaging',l:'Titre & miniature (en parallèle)',a:p.packaging}].map(r=>`<li class="${t>=r.a.start&&t<r.a.end?'now':''}"><i class="ph-${r.k}"></i><span>${esc(r.l)}</span><span class="sm muted">${fmtD(r.a.start)} → ${fmtD(addDays(r.a.end,-1))}</span></li>`).join('')}<li><i style="background:var(--fg)"></i><span>Publication</span><span class="sm muted">${fmtD(v.publishDate,true)}</span></li></ul>`:'<p class="hint">Ajoute une date de publication : le rétroplanning se calcule tout seul.</p>';
@@ -1464,7 +1537,7 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   if(coll==='krs'&&path==='done')doc.doneAt=v?today():null;
   put(coll,id,doc);
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
-  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId'].includes(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
+  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled'].includes(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}});
 document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty'){e.preventDefault();const k=S.data.krs[f.dataset.id];const inp=f.querySelector('input[type=number]');const amt=+inp.value;if(!k||inp.value===''||!isFinite(amt)||!amt)return;const dIn=f.querySelector('input[name=date]');const d=(dIn&&dIn.value)||f.dataset.date||today();const log={...(k.log||{})};log[d]=(+log[d]||0)+amt;put('krs',k.id,{...k,log,updatedAt:nowIso()});toast(`${signed(amt,k.unit||'')} · ${krTitle(k)}`);if(S.sheet)renderSheet();else{S.qtyOpen=null;renderMain(true)}return}if(f.dataset.form==='metric'){e.preventDefault();const m=S.data.metrics[f.dataset.id];if(!m)return;const el=f.elements;const d=(el.date&&el.date.value)||today();let v;
@@ -1485,7 +1558,7 @@ document.addEventListener('pointermove',e=>{
   const hit=e.target.closest&&e.target.closest('.c-hit');if(hit)scrub(hit.parentElement,e.clientX)});
 function swEnd(e){if(!sw||e.pointerId!==sw.id)return;const s=sw;sw=null;if(!s.drag)return;swAt=Date.now();s.fg.style.transition='';s.fg.style.transform='';
   const done=s.el.dataset.done==='1';const thr=Math.min(110,s.el.offsetWidth*.28);s.el.classList.remove('go','back');
-  if((s.dx>thr&&!done)||(s.dx<-thr&&done)){toggleHabit(s.el.dataset.swipe,s.el.dataset.date);try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}}
+  if((s.dx>thr&&!done)||(s.dx<-thr&&done)){applyHabit(s.el.dataset.swipe,s.el.dataset.date,done?'none':'target')}
   if(pending){pending=false;schedule()}}
 document.addEventListener('pointerup',swEnd);document.addEventListener('pointercancel',swEnd);
 document.addEventListener('pointerout',e=>{const hit=e.target.closest&&e.target.closest('.c-hit');if(hit&&!hit.contains(e.relatedTarget))unscrub(hit.parentElement)});
@@ -1528,7 +1601,13 @@ const ACT={
   'todo-toggle':a=>{const t=S.day||today();saveTodos(t,todoItems(t).map(i=>i.id===a.dataset.id?{...i,done:!i.done}:i))},
   'todo-del':a=>{const t=S.day||today();saveTodos(t,todoItems(t).filter(i=>i.id!==a.dataset.id))},
   'carry':()=>{const t=today(),y=addDays(t,-1);const c=todoItems(y).filter(i=>!i.done);saveTodos(t,[...todoItems(t),...c.map(i=>({...i,id:uid()}))]);saveTodos(y,todoItems(y).filter(i=>i.done));toast(`${plural(c.length,'tâche')} reprise${c.length>1?'s':''}`)},
-  'habit-toggle':a=>{toggleHabit(a.dataset.id,a.dataset.date);if(S.sheet)setTimeout(renderSheet,0)},
+  'habit-toggle':a=>{applyHabit(a.dataset.id,a.dataset.date,habitDone(a.dataset.id,a.dataset.date)?'none':'target');if(S.sheet)setTimeout(renderSheet,0)},
+  'habit-set':a=>{const hid=a.dataset.id,d=a.dataset.date,v=a.dataset.v;applyHabit(hid,d,habitState(hid,d)===v?'none':v);if(S.sheet)setTimeout(renderSheet,0)},
+  'hday-open':a=>{S.hday=a.dataset.date;openSheet('hday','habits',a.dataset.id)},
+  'hday-set':a=>{applyHabit(a.dataset.id,S.hday||today(),a.dataset.v);dismissSheet()},
+  'just-set':a=>{const hid=a.dataset.h,key=a.dataset.d,jid=hid+'_'+key,v=a.dataset.v,cur=S.data.justifs[jid];
+    if(cur&&(cur.reason||'none')===v){del('justifs',jid)}else put('justifs',jid,{...(cur?clean(cur):{}),habitId:hid,date:key,scope:a.dataset.scope||'day',reason:v==='none'?'':v,at:nowIso()});
+    if(S.sheet)renderSheet()},
   'freq':a=>{const h=S.data.habits[a.dataset.id];if(!h)return;const n={...h,freq:a.dataset.v};if(a.dataset.v==='days'&&!(h.days||[]).length)n.days=[0,1,2,3,4];if(a.dataset.v==='weekly'&&!h.perWeek)n.perWeek=3;put('habits',h.id,n);renderSheet()},
   'perweek':a=>{const h=S.data.habits[a.dataset.id];if(!h)return;put('habits',h.id,{...h,perWeek:clamp((h.perWeek||3)+(+a.dataset.d),1,7)});renderSheet()},
   'habit-day':a=>{const h=S.data.habits[a.dataset.id];if(!h)return;let d=[...(h.days||[])];const n=+a.dataset.d;d=d.includes(n)?d.filter(x=>x!==n):[...d,n].sort();if(!d.length)return toast('Garde au moins un jour');put('habits',h.id,{...h,freq:'days',days:d});renderSheet()},
