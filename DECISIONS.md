@@ -93,12 +93,38 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - Une suppression laisse les idées sans catégorie ou sans statut, sans les effacer.
 - **Sujets retenus** : « Retenir » transforme une idée en sujet du Studio (étape « Idée »), relié à l'idée, qui reste dans la banque avec la mention « Sujet retenu ». « + Nouveau sujet » reste disponible même quand la liste est vide.
 
+## Habitudes : un geste, quantités et tableau compact (28 octobre 2026)
+
+- **Type de suivi**, réglé dans la fiche de chaque habitude :
+  - **Fait / pas fait** : un appui sur la case la coche, un second l'enlève, sans menu.
+  - **Minimum et cible** : la case ouvre le choix entre cible, minimum et pas fait (D07 inchangé).
+  - **Quantité** : une cible par jour, une unité et un minimum facultatif. La case ouvre la saisie de ce qui a été fait, avec un aperçu en direct et des raccourcis « Minimum » et « Cible ».
+- **Règles d'une quantité** :
+  - À la cible ou au-delà, l'habitude est validée. Au-delà, elle s'affiche en turquoise au lieu du vert.
+  - Entre le minimum et la cible, elle compte comme minimum et garde la série (D07).
+  - Sans minimum réglé, toute quantité sous la cible compte comme minimum. Avec un minimum, une quantité plus petite est notée mais ne compte pas.
+  - La quantité est enregistrée par jour dans le journal du mois (`vals.<jour>.<habitude>`) et se synchronise comme les cases.
+  - Si la cible est modifiée après coup, les jours déjà saisis gardent leur état.
+- **Tableau de la semaine** : une ligne par habitude, une colonne par jour, puis le compte de la semaine (« 3/5 »), en vert quand le quota est atteint et en turquoise au-delà.
+  - Un jour non prévu n'est qu'un point.
+  - Un jour à venir n'est pas cliquable.
+  - Une quantité s'affiche dans sa case (1 500 devient « 1,5k »).
+  - Sur ordinateur, une ligne par habitude. Sur téléphone, le nom au-dessus et les 7 cases en dessous.
+  - La ligne Sommeil n'apparaît que si la semaine en contient.
+  - Une légende en couleurs remplace la légende en texte.
+  - La Revue reprend ce tableau, en lecture seule.
+- **« Gérer »** : la liste des habitudes, avec leurs séries et leurs taux sur 30 jours, quitte la page Habitudes.
+  - Elle est remplacée par une page « Mes habitudes ». Elle liste toutes les habitudes, y compris les preuves d'objectifs, avec leur fréquence et leur type de suivi.
+  - On y crée une habitude, et on y ouvre chaque fiche. La série et le taux sur 30 jours restent dans la fiche.
+- **Aujourd'hui** : une habitude à quantité affiche « 35/20 » à côté de sa case. Cocher la case enregistre la cible, et la décocher efface la quantité. La fin d'une séance de concentration liée à une telle habitude demande la quantité.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Habitudes en un geste, quantités et tableau compact** : 82 vérifications automatisées (41 sur ordinateur, 41 sur téléphone), plus 5 vérifications contre le Firebase simulé (quantité envoyée, modifiée, effacée, reçue d'un autre appareil). Toutes réussies.
 - **Aujourd'hui, Revue et habitudes sans identité** : 28 vérifications automatisées, toutes réussies.
 - **Identités et pictogrammes** : 22 vérifications automatisées, toutes réussies.
 - **Résultats retirés et banque d'idées** : 27 vérifications automatisées, toutes réussies.
