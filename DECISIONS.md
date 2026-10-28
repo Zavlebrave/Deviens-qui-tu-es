@@ -42,4 +42,7 @@ Ces choix restent à confirmer par Ivan : une décision changée se met à jour 
 
 ## Recette
 
-Les scénarios T01 à T46, T49 et T52 ont été joués dans un navigateur Chromium automatisé. Le parcours en ligne a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration. T47 et T48 sont couverts par le calcul de la date dans le fuseau du compte.
+- **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
+- **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
+  - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
+  - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
