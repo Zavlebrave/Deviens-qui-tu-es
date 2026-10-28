@@ -504,7 +504,8 @@ body{font-size:16px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .store-state.s-ok i{background:var(--pos)} .store-state.s-wait i{background:var(--warn)} .store-state.s-off i,.store-state.s-local i{background:var(--muted)} .store-state.s-err i{background:var(--neg)}
 .store-state button{color:var(--accent);font-weight:700;font-size:12px}
-.side .store-state .sh,.mtop .store-state .lg{display:none}
+.store-state .sh,.mtop .store-state .lg{display:none}
+.mtop .store-state .sh{display:inline}
 .mtop .store-state{padding:0;margin-left:auto;margin-right:4px}
 .mobile-only{display:none}
 @media (max-width:819px){.mobile-only{display:block}.tabbar{grid-template-columns:repeat(5,minmax(0,1fr))}.tabbar button{font-size:11px}}
@@ -533,6 +534,7 @@ body{font-size:16px}
 .m-axis{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--faint);margin-top:-6px}
 .m-add{font-size:15px;font-weight:700;margin-top:18px}
 .mgoal .tag{white-space:normal;text-align:right}
+.rv-sync{font-size:12px}
 .today-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0 16px;align-items:start}
 @media (min-width:1100px){.today-grid{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
 details.sec>summary{list-style:none;cursor:pointer;margin-bottom:0}
@@ -688,7 +690,7 @@ function syncState(){if(S.mode==='local')return['local','Enregistré sur cet app
   if(Object.keys(SYNC.failed).length)return['err','Impossible de synchroniser','Erreur'];
   if(!SYNC.online)return['off',SYNC.inflight?'Hors connexion · en attente de synchronisation':'Hors connexion · enregistré sur cet appareil','Hors connexion'];
   if(SYNC.inflight)return['wait','En attente de synchronisation','En attente'];return['ok','Synchronisé','Synchronisé']}
-function renderSync(){const[k,l,sh]=syncState();document.querySelectorAll('[data-sync]').forEach(el=>{el.className='store-state s-'+k;const a=el.querySelector('.lg'),b=el.querySelector('.sh'),btn=el.querySelector('button');if(a)a.textContent=l;if(b)b.textContent=sh;if(btn)btn.hidden=k!=='err'})}
+function renderSync(){const[k,l,sh]=syncState();document.querySelectorAll('[data-sync]').forEach(el=>{el.classList.remove('s-ok','s-wait','s-off','s-err','s-local');el.classList.add('store-state','s-'+k);const a=el.querySelector('.lg'),b=el.querySelector('.sh'),btn=el.querySelector('button');if(a)a.textContent=l;if(b)b.textContent=sh;if(btn)btn.hidden=k!=='err'})}
 function retrySync(){const f=SYNC.failed;SYNC.failed={};for(const{c,id,d} of Object.values(f))queueWrite(c,id,d);renderSync()}
 window.addEventListener('online',()=>{SYNC.online=true;renderSync()});window.addEventListener('offline',()=>{SYNC.online=false;renderSync()});
 function dbError(e){const c=e&&e.code;if(c==='quota_exceeded')toast("Stockage plein : supprime d'anciennes données ou exporte-les.");else if(c==='invalid_argument')toast("Cette modification n'a pas pu être enregistrée.");else if(c==='revoked')toast("L'accès en écriture a été retiré pour cette session.");else toast('Enregistrement impossible pour le moment, réessaie dans un instant.')}
@@ -1296,35 +1298,42 @@ function sheetMetric(id){const m=S.data.metrics[id];const es=mEntries(m).reverse
   ${delBtn('del-metric',id,'Supprimer cet indicateur')}`}
 
 /* ---------- Vue : Revue hebdomadaire ---------- */
+/* Revue (F29-F32) : d'abord les faits préremplis, puis le bilan personnel et les priorités, puis la clôture.
+   Les valeurs des semaines passées sont recalculées depuis les faits : une correction s'y reflète, les textes ne bougent pas. */
 function viewReview(){
   const mon=S.reviewWeek,sun=addDays(mon,6),wk=isoWeek(mon),key=wk.key,rev=S.data.reviews[key]||{};
-  const ws=weekStats(mon),sm=weekSummary(mon),pm=weekSummary(addDays(mon,-7));const q=sm.q;const proofs=weekProofs(mon);
+  const ws=weekStats(mon),sm=weekSummary(mon),pm=weekSummary(addDays(mon,-7));const proofs=weekProofs(mon);
   const rows=proofs.filter(k=>krWeekScore(k,mon)!=null);
-  const qtys=proofs.filter(k=>kindOf(k)==='qty'),levels=proofs.filter(k=>kindOf(k)==='level');const actDate=minD(today(),sun);
+  const qtys=proofs.filter(k=>kindOf(k)==='qty');const actDate=minD(today(),sun);
   const fld=(f,label,ph)=>`<label class="field"><span>${label}</span><textarea id="rv-${f}" data-bind="reviews:${key}:${f}" placeholder="${ph}">${esc(rev[f]||'')}</textarea></label>`;
-  const hist=list('reviews').filter(r=>r.closedAt&&r.id!==key).sort((a,b)=>b.id.localeCompare(a.id)).slice(0,12);
+  const allHist=list('reviews').filter(r=>r.closedAt&&r.id!==key&&r.monday).sort((a,b)=>b.id.localeCompare(a.id));const hist=S.histAll?allHist:allHist.slice(0,12);
   const saved=rev.closedAt?`<span class="tag pos">${rev.auto?'Sauvegardée':'Clôturée'} le ${fmtD(rev.closedAt.slice(0,10))}</span>`:'';const closed=rev.closedAt&&rev.auto===false;const wm=weekMood(mon);
+  const mood=`<div class="wmood">${wm.days.map(d=>{const x=dayOf(d),e=energyOf(x.energy),sl=sleepOf(x.sleep);return `<button class="${d===today()?'today':''}" data-act="goto-day" data-date="${d}" ${d>today()?'disabled':''} aria-label="Ouvrir le ${fmtD(d)}"><small>${DAYS[wd(d)]}</small><i title="${sl?`Sommeil ${esc(sl[2].toLowerCase())}`:''}">${sl?sl[1]:'·'}</i><i title="${e?esc(e[3]):''}">${e?e[1]:'·'}</i><b aria-label="Humeur">${x.mood||'·'}</b></button>`}).join('')}</div>
+      <p class="hint" style="margin-top:8px">${wm.avg!=null||wm.sleep!=null?[wm.sleep!=null&&`Sommeil&nbsp;: ${fmtN(wm.sleep)} / 5 en moyenne (${plural(wm.nS,'réponse')}) · ${esc(sleepOf(Math.round(wm.sleep))[2])}`,wm.avg!=null&&`Énergie&nbsp;: ${fmtN(wm.avg)} / 5 en moyenne (${plural(wm.nE,'réponse')}) · ${esc(energyOf(Math.round(wm.avg))[3])}`].filter(Boolean).join('<br>'):'Rien de noté cette semaine. Renseigne ton sommeil, ton énergie et ton humeur chaque matin dans Aujourd’hui.'}</p>`;
   return bilanSw()+`<header class="page-head"><h1 class="h1">Revue · semaine ${wk.w}</h1>${qnav('rweek',fmtD(mon))}</header>
   <p class="eyebrow">Du ${fmtD(mon)} au ${fmtD(sun)}</p>
-  ${hero('rv','Engagements tenus',sm.score==null?'—':pctS(sm.score),sm.score!=null&&pm.score!=null?dPts(sm.score-pm.score,'vs semaine précédente'):'<span class="muted">premier score de la série</span>')}
-  <section class="stats">${stat('Habitudes tenues',ws.rate==null?'—':pctS(ws.rate),`${ws.done} votes sur ${ws.sched}`)}${stat('To-do cochées',`${ws.todosDone}<small> / ${ws.todosTotal}</small>`,ws.todosTotal?pctS(ws.todosDone/ws.todosTotal):'Aucune tâche')}${stat('Studio',String(ws.moves.length),ws.moves.length>1?'étapes franchies':'étape franchie')}</section>
+  ${hero('rv','Engagements tenus',sm.score==null?'—':pctS(sm.score),sm.score==null?'<span class="muted">Aucun engagement prévu</span>':pm.score!=null?dPts(sm.score-pm.score,'vs semaine précédente'):'<span class="muted">premier score de la série</span>')}
+  <section class="stats">${stat('Habitudes tenues',ws.rate==null?'—':pctS(ws.rate),`${ws.done} sur ${ws.sched} prévues`)}${stat('Tâches cochées',`${ws.todosDone}<small> / ${ws.todosTotal}</small>`,ws.todosTotal?pctS(ws.todosDone/ws.todosTotal):'Aucune tâche')}${stat('Studio',String(ws.moves.length),ws.moves.length>1?'étapes franchies':'étape franchie')}</section>
   <div class="cols">
     <section class="sec"><div class="sec-h"><h2>Engagements de la semaine</h2>${saved}</div>
       ${rows.length?`<div class="list">${rows.map(k=>proofRow(k,mon)).join('')}</div>`:'<p class="empty">Aucun engagement prévu cette semaine.</p>'}
     </section>
     <section class="sec"><div class="sec-h"><h2>Quantités à ajouter</h2></div><p class="hint" style="margin-bottom:6px">Toutes tes preuves de type « Quantité ». Utilise − et +, ou tape un nombre puis OK pour les grandes quantités. Les habitudes et les étapes se cochent directement sur leur ligne.</p>
       ${qtys.map(k=>`<div class="qrow">${av(krIcon(k),idColor(k.identityId),'sm',krTitle(k))}<div class="m"><b style="font-weight:500">${esc(krTitle(k))}</b><span class="hint">${objTitleOf(k)}${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${esc(k.unit||'')} cette semaine</span></div>
-        <div class="qctl">${qtyCtl(k,actDate,mon)}<form class="qty-form" data-form="qty" data-id="${k.id}" data-date="${actDate}"><input id="rq-${k.id}" type="number" step="any" inputmode="decimal" placeholder="Saisir ${esc(k.unit||'')}" aria-label="Nombre de ${esc(k.unit||'unités')} à ajouter à ${esc(krTitle(k))}" required><button class="btn sm" type="submit">OK</button></form></div></div>`).join('')}
-      ${!qtys.length&&!levels.length?'<p class="empty">Rien à saisir : tes habitudes et tes étapes se cochent directement.</p>':''}
+        <div class="qctl">${qtyCtl(k,actDate,mon)}<form class="qty-form" data-form="qty" data-id="${k.id}" data-date="${actDate}"><input id="rq-${k.id}" type="number" step="any" inputmode="decimal" placeholder="Saisir ${esc(k.unit||'')}" aria-label="Nombre de ${esc(k.unit||'unités')} à ajouter à ${esc(krTitle(k))}" required><button class="btn sm" type="submit">OK</button></form></div></div>`).join('')||'<p class="empty">Rien à saisir : tes habitudes et tes étapes se cochent directement.</p>'}
     </section>
   </div>
-  <section class="sec"><div class="sec-h"><h2>Ton bilan</h2></div>
+  <div class="cols">
+    <section class="sec"><div class="sec-h"><h2>Étapes Studio franchies</h2></div>${ws.moves.length?`<div class="list">${ws.moves.map(x=>`<button class="row" data-act="edit-video" data-id="${x.v.id}">${av('🎬','#E8B10E','sm')}<span class="m"><span class="t">${esc(x.v.title||'Sans titre')}</span><span class="s">Passée à « ${esc(STAGE_LABEL[x.stage]||x.stage)} »</span></span><span class="r"><span class="muted">${fmtD(x.date)}</span></span></button>`).join('')}</div>`:'<p class="empty">Aucune étape franchie cette semaine.</p>'}</section>
+    <section class="sec"><div class="sec-h"><h2>Sommeil, énergie et humeur</h2></div>${mood}</section>
+  </div>
+  <section class="sec"><div class="sec-h"><h2>Ton bilan</h2><span class="store-state rv-sync" data-sync><i></i><span class="lg"></span><span class="sh"></span><button data-act="sync-retry" hidden>Réessayer</button></span></div>
     <div class="rv-grid">${fld('wins','Ce qui a marché','Les victoires, même petites')}${fld('blocks','Ce qui a bloqué','Sans te juger')}${fld('lesson','La leçon de la semaine','Une phrase')}<div class="field rv-prios"><span>Mes 3 priorités pour la semaine ${isoWeek(addDays(mon,7)).w}</span>${['p1','p2','p3'].map((pid,i)=>`<input id="rv-${pid}" data-bind="reviews:${key}:prios.${pid}.text" value="${esc(((rev.prios||{})[pid]||{}).text||'')}" placeholder="Priorité ${i+1}" aria-label="Priorité ${i+1}">`).join('')}<span class="hint">Elles s’affichent dans Aujourd’hui toute la semaine ${isoWeek(addDays(mon,7)).w}.</span></div></div>
-    <div class="field" style="margin-top:16px"><span>Sommeil, énergie et humeur du matin</span><div class="wmood">${wm.days.map(d=>{const x=dayOf(d),e=energyOf(x.energy),sl=sleepOf(x.sleep);return `<button class="${d===today()?'today':''}" data-act="goto-day" data-date="${d}" ${d>today()?'disabled':''} aria-label="Ouvrir le ${fmtD(d)}"><small>${DAYS[wd(d)]}</small><i title="${sl?`Sommeil ${esc(sl[2].toLowerCase())}`:''}">${sl?sl[1]:'·'}</i><i title="${e?esc(e[3]):''}">${e?e[1]:'·'}</i><b aria-label="Humeur">${x.mood||'·'}</b></button>`}).join('')}</div>
-      <p class="hint">${wm.avg!=null||wm.sleep!=null?[wm.sleep!=null&&`Sommeil&nbsp;: ${fmtN(wm.sleep)} / 5 en moyenne (${plural(wm.nS,'réponse')}) · ${esc(sleepOf(Math.round(wm.sleep))[2])}`,wm.avg!=null&&`Énergie&nbsp;: ${fmtN(wm.avg)} / 5 en moyenne (${plural(wm.nE,'réponse')}) · ${esc(energyOf(Math.round(wm.avg))[3])}`].filter(Boolean).join('<br>'):'Rien de noté cette semaine. Renseigne ton sommeil, ton énergie et ton humeur chaque matin dans Aujourd’hui.'}</p></div>
+    <p class="hint" style="margin-top:8px">Tes textes s’enregistrent pendant que tu écris.</p>
     <div class="close-wk">${closed?`<span class="tag pos">Semaine clôturée le ${fmtD(rev.closedAt.slice(0,10))}</span>`:''}<button class="btn" data-act="close-review" data-key="${key}" data-mon="${mon}">${closed?'Mettre à jour la clôture':'Clôturer la semaine'}</button><p class="hint">Enregistre ton score, tes preuves et ton bilan dans tes semaines sauvegardées. Si tu oublies, la semaine est sauvegardée automatiquement lundi.</p></div>
   </section>
-  ${hist.length?`<section class="sec"><div class="sec-h"><h2>Semaines sauvegardées</h2></div><div class="list">${hist.map(r=>`<button class="row" data-act="goto-review" data-mon="${r.monday||''}">${av('',null,'sm','S')}<span class="m"><span class="t">Semaine ${esc(r.id.split('-W')[1])}</span><span class="s">${esc(r.lesson||r.wins||(r.auto?'Sauvegarde automatique':'—'))}</span></span><span class="r"><b>${r.weekScore!=null?pctS(r.weekScore):r.habitRate!=null?pctS(r.habitRate):'—'}</b><span class="muted">${(w=>w.avg!=null?`énergie ${fmtN(w.avg)}/5`:r.energy?`énergie ${r.energy}/5`:'')(r.monday?weekMood(r.monday):{avg:null})}</span></span></button>`).join('')}</div></section>`:''}`}
+  ${allHist.length?`<section class="sec"><div class="sec-h"><h2>Semaines sauvegardées <small class="muted">${allHist.length}</small></h2></div><div class="list">${hist.map(r=>{const w=weekSummary(r.monday),mm=weekMood(r.monday);return `<button class="row" data-act="goto-review" data-mon="${r.monday}">${av('',null,'sm','S')}<span class="m"><span class="t">Semaine ${esc(r.id.split('-W')[1])} · ${esc(r.id.split('-W')[0])}</span><span class="s">${esc(r.lesson||r.wins||(r.auto?'Sauvegarde automatique':'—'))}</span></span><span class="r"><b>${w.score==null?'—':pctS(w.score)}</b><span class="muted">${mm.avg!=null?`énergie ${fmtN(mm.avg)}/5`:r.energy?`énergie ${r.energy}/5`:''}</span></span></button>`}).join('')}</div>
+  ${!S.histAll&&allHist.length>12?`<div style="margin-top:10px"><button class="btn-sec" data-act="hist-all">Afficher les ${allHist.length-12} semaines précédentes</button></div>`:''}</section>`:''}`}
 
 /* ---------- Vue : Studio YouTube (année en cours) ---------- */
 function viewStudio(){
@@ -1635,7 +1644,7 @@ function renderMain(force){
   if(!ready()){main.innerHTML='<div class="boot"><p>Ouverture de ton espace…</p></div>';return}
   const keep=ae&&ae.id&&main.contains(ae)?ae.id:null;
   const fn={today:viewToday,okr:viewOKR,habits:viewHabits,progress:viewProgress,review:viewReview,studio:viewStudio,settings:viewSettings}[S.tab]||viewToday;
-  main.innerHTML=fn();
+  main.innerHTML=fn();renderSync();
   if(!archived)setTimeout(autoArchive,0);
   ensurePlan();
   if(S.tab==='studio'&&S.studio==='idees')filterIdeas();
@@ -1670,6 +1679,9 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled','week','objectiveId','min','max'].includes(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.morning)S.mOpen={d:el.dataset.morning,open:el.open}},true);
+/* Les textes s'enregistrent pendant la saisie (brouillon conservé même si l'app est fermée avant de quitter le champ) */
+const bindT={};
+document.addEventListener('input',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.bind&&(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&['text','url','search',''].includes(el.type)))){const k=el.id||el.dataset.bind;clearTimeout(bindT[k]);bindT[k]=setTimeout(()=>{if(el.isConnected)bindChange(el)},700)}});
 document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}});
 document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty'){e.preventDefault();const k=S.data.krs[f.dataset.id];const inp=f.querySelector('input[type=number]');const amt=+inp.value;if(!k||inp.value===''||!isFinite(amt)||!amt)return;const dIn=f.querySelector('input[name=date]');const d=(dIn&&dIn.value)||f.dataset.date||today();const log={...(k.log||{})};log[d]=(+log[d]||0)+amt;put('krs',k.id,{...k,log,updatedAt:nowIso()});toast(`${signed(amt,k.unit||'')} · ${krTitle(k)}`);if(S.sheet)renderSheet();else{S.qtyOpen=null;renderMain(true)}return}if(f.dataset.form==='metric'){e.preventDefault();const m=S.data.metrics[f.dataset.id];if(!m)return;const el=f.elements;const d=(el.date&&el.date.value)||today();let v;
     if(m.type==='rank')v=rankVal(+el.tier.value,+el.div.value);else{if(el.v.value==='')return;v=+el.v.value;if(!isFinite(v))return}
@@ -1729,6 +1741,7 @@ const ACT={
   'hab-range':a=>{S.range.habits=a.dataset.v;saveUi();renderMain(true)},
   'hweek':a=>{S.habitWeek=addDays(S.habitWeek,7*+a.dataset.d);renderMain(true)},
   'rweek':a=>{S.reviewWeek=addDays(S.reviewWeek,7*+a.dataset.d);renderMain(true)},
+  'hist-all':()=>{S.histAll=true;renderMain(true)},
   'goto-review':a=>{if(a.dataset.mon){S.reviewWeek=a.dataset.mon;renderMain(true);window.scrollTo(0,0)}},
   'studio':a=>{S.studio=a.dataset.v;saveUi();renderMain(true)},
   'all-ideas':()=>{S.allIdeas=true;renderMain(true)},
