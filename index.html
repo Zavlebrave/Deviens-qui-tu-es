@@ -792,6 +792,25 @@ a.btn-sec{text-decoration:none}
   .tabbar button[aria-current="page"]{color:var(--accent-2)}
   .tabbar svg{width:25px;height:25px}
 }
+.plink{margin-top:12px}
+.chip.lk{background:var(--accent-bg);color:var(--accent-2);height:30px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.pres{color:var(--muted);margin-top:6px;font-size:15px}
+.td-prio.done .pact .linkish{margin-top:8px}
+.fz-tg{white-space:pre-line}
+.fz-form{display:flex;flex-direction:column;gap:18px}
+.unit-in{display:flex;align-items:center;gap:10px}
+.unit-in input{flex:1;min-width:0}
+.unit-in>span{color:var(--muted);font-weight:500}
+.rpills{display:flex;gap:6px;flex-wrap:wrap}
+.rpills label{position:relative;display:inline-flex}
+.rpills input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.rpills label>span{display:inline-flex;align-items:center;min-height:42px;padding:0 15px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line-2);font-weight:500;color:var(--muted)}
+.rpills input:checked+span{background:var(--accent-bg);color:var(--accent-2);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.rpills input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.stats.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:760px){.stats.four{grid-template-columns:1fr 1fr}.stats.four .stat:nth-child(3){grid-column:auto}}
+.wkn{font-size:14px;font-weight:600}
+.row .ico{width:40px;height:40px}.row .ico svg{width:20px;height:20px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -1165,7 +1184,8 @@ function weekStats(mon){const t=today();let sc=0,dn=0;const votes={};const tk=ne
     if(freqOf(h)==='weekly'){if(addDays(mon,6)>=hStart(h)){sc+=(h.perWeek||3);dn+=Math.min(c,h.perWeek||3)}}else{const a=maxD(mon,hStart(h));const e=occurrences(h,a,end);sc+=e;dn+=Math.min(c,e)}}
   const days=[...Array(7)].map((_,i)=>addDays(mon,i));let td=0,tt=0;for(const d of days){const it=todoItems(d);tt+=it.length;td+=it.filter(x=>x.done).length}
   const moves=[];for(const v of videos()){const lg=v.stageLog||[];lg.forEach((l,i)=>{if(i>0&&l.date>=mon&&l.date<=days[6]&&stageIdx(l.stage)>stageIdx(lg[i-1].stage))moves.push({v,...l})})}
-  return{rate:sc?dn/sc:null,done:dn,sched:sc,votes,todosDone:td,todosTotal:tt,moves}}
+  let pt=0,pd=0,fm=0;for(const d of days){if(d>t||!dayOf(d).prio)continue;const x=prioInfo(d);if(!x||x.missing)continue;pt++;if(x.done)pd++;fm+=+x.p.spent||0}
+  return{rate:sc?dn/sc:null,done:dn,sched:sc,votes,todosDone:td,todosTotal:tt,moves,priosTotal:pt,priosDone:pd,focusMin:fm}}
 
 const todoItems=s=>((S.data.todos[s]||{}).items||[]);
 function saveTodos(s,items){put('todos',s,{date:s,items})}
@@ -1271,31 +1291,66 @@ function viewToday(){
    ou une action Studio, sans jamais la recopier. Accomplie, elle le reste : aucune autre n'est imposée à sa place. */
 function prioInfo(t){const d=dayOf(t),p=d.prio;if(!p)return null;const miss={p,missing:true,label:p.label||'Élément introuvable',icon:'⭐'};let label='',sub='',done=false,act='',icon='⭐',iid='';
   if(p.kind==='todo'){const it=todoItems(t).find(i=>i.id===p.id);if(!it)return miss;label=it.text;icon='📝';done=!!it.done;act=`<button class="btn" data-act="todo-toggle" data-id="${it.id}">Marquer comme faite</button>`}
-  else if(p.kind==='habit'){const h=S.data.habits[p.id];if(!h)return miss;label=h.name||'Habitude';icon=h.icon||'🔁';iid=h.identityId;const st=habitState(h.id,t);done=st==='target';sub=[h.targetLabel,st==='min'?'Minimum réalisé':''].filter(Boolean).join(' · ');act=habitCtl(h,t)}
+  else if(p.kind==='habit'){const h=S.data.habits[p.id];if(!h)return miss;label=h.name||'Habitude';icon=h.icon||'🔁';iid=h.identityId;const st=habitState(h.id,t);done=st==='target'||!!d.prioDone;sub=[h.targetLabel,st==='min'?'Minimum réalisé':''].filter(Boolean).join(' · ');act=habitCtl(h,t)}
   else if(p.kind==='kr'){const k=S.data.krs[p.id];if(!k)return miss;const o=S.data.objectives[k.objectiveId]||{},kind=kindOf(k),mon=monday(t);label=krTitle(k);icon=krIcon(k)||'🎯';iid=o.identityId;sub=o.title||'';
-    if(kind==='milestone'){done=!!k.done;act=`<button class="btn" data-act="kr-done" data-id="${k.id}" data-date="${t}">Marquer faite</button>`}
-    else if(kind==='qty'){const r=krWeekRate(k,mon);done=r!=null&&r>=1;sub=`${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${k.unit||''} cette semaine`;act=qtyCtl(k,t,mon)+`<button class="step" data-act="qty-open" data-id="${k.id}" aria-label="Saisir au clavier">${ICON.kb}</button>`}
-    else{const h=habitOf(k);if(h){done=habitState(h.id,t)==='target';act=habitCtl(h,t)}}}
+    if(kind==='milestone'){done=!!k.done||!!d.prioDone;act=`<button class="btn" data-act="kr-done" data-id="${k.id}" data-date="${t}">Marquer faite</button>`}
+    else if(kind==='qty'){const r=krWeekRate(k,mon);done=!!d.prioDone||(r!=null&&r>=1);sub=`${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${k.unit||''} cette semaine`;act=qtyCtl(k,t,mon)+`<button class="step" data-act="qty-open" data-id="${k.id}" aria-label="Saisir au clavier">${ICON.kb}</button>`}
+    else{const h=habitOf(k);if(h){done=habitState(h.id,t)==='target'||!!d.prioDone;act=habitCtl(h,t)}}}
   else if(p.kind==='video'){const v=S.data.videos[p.id];if(!v)return miss;label=v.nextAction||`${STAGE_LABEL[v.stage]} · ${v.title||''}`;sub=v.title||'';icon='🎬';done=!!d.prioDone;act=`<button class="btn-sec" data-act="edit-video" data-id="${v.id}">Ouvrir la fiche</button><button class="btn" data-act="prio-done" data-date="${t}">Marquer accomplie</button>`}
   else if(p.kind==='weekly'){const r2=S.data.reviews[p.week];const x=r2&&r2.prios&&r2.prios[p.id];if(!x)return miss;label=x.text;icon='📌';sub='Priorité de la semaine';done=!!x.done;act=`<button class="btn" data-act="wprio-done" data-key="${p.week}" data-id="${p.id}">Marquer accomplie</button>`}
   return{p,label,sub,done,act,icon,iid}}
 function prioCard(t){const x=prioInfo(t),past=t<today();
   if(!x)return `<section class="sec td-prio"><div class="ptop"><p class="kicker">Ma priorité</p></div>${past?'<h2 class="pt dim">Aucune priorité choisie ce jour-là.</h2>':`<h2 class="pt">Quelle action compte le plus aujourd’hui ?</h2><p class="pmeta">Une tâche, une preuve, une habitude ou une action du Studio.</p><div class="pact"><button class="btn btn-go" data-act="prio-pick">Choisir ma priorité</button></div>`}</section>`;
-  const i=idOf(x.iid),f=fzGet(),live=f&&f.key===prioKey(t,x.p)&&(f.start||f.acc)?f:null;
+  const i=idOf(x.iid),f=fzGet(),live=f&&f.key===prioKey(t,x.p)&&(f.start||f.acc)?f:null,lk=linkInfo(x.p);
   const meta=[i&&`${i.icon?`<span aria-hidden="true">${esc(i.icon)}</span> `:''}${esc(i.name||'')}`,x.sub&&esc(x.sub),x.p.dur&&`${x.p.dur} min`].filter(Boolean);
+  const link=LINKABLE.includes(x.p.kind)&&!x.done&&!x.missing?`<p class="plink"><button class="${lk?'chip lk':'linkish'}" data-act="prio-link-open" data-date="${t}">🔗 ${lk?esc(lk.label):'Lier à une preuve ou un indicateur'}</button></p>`:'';
   const cta=x.missing?'<p class="hint" style="margin-top:10px">L’élément d’origine a été supprimé ou déplacé. Choisis une autre priorité.</p>'
-    :x.done?'<div class="pact"><p class="prio-ok">✓ Priorité accomplie</p></div>'
+    :x.done?`<div class="pact"><p class="prio-ok">✓ Priorité accomplie${x.p.spent?` en ${fmtMin(x.p.spent)}`:''}</p>${x.p.result?`<p class="pres">${esc(x.p.result)}</p>`:''}<button class="linkish" data-act="prio-reopen" data-date="${t}">Rouvrir</button></div>`
     :past?`<div class="pact"><button class="btn-sec" data-act="prio-quick" data-date="${t}">Marquer accomplie</button></div>`
     :`<div class="pact"><button class="btn btn-go" data-act="focus-open" data-date="${t}">${ICON.play}<span>${live?`Reprendre · ${fzClock(live)}`:'Commencer'}</span></button><div class="pfoot"><button class="linkish" data-act="prio-quick" data-date="${t}">C’est déjà fait</button></div></div>`;
   return `<section class="sec td-prio ${x.done?'done':''}"><div class="ptop"><p class="kicker">Ma priorité</p><button class="linkish" data-act="prio-pick">Changer</button></div>
-  <h2 class="pt">${esc(x.label)}</h2>${meta.length?`<p class="pmeta">${meta.join('<span class="sep" aria-hidden="true">•</span>')}</p>`:''}${cta}</section>`}
-/* Valide l'élément de la priorité (jamais une copie) ; v : 'target' ou 'min' pour une habitude avec version minimale */
-function completePrio(t,x,v){const p=x.p;
-  if(p.kind==='todo'){saveTodos(t,todoItems(t).map(i=>i.id===p.id?{...i,done:true}:i));toast('Priorité accomplie')}
-  else if(p.kind==='habit')applyHabit(p.id,t,v==='min'?'min':'target');
-  else if(p.kind==='kr'){const k=S.data.krs[p.id];if(!k)return;if(kindOf(k)==='milestone'){if(!k.done)put('krs',k.id,{...k,done:true,doneAt:t});toast('Étape faite')}else{const h=habitOf(k);if(h)applyHabit(h.id,t,v==='min'?'min':'target')}}
-  else if(p.kind==='weekly'){const rv=S.data.reviews[p.week];if(!rv)return;const ps=JSON.parse(JSON.stringify(rv.prios||{}));ps[p.id]={...(ps[p.id]||{}),done:true};put('reviews',p.week,{...rv,prios:ps});toast('Priorité accomplie')}
-  else if(p.kind==='video'){setDay(t,{prioDone:true});toast('Priorité accomplie')}}
+  <h2 class="pt">${esc(x.label)}</h2>${meta.length?`<p class="pmeta">${meta.join('<span class="sep" aria-hidden="true">•</span>')}</p>`:''}${link}${cta}</section>`}
+const fmtMin=m=>{m=Math.round(+m||0);return m<60?`${m} min`:`${Math.floor(m/60)} h${m%60?` ${pad(m%60)}`:''}`};
+const sgn=(n,u)=>`${n>0?'+':'−'}${fmtN(Math.abs(n))}${u?' '+u:''}`;
+/* Une tâche, une priorité de la semaine ou une action Studio peut être liée à une preuve ou à un indicateur.
+   Une preuve ou une habitude choisie comme priorité est déjà son propre lien. */
+const LINKABLE=['todo','weekly','video'];
+function prioTarget(p){if(p.kind==='kr')return S.data.krs[p.id]?{kind:'kr',id:p.id}:null;if(p.kind==='habit')return S.data.habits[p.id]?{kind:'habit',id:p.id}:null;
+  const l=p.link;if(!l)return null;const coll={kr:'krs',habit:'habits',metric:'metrics'}[l.kind];return coll&&S.data[coll][l.id]?l:null}
+function linkInfo(p){if(!p.link)return null;const l=prioTarget(p);if(!l)return{label:'Lien introuvable'};
+  if(l.kind==='kr')return{label:krTitle(S.data.krs[l.id])};if(l.kind==='habit')return{label:S.data.habits[l.id].name||'Habitude'};return{label:S.data.metrics[l.id].name||'Indicateur'}}
+/* Fin de séance : complète la preuve ou l'indicateur lié selon son type ; renvoie le résumé, ou false si une saisie est invalide */
+function applyPrioResult(t,x,v){const tg=prioTarget(x.p),out=[];if(!tg)return out;
+  const hab=h=>{if(h&&v.hab&&v.hab!=='none'){setHabitState(h.id,t,v.hab);out.push(`${h.name||'Habitude'} : ${v.hab==='min'?'minimum réalisé':'cible atteinte'}`)}};
+  if(tg.kind==='kr'){const k=S.data.krs[tg.id],kind=kindOf(k);
+    if(kind==='qty'&&v.qty!==''){const n=+v.qty;if(!isFinite(n)||n<0){toast('Quantité invalide');return false}if(n){incLog(k.id,t,n);out.push(`${sgn(n,k.unit||'')} · ${krTitle(k)}`)}}
+    else if(kind==='milestone'&&v.ms){if(!k.done)put('krs',k.id,{...k,done:true,doneAt:t});out.push(`Étape faite : ${krTitle(k)}`)}
+    else if(kind==='habit')hab(habitOf(k))}
+  else if(tg.kind==='habit')hab(S.data.habits[tg.id]);
+  else{const m=S.data.metrics[tg.id],es=mEntries(m),last=es.length?es[es.length-1][1]:null;
+    if(m.type==='rank'){const d=+v.div||0;if(d&&last!=null){const nv=clamp(Math.round(last)+d,0,30);setMetric(m,t,nv);out.push(`${m.name||'Rang'} : ${d>0?'+':'−'}${Math.abs(d)} division → ${rankLabel(nv)}`)}}
+    else if(last==null&&v.val!==''){const n=+v.val;if(!isFinite(n)){toast('Valeur invalide');return false}setMetric(m,t,n);out.push(`${m.name||'Indicateur'} : ${mFmt(m,n)}`)}
+    else if(last!=null&&v.delta!==''){const n=+v.delta;if(!isFinite(n)||n<0){toast('Variation invalide');return false}if(n){const d=n*(v.sign==='-1'?-1:1),nv=Math.round((last+d)*100)/100;setMetric(m,t,nv);out.push(`${m.name||'Indicateur'} : ${sgn(d,m.unit||'')} → ${mFmt(m,nv)}`)}}}
+  return out}
+/* Valide la priorité elle-même (jamais une copie) et garde le temps passé et le résumé de la séance */
+function finishPrio(t,x,spent,res){const p=x.p;
+  if(p.kind==='todo')saveTodos(t,todoItems(t).map(i=>i.id===p.id?{...i,done:true}:i));
+  else if(p.kind==='weekly'){const rv=S.data.reviews[p.week];if(rv){const ps=JSON.parse(JSON.stringify(rv.prios||{}));ps[p.id]={...(ps[p.id]||{}),done:true};put('reviews',p.week,{...rv,prios:ps})}}
+  const cur=dayOf(t).prio||p;setDay(t,{prio:{...cur,spent:spent!=null?spent:(cur.spent??null),result:res.length?res.join(' · '):(cur.result||null)},prioDone:true});
+  try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
+  toast(['Priorité accomplie',spent?fmtMin(spent):'',...res].filter(Boolean).join(' · '))}
+function sheetPrioLink(t){const x=prioInfo(t);if(!x||x.missing)return sheetTop('Lier la priorité','')+'<section><p class="empty">Aucune priorité pour ce jour.</p></section>';
+  const mon=monday(t),cur=x.p.link,on=(k,id)=>!!(cur&&cur.kind===k&&cur.id===id);
+  const row=(kind,id,icon,label,sub,color)=>`<button class="row" data-act="prio-link-set" data-kind="${kind}" data-id="${id}" data-date="${t}" aria-pressed="${on(kind,id)}">${av(icon,color,'sm',label)}<span class="m"><span class="t">${esc(label)}</span>${sub?`<span class="s">${esc(sub)}</span>`:''}</span><span class="r">${on(kind,id)?'<b class="tone-pos">✓</b>':''}</span></button>`;
+  const grp=(h,rows)=>rows.length?`<section><h3>${h}</h3><div class="list">${rows.join('')}</div></section>`:'';
+  const kindTxt=k=>{const kd=kindOf(k);return kd==='qty'?`Quantité${k.unit?` · ${k.unit}`:''}`:kd==='milestone'?'Étape':'Habitude'};
+  const proof=k=>k.virtual?row('habit',k.habitId,krIcon(k)||'🔁',krTitle(k),'Habitude d’entretien',idColor(k.identityId)):row('kr',k.id,krIcon(k)||'🎯',krTitle(k),[kindTxt(k),(S.data.objectives[k.objectiveId]||{}).title].filter(Boolean).join(' · '),idColor(k.identityId));
+  const ps=weekProofs(mon),vid=x.p.kind==='video'?x.p.id:null,sugg=vid?ps.filter(k=>!k.virtual&&(S.data.objectives[k.objectiveId]||{}).videoId===vid):[];
+  return sheetTop('Lier à une preuve',esc(x.label))+`<section><p class="note">À la fin de la séance, tu complètes directement ce que tu lies ici : des mots ou des heures, une étape, une habitude, ton Elo ou ton rang.</p></section>
+  ${grp('Proposées pour cette vidéo',sugg.map(proof))}
+  ${identities().map(i=>grp(`${i.icon?esc(i.icon)+' ':''}${esc(i.name||'Identité')}`,ps.filter(k=>k.identityId===i.id&&!sugg.includes(k)).map(proof))).join('')}
+  ${grp('Indicateurs',metrics().map(m=>{const es=mEntries(m),last=es.length?es[es.length-1][1]:null;return row('metric',m.id,m.icon||'📈',m.name||'Indicateur',last==null?'Aucune mesure':`Dernière mesure : ${mFmt(m,last)}`,'#8C96FF')}))}
+  ${cur?`<section><button class="btn-sec" data-act="prio-link-clear" data-date="${t}">Retirer le lien</button></section>`:''}`}
 /* U19 : mode concentration. « Commencer » ouvre une vue réduite à l'action : sa cible, un minuteur facultatif, un lien utile
    et « Terminer ». Le minuteur reste sur cet appareil (première livraison, D14) et ne valide jamais rien tout seul :
    à la fin, tu confirmes ce que tu as fait ou tu saisis la quantité réelle. Fermer la vue garde la séance en cours. */
@@ -1311,36 +1366,50 @@ function fzTick(){const el=document.getElementById('fz-clock'),s=S.sheet;if(!s||
   const p=dayOf(s.id).prio;if(!p)return;const f=fzOf(s.id,p);el.textContent=fzClock(f);
   if(f.dur&&f.start&&!f.rang&&fzElapsed(f)>=f.dur*6e4){f.rang=true;fzSet(f);try{navigator.vibrate&&navigator.vibrate([90,60,90])}catch(e){}toast('Temps écoulé · termine quand tu veux')}}
 function fzUpdate(t,fn){const p=dayOf(t).prio;if(!p)return;const f=fzOf(t,p);fn(f);fzSet(f);renderSheet()}
-function focusTarget(x,t){const p=x.p,mon=monday(t);
-  if(p.kind==='habit'){const h=S.data.habits[p.id];return h?[h.targetLabel&&`Cible : ${h.targetLabel}`,h.minEnabled&&h.minLabel&&`Minimum : ${h.minLabel}`].filter(Boolean).join(' · '):''}
-  if(p.kind==='kr'){const k=S.data.krs[p.id];if(!k)return '';const kind=kindOf(k);if(kind==='qty')return `Cette semaine : ${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${k.unit||''}`.trim();if(kind==='milestone')return 'Étape à franchir';const h=habitOf(k);return h&&h.targetLabel?`Cible : ${h.targetLabel}`:''}
-  if(p.kind==='video'){const v=S.data.videos[p.id];if(!v)return '';const dl=deadline(v);return [STAGE_LABEL[v.stage],dl&&`avant le ${fmtD(dl)}`].filter(Boolean).join(' · ')}
-  return ''}
-function focusLinks(x){const p=x.p;
-  if(p.kind==='video'){const v=S.data.videos[p.id];if(!v)return '';return `${v.scriptUrl?`<a class="btn-sec" href="${esc(v.scriptUrl)}" target="_blank" rel="noopener">Ouvrir le script</a>`:''}<button class="btn-sec" data-act="edit-video" data-id="${v.id}">Fiche de la vidéo</button>`}
-  if(p.kind==='kr')return S.data.krs[p.id]?`<button class="btn-sec" data-act="edit-kr" data-id="${p.id}">Ouvrir la preuve</button>`:'';
-  if(p.kind==='habit')return `<button class="btn-sec" data-act="edit-habit" data-id="${p.id}">Ouvrir l’habitude</button>`;
-  if(p.kind==='weekly')return '<button class="btn-sec" data-act="open-review-prev">Voir la revue</button>';
-  return ''}
-function focusEnd(x,t){const p=x.p,b=(v,l,cls='btn-sec')=>`<button class="${cls}" data-act="fz-done" data-date="${t}" data-v="${v}">${l}</button>`;let h=null;
-  if(p.kind==='habit')h=S.data.habits[p.id];
-  if(p.kind==='kr'){const k=S.data.krs[p.id];
-    if(k&&kindOf(k)==='qty')return `<p class="note">La quantité s’ajoute à « ${esc(krTitle(k))} » pour ce jour.</p><form class="qty-form fz-qty" data-form="qty" data-id="${k.id}" data-date="${t}"><input id="fz-qty" type="number" step="any" inputmode="decimal" placeholder="Quantité réalisée${k.unit?` (${esc(k.unit)})`:''}" aria-label="Quantité réalisée"><button class="btn" type="submit">Ajouter</button></form><div class="fz-end">${b('none','Rien à ajouter')}</div>`;
-    if(k&&kindOf(k)==='milestone')return `<div class="fz-end">${b('target','Étape faite','btn')}${b('none','Pas encore')}</div>`;
-    if(k)h=habitOf(k)}
-  if(h)return `<div class="fz-end">${h.minEnabled?b('min','Minimum réalisé'):''}${b('target',h.minEnabled?'Cible atteinte':'C’est fait','btn')}${b('none','Pas cette fois')}</div>`;
-  return `<div class="fz-end">${b('target','Accomplie','btn')}${b('none','Pas encore')}</div>`}
+function focusTarget(x,t){const p=x.p,mon=monday(t),tg=prioTarget(p),out=[];
+  const habTxt=h=>[h.targetLabel&&`Cible : ${h.targetLabel}`,h.minEnabled&&h.minLabel&&`Minimum : ${h.minLabel}`].filter(Boolean).join(' · ');
+  if(p.kind==='video'){const v=S.data.videos[p.id];if(v){const dl=deadline(v);out.push([STAGE_LABEL[v.stage],dl&&`avant le ${fmtD(dl)}`].filter(Boolean).join(' · '))}}
+  if(tg&&tg.kind==='kr'){const k=S.data.krs[tg.id],kind=kindOf(k);
+    if(kind==='qty')out.push(`${krTitle(k)} : ${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${k.unit||''} cette semaine`.trim());
+    else if(kind==='milestone')out.push(`Étape : ${krTitle(k)}${k.done?' (faite)':''}`);else{const h=habitOf(k);if(h)out.push(habTxt(h))}}
+  else if(tg&&tg.kind==='habit')out.push(habTxt(S.data.habits[tg.id]));
+  else if(tg&&tg.kind==='metric'){const m=S.data.metrics[tg.id],es=mEntries(m),last=es.length?es[es.length-1][1]:null,tt=mTargetTxt(m);out.push(`${m.name||'Indicateur'} : ${last==null?'aucune mesure':mFmt(m,last)}${tt?` · cible ${tt}`:''}`)}
+  return out.filter(Boolean).join('\n')}
+function focusLinks(x,t){const p=x.p,tg=prioTarget(p),b=[];
+  if(p.kind==='video'){const v=S.data.videos[p.id];if(v){if(v.scriptUrl)b.push(`<a class="btn-sec" href="${esc(v.scriptUrl)}" target="_blank" rel="noopener">Ouvrir le script</a>`);b.push(`<button class="btn-sec" data-act="edit-video" data-id="${v.id}">Fiche de la vidéo</button>`)}}
+  if(p.kind==='weekly')b.push('<button class="btn-sec" data-act="open-review-prev">Voir la revue</button>');
+  if(tg&&tg.kind==='kr')b.push(`<button class="btn-sec" data-act="edit-kr" data-id="${tg.id}">Ouvrir la preuve</button>`);
+  if(tg&&tg.kind==='habit')b.push(`<button class="btn-sec" data-act="edit-habit" data-id="${tg.id}">Ouvrir l’habitude</button>`);
+  if(tg&&tg.kind==='metric')b.push(`<button class="btn-sec" data-act="edit-metric" data-id="${tg.id}">Ouvrir l’indicateur</button>`);
+  if(LINKABLE.includes(p.kind))b.push(`<button class="btn-sec" data-act="prio-link-open" data-date="${t}">🔗 ${p.link?'Changer le lien':'Lier à une preuve'}</button>`);
+  return b.join('')}
+/* Fin de séance : le temps passé (prérempli par le minuteur), puis ce que la preuve ou l'indicateur lié demande */
+function habChoice(h,t){const st=habitState(h.id,t),def=st!=='none'?st:'target',opts=[['none','Pas fait'],...(h.minEnabled?[['min','Minimum']]:[]),['target',h.minEnabled?'Cible atteinte':'Fait']];
+  return `<div class="field"><span>${esc(h.name||'Habitude')}</span><div class="rpills" role="radiogroup" aria-label="${esc(h.name||'Habitude')}">${opts.map(([v,l])=>`<label><input type="radio" name="hab" value="${v}" ${v===def?'checked':''}><span>${l}</span></label>`).join('')}</div></div>`}
+function focusEnd(x,t){const p=x.p,tg=prioTarget(p),el=fzElapsed(fzOf(t,p)),auto=el>=30000?Math.max(1,Math.round(el/60000)):'';let body='';
+  const spent=`<label class="field"><span>Temps passé</span><span class="unit-in"><input name="spent" id="fz-spent" type="number" min="0" step="1" inputmode="numeric" value="${auto}" placeholder="${p.dur||''}" aria-label="Temps passé en minutes"><span>min</span></span><span class="hint">${auto?'Prérempli par le minuteur : corrige si besoin.':'Facultatif : combien de temps ça t’a pris ?'}</span></label>`;
+  if(tg&&tg.kind==='kr'){const k=S.data.krs[tg.id],kind=kindOf(k),mon=monday(t);
+    if(kind==='qty'){const hrs=/^(h|heures?)$/i.test((k.unit||'').trim());body=`<label class="field"><span>${esc(krTitle(k))} : quantité réalisée${k.unit?` (${esc(k.unit)})`:''}</span><input name="qty" id="fz-qty" type="number" min="0" step="any" inputmode="decimal" value="${hrs&&auto?Math.round(auto/15)/4:''}" placeholder="0"><span class="hint">Cette semaine : ${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))} ${esc(k.unit||'')}${hrs&&auto?' · prérempli avec le temps passé':''}.</span></label>`}
+    else if(kind==='milestone')body=`<div class="checks"><label><input type="checkbox" name="ms" ${p.kind==='kr'||k.done?'checked':''} ${k.done?'disabled':''}><span><b>Étape franchie : ${esc(krTitle(k))}</b>${k.done?'Déjà faite.':'Coche si l’étape est terminée.'}</span></label></div>`;
+    else{const h=habitOf(k);if(h)body=habChoice(h,t)}}
+  else if(tg&&tg.kind==='habit')body=habChoice(S.data.habits[tg.id],t);
+  else if(tg&&tg.kind==='metric'){const m=S.data.metrics[tg.id],es=mEntries(m),last=es.length?es[es.length-1][1]:null,nm=esc(m.name||'Indicateur');
+    if(m.type==='rank')body=last==null?`<p class="hint">${nm} : aucune mesure. Note ton rang actuel dans Bilan → Progrès pour le faire évoluer ici.</p>`:`<div class="field"><span>${nm} pendant la séance</span><div class="rpills" role="radiogroup" aria-label="Évolution du rang">${[[-1,'−1 division'],[0,'Aucun changement'],[1,'+1 division']].map(([v,l])=>`<label><input type="radio" name="div" value="${v}" ${v===0?'checked':''}><span>${l}</span></label>`).join('')}</div><span class="hint">Rang actuel : ${esc(rankLabel(last))}.</span></div>`;
+    else body=last==null?`<label class="field"><span>${nm} : valeur actuelle${m.unit?` (${esc(m.unit)})`:''}</span><input name="val" id="fz-val" type="number" step="any" inputmode="decimal" placeholder="0"></label>`
+      :`<div class="field"><span>${nm} pendant la séance${m.unit?` (${esc(m.unit)})`:''}</span><div class="rpills" role="radiogroup" aria-label="Sens">${[['1','Gagné'],['-1','Perdu']].map(([v,l])=>`<label><input type="radio" name="sign" value="${v}" ${v==='1'?'checked':''}><span>${l}</span></label>`).join('')}</div><input name="delta" id="fz-delta" type="number" min="0" step="any" inputmode="decimal" placeholder="0" aria-label="Variation"><span class="hint">Dernière mesure : ${esc(mFmt(m,last))}. Laisse vide si rien n’a changé.</span></div>`}
+  const nolink=!tg&&LINKABLE.includes(p.kind)?`<p class="hint">Lie la priorité à une preuve ou à un indicateur pour le compléter ici. <button class="linkish" type="button" data-act="prio-link-open" data-date="${t}">Lier à une preuve</button></p>`:'';
+  return `<form class="fz-form" data-form="fz-end" data-date="${t}">${spent}${body}${nolink}<div class="fz-end"><button class="btn" type="submit">Valider la priorité</button><button class="btn-sec" type="button" data-act="fz-later" data-date="${t}">Pas encore</button></div></form>`}
 function sheetFocus(t){const x=prioInfo(t);
   if(!x||x.missing)return sheetTop('Mode concentration','')+'<section><p class="empty">Aucune priorité à lancer pour ce jour.</p></section>';
-  const f=fzOf(t,x.p),i=idOf(x.iid),tg=focusTarget(x,t),ln=focusLinks(x),meta=[i&&esc(i.name||''),x.sub&&esc(x.sub)].filter(Boolean);
+  const f=fzOf(t,x.p),i=idOf(x.iid),tg=focusTarget(x,t),ln=focusLinks(x,t),lk=linkInfo(x.p),meta=[i&&esc(i.name||''),x.sub&&esc(x.sub),lk&&`🔗 ${esc(lk.label)}`].filter(Boolean);
   return `<div class="sheet-top"><div><p class="eyebrow">Mode concentration</p></div><button class="btn sm" data-act="close-sheet">Fermer</button></div>
   <section class="fz-head"><p class="kicker">Ma priorité</p><h2 class="fz-t">${esc(x.label)}</h2>${meta.length?`<p class="pmeta">${meta.join('<span class="sep" aria-hidden="true">•</span>')}</p>`:''}${tg?`<p class="fz-tg">${esc(tg)}</p>`:''}</section>
-  ${S.focusEnd?`<section><h3>Qu’as-tu fait ?</h3>${focusEnd(x,t)}<div><button class="linkish" data-act="fz-back">Revenir au minuteur</button></div></section>`
+  ${S.focusEnd?`<section><h3>Bilan de la séance</h3>${focusEnd(x,t)}<div><button class="linkish" data-act="fz-back">Revenir au minuteur</button></div></section>`
   :`<section class="fz-timer"><div class="fz-clock" id="fz-clock" role="timer">${fzClock(f)}</div><p class="hint">${f.dur?`Compte à rebours de ${f.dur} min`:'Chronomètre libre'} · minuteur facultatif</p>
   ${pills('fz-dur',String(f.dur||0),[['0','Libre'],['25','25 min'],['45','45 min'],['60','60 min']],`data-date="${t}"`)}
   <div class="fz-ctl"><button class="btn" data-act="fz-run" data-date="${t}">${f.start?`${ICON.pause}<span>Pause</span>`:`${ICON.play}<span>${f.acc?'Reprendre':'Démarrer'}</span>`}</button>${f.acc||f.start?`<button class="btn-sec" data-act="fz-reset" data-date="${t}">Remettre à zéro</button>`:''}</div></section>
   ${ln?`<section><div class="fz-links">${ln}</div></section>`:''}
-  <section><button class="btn btn-go" data-act="fz-end">Terminer</button><p class="hint">Le minuteur ne valide rien tout seul : à la fin, tu confirmes ce que tu as fait.</p></section>`}`}
+  <section><button class="btn btn-go" data-act="fz-end">Terminer</button><p class="hint">Le minuteur ne valide rien tout seul : à la fin, tu notes le temps passé et ce que tu as fait.</p></section>`}`}
 function sheetPrio(t){const mon=monday(t);const items=todoItems(t).filter(i=>!i.done);const hs=habits().filter(h=>visibleOn(h,t)&&t>=hStart(h)&&habitState(h.id,t)!=='target');
   const krs=weekProofs(mon).filter(k=>!k.virtual&&(s=>s!=null&&s<1)(krWeekScore(k,mon)));const wp=weekPriosFor(t).filter(x=>!x.done);
   const vids=videos().filter(v=>v.stage!=='publie'&&v.stage!=='idee').sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999')).slice(0,3);
@@ -1630,14 +1699,14 @@ function viewReview(){
   const rows=proofs.filter(k=>krWeekScore(k,mon)!=null);
   const qtys=proofs.filter(k=>kindOf(k)==='qty');const actDate=minD(today(),sun);
   const fld=(f,label,ph)=>`<label class="field"><span>${label}</span><textarea id="rv-${f}" data-bind="reviews:${key}:${f}" placeholder="${ph}">${esc(rev[f]||'')}</textarea></label>`;
-  const allHist=list('reviews').filter(r=>r.closedAt&&r.id!==key&&r.monday).sort((a,b)=>b.id.localeCompare(a.id));const hist=S.histAll?allHist:allHist.slice(0,12);
+  const nSaved=savedWeeks().length;
   const saved=rev.closedAt?`<span class="tag pos">${rev.auto?'Sauvegardée':'Clôturée'} le ${fmtD(rev.closedAt.slice(0,10))}</span>`:'';const closed=rev.closedAt&&rev.auto===false;const wm=weekMood(mon);
   const mood=`<div class="wmood">${wm.days.map(d=>{const x=dayOf(d),e=energyOf(x.energy),sl=sleepOf(x.sleep);return `<button class="${d===today()?'today':''}" data-act="goto-day" data-date="${d}" ${d>today()?'disabled':''} aria-label="Ouvrir le ${fmtD(d)}"><small>${DAYS[wd(d)]}</small><i title="${sl?`Sommeil ${esc(sl[2].toLowerCase())}`:''}">${sl?sl[1]:'·'}</i><i title="${e?esc(e[3]):''}">${e?e[1]:'·'}</i><b aria-label="Humeur">${x.mood||'·'}</b></button>`}).join('')}</div>
       <p class="hint" style="margin-top:8px">${wm.avg!=null||wm.sleep!=null?[wm.sleep!=null&&`Sommeil&nbsp;: ${fmtN(wm.sleep)} / 5 en moyenne (${plural(wm.nS,'réponse')}) · ${esc(sleepOf(Math.round(wm.sleep))[2])}`,wm.avg!=null&&`Énergie&nbsp;: ${fmtN(wm.avg)} / 5 en moyenne (${plural(wm.nE,'réponse')}) · ${esc(energyOf(Math.round(wm.avg))[3])}`].filter(Boolean).join('<br>'):'Rien de noté cette semaine. Renseigne ton sommeil, ton énergie et ton humeur chaque matin dans Aujourd’hui.'}</p>`;
   return bilanSw()+`<header class="page-head"><h1 class="h1">Revue · semaine ${wk.w}</h1>${qnav('rweek',fmtD(mon))}</header>
   <p class="eyebrow">Du ${fmtD(mon)} au ${fmtD(sun)}</p>
   ${hero('rv','Engagements tenus',sm.score==null?'—':pctS(sm.score),sm.score==null?'<span class="muted">Aucun engagement prévu</span>':pm.score!=null?dPts(sm.score-pm.score,'vs semaine précédente'):'<span class="muted">premier score de la série</span>')}
-  <section class="stats">${stat('Habitudes tenues',ws.rate==null?'—':pctS(ws.rate),`${ws.done} sur ${ws.sched} prévues`)}${stat('Tâches cochées',`${ws.todosDone}<small> / ${ws.todosTotal}</small>`,ws.todosTotal?pctS(ws.todosDone/ws.todosTotal):'Aucune tâche')}${stat('Studio',String(ws.moves.length),ws.moves.length>1?'étapes franchies':'étape franchie')}</section>
+  <section class="stats four">${stat('Habitudes tenues',ws.rate==null?'—':pctS(ws.rate),`${ws.done} sur ${ws.sched} prévues`)}${stat('Tâches cochées',`${ws.todosDone}<small> / ${ws.todosTotal}</small>`,ws.todosTotal?pctS(ws.todosDone/ws.todosTotal):'Aucune tâche')}${stat('Priorités du jour',`${ws.priosDone}<small> / ${ws.priosTotal}</small>`,ws.focusMin?`${fmtMin(ws.focusMin)} de travail noté`:ws.priosTotal?'Temps non noté':'Aucune priorité choisie')}${stat('Studio',String(ws.moves.length),ws.moves.length>1?'étapes franchies':'étape franchie')}</section>
   <div class="cols">
     <section class="sec"><div class="sec-h"><h2>Engagements de la semaine</h2>${saved}</div>
       ${rows.length?`<div class="list">${rows.map(k=>proofRow(k,mon)).join('')}</div>`:'<p class="empty">Aucun engagement prévu cette semaine.</p>'}
@@ -1656,8 +1725,11 @@ function viewReview(){
     <p class="hint" style="margin-top:8px">Tes textes s’enregistrent pendant que tu écris.</p>
     <div class="close-wk">${closed?`<span class="tag pos">Semaine clôturée le ${fmtD(rev.closedAt.slice(0,10))}</span>`:''}<button class="btn" data-act="close-review" data-key="${key}" data-mon="${mon}">${closed?'Mettre à jour la clôture':'Clôturer la semaine'}</button><p class="hint">Enregistre ton score, tes preuves et ton bilan dans tes semaines sauvegardées. Si tu oublies, la semaine est sauvegardée automatiquement lundi.</p></div>
   </section>
-  ${allHist.length?`<section class="sec"><div class="sec-h"><h2>Semaines sauvegardées <small class="muted">${allHist.length}</small></h2></div><div class="list">${hist.map(r=>{const w=weekSummary(r.monday),mm=weekMood(r.monday);return `<button class="row" data-act="goto-review" data-mon="${r.monday}">${av('',null,'sm','S')}<span class="m"><span class="t">Semaine ${esc(r.id.split('-W')[1])} · ${esc(r.id.split('-W')[0])}</span><span class="s">${esc(r.lesson||r.wins||(r.auto?'Sauvegarde automatique':'—'))}</span></span><span class="r"><b>${w.score==null?'—':pctS(w.score)}</b><span class="muted">${mm.avg!=null?`énergie ${fmtN(mm.avg)}/5`:r.energy?`énergie ${r.energy}/5`:''}</span></span></button>`}).join('')}</div>
-  ${!S.histAll&&allHist.length>12?`<div style="margin-top:10px"><button class="btn-sec" data-act="hist-all">Afficher les ${allHist.length-12} semaines précédentes</button></div>`:''}</section>`:''}`}
+  ${nSaved?`<section class="sec"><button class="row" data-act="saved-open"><span class="ico" aria-hidden="true">${ICON.history}</span><span class="m"><span class="t">Semaines sauvegardées</span><span class="s">${plural(nSaved,'semaine')} · dans les Réglages</span></span><span class="r">${ICON.chevR}</span></button></section>`:''}`}
+/* Semaines clôturées dans la Revue ou sauvegardées automatiquement le lundi, de la plus récente à la plus ancienne */
+const savedWeeks=()=>list('reviews').filter(r=>r.closedAt&&r.monday).sort((a,b)=>b.id.localeCompare(a.id));
+function savedRow(r){const w=weekSummary(r.monday),mm=weekMood(r.monday),wk=r.id.split('-W');
+  return `<button class="row" data-act="open-week" data-mon="${r.monday}"><span class="av sm txt wkn" aria-hidden="true">${esc(String(+wk[1]||''))}</span><span class="m"><span class="t">Semaine ${esc(String(+wk[1]||''))} · ${esc(wk[0])}</span><span class="s">${fmtD(r.monday)} – ${fmtD(addDays(r.monday,6))} · ${r.auto===false?`clôturée le ${fmtD(r.closedAt.slice(0,10))}`:'sauvegarde automatique'}${r.lesson?` · ${esc(r.lesson)}`:''}</span></span><span class="r"><b>${w.score==null?'—':pctS(w.score)}</b><span class="muted">${mm.avg!=null?`énergie ${fmtN(mm.avg)}/5`:''}</span></span></button>`}
 
 /* ---------- Vue : Studio YouTube (année en cours) ---------- */
 function viewStudio(){
@@ -1752,6 +1824,10 @@ function viewSettings(){
       ${templates().length?`<div class="list">${templates().map(t=>`<button class="row" data-act="edit-template" data-id="${t.id}">${av(t.icon,idColor(t.identityId),'sm',t.name)}<span class="m"><span class="t">${esc(t.name||'Modèle sans nom')}</span><span class="s">${plural((t.items||[]).length,'preuve')}${t.video?' · modèle vidéo':''}</span></span><span></span></button>`).join('')}</div>`:'<p class="empty">Aucun modèle. Ouvre un objectif et touche « Enregistrer comme modèle ».</p>'}
       <p class="hint" style="margin-top:8px">Utilise un modèle avec « + Objectif » sous une identité, ou depuis la fiche d’une vidéo du Studio.</p>
     </section>
+    <section class="sec" id="saved-weeks"><div class="sec-h"><h2>Semaines sauvegardées <small class="muted">${savedWeeks().length}</small></h2></div>
+      <p class="hint">Chaque semaine clôturée dans la Revue, ou sauvegardée automatiquement le lundi. Touche une semaine pour rouvrir sa revue.</p>
+      ${(sw=>sw.length?`<div class="list">${(S.histAll?sw:sw.slice(0,12)).map(savedRow).join('')}</div>${!S.histAll&&sw.length>12?`<div style="margin-top:10px"><button class="btn-sec" data-act="hist-all">Afficher les ${sw.length-12} semaines précédentes</button></div>`:''}`:'<p class="empty">Aucune semaine sauvegardée pour l’instant. Clôture ta semaine en bas de la Revue.</p>')(savedWeeks())}
+    </section>
     <section class="sec"><div class="sec-h"><h2>Tes données</h2><span class="store-state" data-sync><i></i><span class="lg"></span><span class="sh"></span><button data-act="sync-retry" hidden>Réessayer</button></span></div>
       <p class="note">Exporte tout en un fichier JSON : une sauvegarde, ou le moyen d'emporter ton espace ailleurs.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn sm" data-act="export">Exporter</button><label class="btn-sec" for="import-file" style="cursor:pointer">Importer un fichier</label><input id="import-file" type="file" accept=".json,application/json" hidden></div>
@@ -1777,7 +1853,7 @@ function freqEditor(h){const f=freqOf(h);const days=Array.isArray(h.days)?h.days
   ${f==='days'?`<div class="days">${DAYS.map((d,i)=>`<button data-act="habit-day" data-id="${h.id}" data-d="${i}" aria-pressed="${days.includes(i)}">${d}</button>`).join('')}</div>`:''}`}
 function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
   $('#sheet-panel').classList.toggle('is-focus',s.kind==='focus');
-  const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry,focus:sheetFocus,morning:sheetMorning}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;if(s.kind==='focus'&&!fzTimer)fzTimer=setInterval(fzTick,1000);return}
+  const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry,focus:sheetFocus,morning:sheetMorning,'prio-link':sheetPrioLink}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;if(s.kind==='focus'&&!fzTimer)fzTimer=setInterval(fzTick,1000);return}
   const fn={abandon:sheetAbandon,hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
@@ -2020,10 +2096,14 @@ document.addEventListener('input',e=>{const el=e.target;if(el&&el.dataset&&el.da
 document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}});
 document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty'){e.preventDefault();const k=S.data.krs[f.dataset.id];const inp=f.querySelector('input[type=number]');const amt=+inp.value;if(!k||inp.value===''||!isFinite(amt)||!amt)return;const dIn=f.querySelector('input[name=date]');const d=(dIn&&dIn.value)||f.dataset.date||today();
     if(amt<0){const m=monday(d);if(krWeekValue(k,m)+amt<0){toast('Correction impossible : le total de la semaine deviendrait négatif');return}}
-    incLog(k.id,d,amt);toast(`${signed(amt,k.unit||'')} · ${krTitle(k)}`);if(S.sheet&&S.sheet.kind==='focus'){fzSet(null);S.focusEnd=false;dismissSheet()}else if(S.sheet)renderSheet();else{S.qtyOpen=null;renderMain(true)}return}if(f.dataset.form==='metric'){e.preventDefault();const m=S.data.metrics[f.dataset.id];if(!m)return;const el=f.elements;const d=(el.date&&el.date.value)||today();let v;
+    incLog(k.id,d,amt);toast(`${signed(amt,k.unit||'')} · ${krTitle(k)}`);if(S.sheet)renderSheet();else{S.qtyOpen=null;renderMain(true)}return}if(f.dataset.form==='metric'){e.preventDefault();const m=S.data.metrics[f.dataset.id];if(!m)return;const el=f.elements;const d=(el.date&&el.date.value)||today();let v;
     if(m.type==='rank')v=rankVal(+el.tier.value,+el.div.value);else{if(el.v.value==='')return;v=+el.v.value;if(!isFinite(v))return}
     setMetric(m,d,v);toast(`${m.name||'Indicateur'} · ${mFmt(m,v)}`);if(document.activeElement)document.activeElement.blur();renderMain(true);return}
   if(f.dataset.form==='prio-new'){e.preventDefault();const inp=$('#prio-new');const txt=inp.value.trim();if(!txt)return;const t=S.day||today();const id=uid();saveTodos(t,[...todoItems(t),{id,text:txt,done:false}]);setDay(t,{prio:{kind:'todo',id,label:txt},prioDone:false});dismissSheet();return}
+  if(f.dataset.form==='fz-end'){e.preventDefault();const t=f.dataset.date,x=prioInfo(t);if(!x||x.missing)return;const el=f.elements,val=n=>el[n]?String(el[n].value).trim():'';
+    const sp=val('spent');if(sp!==''&&!(+sp>=0)){toast('Temps passé invalide');return}
+    const res=applyPrioResult(t,x,{qty:val('qty'),ms:!!(el.ms&&el.ms.checked&&!el.ms.disabled),hab:val('hab'),delta:val('delta'),sign:val('sign')||'1',val:val('val'),div:val('div')||'0'});if(!res)return;
+    finishPrio(t,x,sp===''?null:Math.round(+sp),res);fzSet(null);S.focusEnd=false;dismissSheet();return}
   if(f.dataset.form==='carry'){e.preventDefault();const sel=[...f.querySelectorAll('input[name=carry]:checked')].map(x=>x.value.split('|'));if(!sel.length){toast('Sélectionne au moins une tâche');return}carryTasks(sel);dismissSheet();return}
   if(f.dataset.form==='todo'){e.preventDefault();const inp=$('#todo-new');const txt=inp.value.trim();if(!txt)return;const t=S.day||today();saveTodos(t,[...todoItems(t),{id:uid(),text:txt,done:false}]);inp.value='';renderMain(true);const n=$('#todo-new');if(n)n.focus()}});
 document.addEventListener('keydown',e=>{if(e.key==='Tab'&&S.sheet){const p=$('#sheet-panel');const f=[...p.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type=hidden]),select,textarea,[href]')].filter(x=>x.offsetParent!==null);if(f.length){const a=f[0],z=f[f.length-1];if(e.shiftKey&&(document.activeElement===a||document.activeElement===p)){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}}}
@@ -2071,7 +2151,7 @@ const ACT={
   'goto-day':a=>{const d=a.dataset.date;S.day=d&&d<today()?d:null;if(S.sheet)closeSheet(true);setTab('today')},
   'open-review':()=>{S.reviewWeek=monday(today());setTab('review')},
   'close-review':a=>{const key=a.dataset.key,mon=a.dataset.mon;const base=S.data.reviews[key]||{createdAt:nowIso()};
-    put('reviews',key,{...base,week:key,monday:mon,...archiveOf(mon),auto:false,final:addDays(mon,6)<today(),closedAt:nowIso()});toast('Semaine clôturée : elle rejoint tes semaines sauvegardées.')},
+    put('reviews',key,{...base,week:key,monday:mon,...archiveOf(mon),auto:false,final:addDays(mon,6)<today(),closedAt:nowIso()});toast('Semaine clôturée : elle est dans tes semaines sauvegardées, dans les Réglages.',{label:'Voir',fn:()=>ACT['saved-open']()})},
   'close-sheet':()=>dismissSheet(),
   'jump':a=>{const el=document.getElementById('id-'+a.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},
   'quarter':a=>{S.quarter=qShift(S.quarter,+a.dataset.d);renderMain(true)},
@@ -2109,9 +2189,15 @@ const ACT={
   'fz-dur':a=>{const t=a.dataset.date,v=+a.dataset.v||0,p=dayOf(t).prio;if(!p)return;fzUpdate(t,f=>{f.dur=v;f.rang=false});setDay(t,{prio:{...p,dur:v||null}})},
   'fz-end':()=>{S.focusEnd=true;renderSheet()},
   'fz-back':()=>{S.focusEnd=false;renderSheet()},
-  'fz-done':a=>{const t=a.dataset.date,x=prioInfo(t),v=a.dataset.v;fzSet(null);S.focusEnd=false;dismissSheet();if(x&&!x.missing&&v!=='none')completePrio(t,x,v);else toast('Séance terminée : rien n’a été validé')},
-  'prio-quick':a=>{const t=a.dataset.date||S.day||today(),x=prioInfo(t);if(!x||x.missing)return;const k=x.p.kind==='kr'?S.data.krs[x.p.id]:null;const h=x.p.kind==='habit'?S.data.habits[x.p.id]:k&&kindOf(k)==='habit'?habitOf(k):null;
-    if((k&&kindOf(k)==='qty')||(h&&h.minEnabled)){S.focusEnd=true;openSheet('focus',null,t)}else completePrio(t,x,'target')},
+  'prio-quick':a=>{const t=a.dataset.date||S.day||today(),x=prioInfo(t);if(!x||x.missing)return;S.focusEnd=true;openSheet('focus',null,t)},
+  'fz-later':a=>{const t=a.dataset.date,p=dayOf(t).prio;if(p){const f=fzOf(t,p);if(f.start){f.acc+=Date.now()-f.start;f.start=null}if(f.acc)fzSet(f)}S.focusEnd=false;dismissSheet();toast('Séance en pause : ta priorité reste à faire')},
+  'prio-reopen':a=>{const t=a.dataset.date,x=prioInfo(t);if(!x)return;const p=x.p;if(p.kind==='todo')saveTodos(t,todoItems(t).map(i=>i.id===p.id?{...i,done:false}:i));
+    else if(p.kind==='weekly'){const rv=S.data.reviews[p.week];if(rv){const ps=JSON.parse(JSON.stringify(rv.prios||{}));ps[p.id]={...(ps[p.id]||{}),done:false};put('reviews',p.week,{...rv,prios:ps})}}setDay(t,{prioDone:false})},
+  'prio-link-open':a=>openSheet('prio-link',null,a.dataset.date||S.day||today()),
+  'prio-link-set':a=>{const t=a.dataset.date,p=dayOf(t).prio;if(!p)return;setDay(t,{prio:{...p,link:{kind:a.dataset.kind,id:a.dataset.id}}});toast('Priorité liée');dismissSheet()},
+  'prio-link-clear':a=>{const t=a.dataset.date,p=dayOf(t).prio;if(!p)return;setDay(t,{prio:{...p,link:null}});dismissSheet()},
+  'saved-open':()=>{if(S.sheet)closeSheet(true);setTab('settings');setTimeout(()=>{const el=document.getElementById('saved-weeks');if(el)el.scrollIntoView({block:'start'})},60)},
+  'open-week':a=>{if(S.sheet)closeSheet(true);S.reviewWeek=a.dataset.mon;setTab('review')},
   'carry':()=>{const t=today(),y=addDays(t,-1);const c=todoItems(y).filter(i=>!i.done);saveTodos(t,[...todoItems(t),...c.map(i=>({...i,id:uid()}))]);saveTodos(y,todoItems(y).filter(i=>i.done));toast(`${plural(c.length,'tâche')} reprise${c.length>1?'s':''}`)},
   'habit-toggle':a=>{applyHabit(a.dataset.id,a.dataset.date,habitDone(a.dataset.id,a.dataset.date)?'none':'target');if(S.sheet)setTimeout(renderSheet,0)},
   'habit-set':a=>{const hid=a.dataset.id,d=a.dataset.date,v=a.dataset.v;applyHabit(hid,d,habitState(hid,d)===v?'none':v);if(S.sheet)setTimeout(renderSheet,0)},

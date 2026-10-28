@@ -33,7 +33,14 @@ Ces choix restent à confirmer par Ivan : une décision changée se met à jour 
 - **Partiel** :
   - F38 et F39 : les écritures concurrentes de quantités et de validations fusionnent. Les autres documents (textes, réglages) suivent « dernière écriture » et n'ont pas d'écran de résolution de conflit (T41).
   - F40 : la file hors connexion est celle de Firestore. Elle survit au redémarrage, et la déconnexion avertit s'il reste des envois en attente.
-- **Réalisé en première livraison** : U19, mode concentration. « Commencer » ouvre la vue de l'action avec sa cible, un minuteur facultatif (libre, 25, 45 ou 60 minutes), un lien utile et « Terminer ». À la fin, tu confirmes le résultat ou tu saisis la quantité réelle.
+- **Réalisé en première livraison** : U19, mode concentration. « Commencer » ouvre la vue de l'action avec sa cible, un minuteur facultatif (libre, 25, 45 ou 60 minutes), un lien utile et « Terminer ».
+  - **Bilan de la séance** : le temps passé (prérempli par le minuteur, modifiable), puis ce que demande l'élément lié.
+    - Une quantité : des mots ou des heures, préremplies avec le temps passé si l'unité est l'heure.
+    - Une étape, ou une habitude (minimum ou cible).
+    - Un indicateur : Elo gagné ou perdu, une division de plus ou de moins au rang LoL, une variation de poids.
+  - **Lien** : une tâche, une priorité de la semaine ou une action Studio peut être liée à une preuve ou à un indicateur. Une preuve ou une habitude choisie comme priorité est déjà son propre lien.
+  - **Pas encore** : met la séance en pause sans rien valider.
+  - **Trace** : le temps passé et le résumé restent sur la priorité du jour. La Revue additionne les priorités accomplies et le temps noté de la semaine.
 - **Non réalisé** (lot complémentaire, chapitre 17) : U20, rappels.
 - **Limites connues** :
   - les semaines supprimées avant cette version ne sont pas reconstituables (F31) ;
@@ -47,6 +54,7 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Police** : Outfit pour les titres et le texte, à la place de Quicksand.
 - **Image** : « Le Voyageur contemplant une mer de nuages » (Caspar David Friedrich, 1818, domaine public) en fond du haut des pages, et en logo. L'image vient des maquettes ; une version en meilleure définition peut la remplacer dans `assets/`.
 - **Navigation** : cinq entrées sur ordinateur comme sur téléphone (Aujourd'hui, Identités, Habitudes, Studio, Bilan). Bilan regroupe Revue et Progrès. Le rond du compte ouvre les Réglages.
+- **Semaines sauvegardées** : la liste est dans les Réglages et contient aussi la semaine qui vient d'être clôturée. La Revue y renvoie, et la clôture le rappelle avec un bouton « Voir ».
 - **Aujourd'hui** : cartes Ma priorité, Mon état du matin, Mes habitudes, Mes tâches, Studio, Mes 3 priorités de la semaine et Engagements tenus. Pour une habitude avec version minimale, la barre montre deux paliers (minimum, puis cible) et non un pourcentage (D07).
 
 ## Recette
@@ -55,6 +63,7 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Priorité liée et semaines sauvegardées** : 32 vérifications automatisées, toutes réussies (quantité, Elo gagné ou perdu, division LoL, habitude au minimum, Pas encore, Rouvrir, Revue, clôture et Réglages, téléphone).
 - **Refonte « Voyageur »** : 40 vérifications automatisées, toutes réussies.
   - Navigation ; Commencer, minuteur, durée prévue, Fermer puis Reprendre ; retour arrière ; Terminer avec confirmation ; saisie de la quantité réelle.
   - Minimum puis cible ; état du matin ; cartes repliables ; jour passé ; clavier.
