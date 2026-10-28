@@ -2317,7 +2317,7 @@ function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf
   ${delBtn('del-kr',id,h&&h.fromKr===id?'Supprimer la preuve et son habitude':'Supprimer cette preuve')}`}
 /* Encadré « Comment ça marche » de la fiche preuve : où elle apparaît, comment elle avance */
 function howTo(k){const kind=kindOf(k);const step=(ok,n,html)=>`<li class="${ok?'ok':'todo'}"><i aria-hidden="true">${ok?ICON.check:n}</i><span>${html}</span></li>`;
-  const T={qty:['Sur sa ligne dans Identités&nbsp;: <b>−</b> et <b>+</b> (le pas se règle ci-dessous), ou le clavier pour un grand nombre. Aussi dans Revue → Quantités à ajouter. Elle n’apparaît pas dans Aujourd’hui.','Chaque saisie s’additionne. L’objectif de la semaine se calcule à partir de ce qu’il reste à faire dans le trimestre.'],
+  const T={qty:['Sur sa ligne dans Identités&nbsp;: <b>−</b> et <b>+</b> (le pas se règle ci-dessous), ou le clavier pour un grand nombre. Elle n’apparaît pas dans Aujourd’hui, sauf choisie comme priorité du jour.','Chaque saisie s’additionne. L’objectif de la semaine se calcule à partir de ce qu’il reste à faire dans le trimestre.'],
     milestone:['Sur sa ligne dans Identités (rond ✓), ou avec la case « Faite » ci-dessous. Elle n’apparaît pas dans Aujourd’hui.','0 ou 100 %. Donne-lui une semaine prévue&nbsp;: elle comptera dans le score de cette semaine.'],
     level:['Sur sa ligne dans Identités, avec <b>−</b> et <b>+</b>, ou dans « Valeur actuelle » ci-dessous. Elle n’apparaît pas dans Aujourd’hui.','Elle avance du point de départ vers l’objectif. Chaque changement est daté.'],
     videos:['Rien à faire&nbsp;: le Studio compte les vidéos publiées.','Ancien type de preuve.']}[kind];
