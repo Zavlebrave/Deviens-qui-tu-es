@@ -521,6 +521,10 @@ body{font-size:16px}
 .id-sum{font-size:14px;color:var(--muted);margin-top:6px}
 .id-pause{margin-top:12px;color:var(--warn)}
 .res-ed{display:grid;gap:12px}
+.ms-act{margin-top:14px;padding:16px;border-radius:14px;background:var(--surface-2);display:grid;gap:12px}
+.ms-act h4{font-size:15px;font-weight:700}
+.btn-warn{background:var(--neg);color:#111318}
+.howto dl dd{color:var(--fg)}
 .today-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0 16px;align-items:start}
 @media (min-width:1100px){.today-grid{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
 details.sec>summary{list-style:none;cursor:pointer;margin-bottom:0}
@@ -737,7 +741,7 @@ const krProgressAt=(kr,d)=>prog(kr,krValueAt(kr,d));
 function krExpectedAt(kr,d){const{s,e}=krSpan(kr);if(d<s)return 0;if(d>=e)return 1;
   const h=kindOf(kr)==='habit'&&habitOf(kr);if(h){const a=maxD(s,hStart(h));const tot=occurrences(h,a,e);if(tot)return occurrences(h,a,d)/tot}
   return (diffDays(s,d)+1)/(diffDays(s,e)+1)}
-function krStatus(kr){const p=krProgress(kr),t=today(),{s,e}=krSpan(kr),x=krExpectedAt(kr,t);
+function krStatus(kr){if(kindOf(kr)==='milestone'&&kr.abandoned&&!kr.done)return{k:'mut',t:'Abandonnée'};const p=krProgress(kr),t=today(),{s,e}=krSpan(kr),x=krExpectedAt(kr,t);
   if(p>=1)return{k:'pos',t:'Atteint'};
   if(t>e)return{k:'neg',t:'Non atteint'};
   if(t<s)return{k:'mut',t:'À venir'};
@@ -761,7 +765,7 @@ function krWeekTarget(kr,mon){const k=kindOf(kr);const sun=addDays(mon,6);const{
   if(k==='habit'){const h=habitOf(kr);if(!h)return 0;if(kr.maint){const from=maxD(maxD(mon,hStart(h)),kr.createdAt);if(from>sun)return 0;return freqOf(h)==='weekly'?(h.perWeek||3):occurrences(h,from,sun)}return weekExpected(h,mon)}
   if(sun<s||mon>e)return 0;
   if(k==='qty'){if(+kr.weekTarget>0)return +kr.weekTarget;const pl=S.data.plans[isoWeek(mon).key];if(pl&&pl.targets&&pl.targets[kr.id]!=null)return +pl.targets[kr.id];return qtyAutoTarget(kr,mon)}
-  if(k==='milestone'){if(kr.done&&kr.doneAt<mon)return 0;if(kr.done&&kr.doneAt<=sun)return 1;return kr.week&&kr.week<=mon?1:0}
+  if(k==='milestone'){if(kr.done&&kr.doneAt<mon)return 0;if(kr.done&&kr.doneAt<=sun)return 1;if(kr.abandoned&&kr.abandoned.at<mon)return 0;return msPlannedIn(kr,mon)?1:0}
   return 0}
 /* Cible hebdomadaire figée (F13) : calculée au début de la semaine pour chaque quantité, puis conservée dans « plans ».
    Les saisies font avancer le réalisé sans déplacer la cible ; le reste à faire est recalculé la semaine suivante. */
@@ -771,6 +775,10 @@ function ensurePlan(){if(!ready())return;const mon=monday(today()),key=isoWeek(m
   if(add)put('plans',key,{...(pl?clean(pl):{createdAt:nowIso()}),week:key,monday:mon,targets:tg})}
 /* F14 : variation de la cible par rapport à la semaine précédente */
 function targetDelta(kr,mon){const t=krWeekTarget(kr,mon),pv=krWeekTarget(kr,addDays(mon,-7));if(!(t>0))return '';if(!(pv>0))return 'Nouvelle cible';const d=Math.round((t-pv)/pv*100);return d===0?'Cible stable':`Cible ${d>0?'+':'−'}${Math.abs(d)} % vs sem. préc.`}
+/* Une étape compte dans une semaine si elle y était prévue ou en retard, y compris avant une replanification :
+   déplacer ou abandonner une étape n'efface pas le manquement des semaines passées (F17, D03) */
+function msPlannedIn(kr,mon){if(kr.week&&kr.week<=mon)return true;return (kr.reschedules||[]).some(x=>x.from&&x.from<=mon&&monday(x.at)>=mon)}
+const msLate=kr=>kindOf(kr)==='milestone'&&!kr.done&&!kr.abandoned&&kr.week&&addDays(kr.week,6)<today();
 function weekScoreAt(mon,d){const sc=[];for(const k of weekProofs(mon)){const t=krWeekTarget(k,mon);if(t>0)sc.push(Math.min(1,Math.max(0,krWeekValue(k,mon,d))/t))}return sc.length?avg(sc):null}
 /* Où tu devrais en être au jour d : une habitude à jours précis n'est attendue qu'à partir de son premier jour prévu */
 function krWeekExpected(kr,mon,d){const t=krWeekTarget(kr,mon);if(!(t>0))return null;const h=kindOf(kr)==='habit'&&habitOf(kr);
@@ -786,6 +794,7 @@ function rateTone(r,past){if(r==null)return{k:'mut',t:'Aucun engagement prévu'}
 const toneVar=k=>({pos:'var(--pos)',warn:'var(--warn)',neg:'var(--neg)'}[k]||'var(--faint)');
 function rateHtml(r,past){const tn=rateTone(r,past);return r==null?`<span class="tone-mut">${tn.t}</span>`:`<span class="tone-${tn.k}">${pctS(r)}${tn.k==='neg'?` · ${tn.t}`:''}</span>`}
 function milestoneTag(kr,mon){const sun=addDays(mon,6);
+  if(kr.abandoned&&!kr.done)return `<span class="tag mut">Abandonnée le ${fmtD(kr.abandoned.at)}</span>`;
   if(kr.done){const inW=kr.doneAt>=mon&&kr.doneAt<=sun;return `<span class="tag ${inW?'pos':'mut'}">Faite le ${fmtD(kr.doneAt)}</span>`}
   if(!kr.week)return '<span class="tag mut">À planifier</span>';
   if(kr.week===mon)return '<span class="tag warn">Prévue cette semaine</span>';
@@ -1143,15 +1152,17 @@ function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());
   let rb,rs,sub,bp,be=null,col;
   if(mode==='week'){const t=krWeekTarget(k,mon),r=t>0?krWeekRate(k,mon):null,past=mon<cur,paused=idPausedWeek(k.identityId,mon);sub=paused?'<span class="muted">Identité en pause : pas d’attente cette semaine</span>':weekSub(k,mon);rb=weekVal(k,mon);
     rs=paused||(kind==='milestone'&&!(t>0))?'':rateHtml(r,past);col=toneVar(rateTone(r,past).k);
+    if(kind==='milestone'&&k.abandoned&&!k.done){rb='Abandonnée';rs=t>0?'<span class="muted">0 % · compte cette semaine</span>':'';col='var(--faint)'}
     bp=r==null?0:Math.min(1,r);if(isCur&&kind!=='milestone'&&!paused){const x=krWeekExpected(k,mon,today());be=x>0?x:null}}
   else{const st=krStatus(k);rb=kind==='milestone'?(k.done?'Faite':'À faire'):`${fmtN(krValue(k))} / ${fmtN(krTarget(k))}`;rs=pctS(krProgress(k));sub=`${tag(st)} · ${quarterSub(k)}`;bp=krProgress(k);be=krExpectedAt(k,today());col=toneVar(st.k)}
   let ctl='';
   if(kind==='habit'&&habitOf(k)&&(mode==='quarter'||isCur))ctl=habitCtl(habitOf(k),today());
   else if(kind==='qty')ctl=qtyCtl(k,actDate,mode==='week'?mon:krSpan(k).qs)+`<button class="step" data-act="qty-open" data-id="${k.id}" aria-label="Saisir au clavier">${ICON.kb}</button>`;
+  else if(kind==='milestone'&&k.abandoned&&!k.done)ctl='';
   else if(kind==='milestone')ctl=`${!k.done&&k.week!==mon&&mode==='week'?`<button class="pill-mini" data-act="plan-week" data-id="${k.id}" data-mon="${mon}">Cette semaine</button>`:''}<button class="hcheck ${k.done?'on':''}" data-act="kr-done" data-id="${k.id}" data-date="${actDate}" aria-label="${k.done?'Marquer à faire':'Marquer faite'}">${ICON.check}</button>`;
   else if(kind==='level')ctl=`<button class="step" data-act="kr-step" data-id="${k.id}" data-d="-1" aria-label="Retirer 1">−</button><button class="step" data-act="kr-step" data-id="${k.id}" data-d="1" aria-label="Ajouter 1">+</button>`;
   const form=kind==='qty'&&S.qtyOpen===k.id?`<form class="qty-form" data-form="qty" data-id="${k.id}" data-date="${actDate}"><input id="qty-${k.id}" type="number" step="any" inputmode="decimal" placeholder="Nombre de ${esc(k.unit||'unités')} à ajouter" aria-label="Quantité à ajouter" required><button class="btn sm" type="submit">Ajouter</button><button class="btn-sec" type="button" data-act="qty-close">Annuler</button></form>`:'';
-  const faded=mode==='week'&&kind==='milestone'&&((k.done&&k.doneAt<mon)||(!k.done&&k.week&&k.week>mon));
+  const faded=kind==='milestone'&&((!k.done&&k.abandoned)||(mode==='week'&&((k.done&&k.doneAt<mon)||(!k.done&&k.week&&k.week>mon))));
   return `<div class="kr ${faded?'faded':''}"><div class="row"><button class="row-l" ${editAttr(k)}>${av(krIcon(k),color,'sm',krTitle(k))}<span class="m"><span class="t">${esc(krTitle(k))}</span><span class="s">${sub}</span></span></button><span class="r"><b>${rb}</b><span class="muted">${rs}</span></span></div><div class="kr-b">${bar(bp,be,col)}${ctl?`<span class="kr-c">${ctl}</span>`:''}</div>${form}</div>`}
 
 const objTitleOf=k=>{const o=S.data.objectives[k.objectiveId];return o&&o.title?esc(o.title)+' · ':''};
@@ -1393,7 +1404,7 @@ function freqEditor(h){const f=freqOf(h);const days=Array.isArray(h.days)?h.days
   ${f==='days'?`<div class="days">${DAYS.map((d,i)=>`<button data-act="habit-day" data-id="${h.id}" data-d="${i}" aria-pressed="${days.includes(i)}">${d}</button>`).join('')}</div>`:''}`}
 function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
   const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;return}
-  const fn={hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
+  const fn={abandon:sheetAbandon,hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
 function openSheet(kind,coll,id,isNew){const from=S.sheet&&S.sheet.kind;if(S.sheet)closeSheet(true);S.sheet={kind,coll,id,isNew:!!isNew};navPush(from==='pick');$('#sheet-panel').scrollTop=0;renderSheet();if(isNew){const el=$('#sheet-panel [data-bind$=":title"],#sheet-panel [data-bind$=":name"],#sheet-panel [data-bind$=":text"]');if(el)setTimeout(()=>el.focus(),60)}}
@@ -1445,7 +1456,8 @@ function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf
     <div class="field"><span>Ajouter</span><form class="qty-form" style="margin:0" data-form="qty" data-id="${id}"><input id="qty-s-${id}" type="number" step="any" inputmode="decimal" placeholder="Quantité" required aria-label="Quantité"><input name="date" type="date" value="${today()}" aria-label="Date" class="qdate"><button class="btn sm" type="submit">Ajouter</button></form></div>
     <div class="field"><span>Journal · ${fmtN(krValue(k))} / ${fmtN(krTarget(k))} ${esc(k.unit||'')} ce trimestre</span>${log.length?`<ul class="log">${log.map(([d,v])=>`<li><span>${fmtD(d,true)} · sem. ${isoWeek(d).w}</span><b>${signed(+v,k.unit||'')}</b><button class="x" data-act="log-del" data-id="${id}" data-d="${d}" aria-label="Supprimer la saisie du ${fmtD(d)}">${ICON.x}</button></li>`).join('')}</ul>`:'<p class="hint">Rien de saisi pour l’instant.</p>'}</div>`}
   else if(kind==='milestone')extra=`<div class="checks"><label><input type="checkbox" id="kr-done-${id}" data-bind="krs:${id}:done" ${k.done?'checked':''}><span><b>Faite</b>${k.done&&k.doneAt?`Le ${fmtD(k.doneAt,true)}`:'Coche quand l’étape est franchie.'}</span></label></div>
-    ${F('krs',id,'week','Semaine prévue',{options:[['','À planifier'],...weeksOfQuarter(q).map(m=>[m,`Semaine ${isoWeek(m).w} · du ${fmtD(m)} au ${fmtD(addDays(m,6))}`])],hint:'Une étape prévue compte dans le score de sa semaine. Non faite, elle reste « en retard » les semaines suivantes.'})}`;
+    ${k.abandoned&&!k.done?'':F('krs',id,'week','Semaine prévue',{options:[['','À planifier'],...weeksOfQuarter(q).map(m=>[m,`Semaine ${isoWeek(m).w} · du ${fmtD(m)} au ${fmtD(addDays(m,6))}`])],hint:'Une étape prévue compte dans les engagements de sa semaine. Non faite, elle reste « en retard » les semaines suivantes. La changer replanifie l’étape et garde une trace de l’ancienne échéance.'})}
+    ${msBlock(k)}`;
   else if(kind==='videos')extra=`${F('krs',id,'target','Vidéos à publier dans le trimestre',{type:'number'})}<p class="hint">Ancien type de preuve. Choisis un des types ci-dessus pour le remplacer.</p>`;
   else extra=`<div class="two">${F('krs',id,'start','Point de départ',{type:'number'})}${F('krs',id,'target','Objectif',{type:'number'})}</div><div class="two">${F('krs',id,'current','Valeur actuelle',{type:'number'})}${F('krs',id,'unit','Unité',{ph:'Elo, rang…'})}</div>`;
   return sheetTop(esc(krTitle(k)==='Preuve sans titre'?'Nouvelle preuve':krTitle(k)),'Preuve')+`<section>${iconPicker('krs',id,k.icon)}${F('krs',id,'title','Preuve',{ph:'Plan validé'})}</section>
@@ -1470,6 +1482,24 @@ function howTo(k){const kind=kindOf(k);const step=(ok,n,html)=>`<li class="${ok?
 function weekToggles(h){const t=today(),mon=monday(t);return `<div class="field"><span>Cette semaine · touche un jour pour le saisir</span><div class="days wk">${[...Array(7)].map((_,i)=>{const d=addDays(mon,i),st=habitState(h.id,d);return `<button class="${st==='min'?'min':''}" data-act="${h.minEnabled?'hday-open':'habit-toggle'}" data-id="${h.id}" data-date="${d}" aria-pressed="${st==='target'}" ${d>t||d<hStart(h)?'disabled':''} aria-label="${esc(h.name||'Habitude')} le ${fmtD(d)}">${DAYS[i]}</button>`}).join('')}</div></div>`}
 function minEditor(h){return `<div class="checks"><label><input type="checkbox" id="hmin-${h.id}" data-bind="habits:${h.id}:minEnabled" ${h.minEnabled?'checked':''}><span><b>Activer une version minimale</b>Pour les jours difficiles : le minimum garde ta série, sans compter comme cible atteinte.</span></label></div>
   ${h.minEnabled?`<div class="two">${F('habits',h.id,'minLabel','Version minimale',{ph:'2 minutes de lecture'})}${F('habits',h.id,'targetLabel','Cible',{ph:'20 minutes de lecture'})}</div>`:''}`}
+/* F17 / F18 : une étape en retard se replanifie, se réduit ou s'abandonne ; l'abandon demande deux validations */
+function msBlock(k){const id=k.id;const hist=[...(k.reschedules||[]).map(x=>({at:x.at,t:`Replanifiée : semaine ${isoWeek(x.from).w} → ${x.to?`semaine ${isoWeek(x.to).w}`:'à planifier'}`})),...(k.scopes||[]).map(x=>({at:x.at,t:`Périmètre réduit : « ${x.from} » → « ${x.to} »`})),...(k.abandoned?[{at:k.abandoned.at,t:`Abandonnée${k.abandoned.reason?` : ${k.abandoned.reason}`:''}`}]:[]),...(k.reactivations||[]).map(x=>({at:x.at,t:'Réactivée'}))].sort((a,b)=>a.at.localeCompare(b.at));
+  let out='';
+  if(k.abandoned&&!k.done)out+=`<div class="howto"><h4>Abandonnée le ${fmtD(k.abandoned.at,true)}</h4><p style="margin-top:0">${k.abandoned.reason?`Motif : ${esc(k.abandoned.reason)}. `:''}Elle reste dans l’historique ; les semaines où elle était prévue gardent leur constat.</p><div style="margin-top:12px"><button class="btn-sec" data-act="kr-reactivate" data-id="${id}">Réactiver l’étape</button></div></div>`;
+  else if(!k.done){const late=msLate(k);
+    out+=`<div class="ms-act" id="ms-${id}"><h4>${late?`En retard depuis la semaine ${isoWeek(addDays(k.week,7)).w}`:'Si l’étape ne passe pas'}</h4>${late?'<p class="hint">Elle reste visible tant qu’elle n’est pas faite. Trois options :</p>':''}
+    <div class="field"><span>Réduire le périmètre</span><div class="qty-form" style="margin:0"><input id="scope-${id}" placeholder="Nouvelle formulation, plus petite" aria-label="Nouvelle formulation de l’étape"><button class="btn-sec" type="button" data-act="kr-scope" data-id="${id}">Réduire</button></div><span class="hint">L’étape reste à faire, avec sa nouvelle formulation.</span></div>
+    <p class="hint">Replanifier : choisis une autre semaine ci-dessus.</p>
+    <div><button class="btn-sec btn-danger" data-act="kr-abandon" data-id="${id}">Abandonner l’étape…</button></div></div>`}
+  if(hist.length)out+=`<div class="field" style="margin-top:14px"><span>Historique</span><ul class="log">${hist.map(x=>`<li><span>${fmtD(x.at,true)}</span><b style="font-weight:500">${esc(x.t)}</b></li>`).join('')}</ul></div>`;
+  return out}
+function sheetAbandon(id){const k=S.data.krs[id];const o=S.data.objectives[k.objectiveId]||{};const ab=S.ab&&S.ab.id===id?S.ab:(S.ab={id,step:1,reason:''});
+  if(ab.step===2)return sheetTop('Confirmer l’abandon','Étape · 2 / 2')+`<section><div class="howto"><h4>Récapitulatif</h4><dl><dt>Étape</dt><dd>${esc(krTitle(k))}${o.title?` · ${esc(o.title)}`:''}</dd><dt>Motif</dt><dd>${ab.reason?esc(ab.reason):'<span class="faint">Non précisé</span>'}</dd><dt>Conséquence</dt><dd>Cette étape sera conservée dans l’historique avec le statut Abandonnée. Les semaines où elle était prévue gardent leur constat ; elle ne comptera plus dans les semaines suivantes.</dd></dl></div>
+    <div class="prio-a"><button class="btn-sec" data-act="ab-back">Revenir</button><button class="btn btn-warn" data-act="ab-confirm" data-id="${id}">Confirmer l’abandon</button></div></section>`;
+  return sheetTop('Abandonner cette étape ?','Étape · 1 / 2')+`<section><p class="note"><b style="color:var(--fg)">${esc(krTitle(k))}</b>${o.title?` · objectif « ${esc(o.title)} »`:''}</p>
+  <label class="field" style="margin-top:14px"><span>Pourquoi souhaites-tu abandonner cette étape ?</span><textarea id="ab-reason" rows="3" placeholder="Ce qui a changé">${esc(ab.reason||'')}</textarea></label>
+  <div class="field" style="margin-top:14px"><span>La replanifier ou réduire son périmètre permettrait-il de la conserver ?</span><div class="prio-a" style="margin-top:4px"><button class="btn-sec" data-act="ab-alt">Replanifier ou réduire</button></div></div>
+  <div class="prio-a" style="margin-top:22px"><button class="btn-sec" data-act="close-sheet">Annuler</button><button class="btn" data-act="ab-next">Continuer vers l’abandon</button></div></section>`}
 function sheetHabit(id){const h=S.data.habits[id];const r=rate30(h);const q=qKey(today());
   const kr=list('krs').find(k=>k.habitId===id&&kindOf(k)==='habit'&&krQuarter(k)===q);const objs=objectivesOf(q,h.identityId);
   const link=`<label class="field"><span>Objectif de ${qLabel(q)} (facultatif)</span><select id="hobj-${id}" data-link="habit-obj" data-id="${id}">${[['','Aucun : reste dans ton traqueur d’habitudes'],...objs.map(o=>[o.id,o.title||'Sans titre'])].map(([v,l])=>`<option value="${esc(v)}" ${(kr?kr.objectiveId:'')===v?'selected':''}>${esc(l)}</option>`).join('')}</select><span class="hint">Sans objectif : habitude d’entretien de son identité, ou suivi indépendant si elle n’a pas d’identité. Rattachée à un objectif : preuve de cet objectif. Son historique et sa série sont conservés dans tous les cas.</span></label>`;
@@ -1596,9 +1626,10 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   if(coll==='habits'&&path==='identityId'&&v!==base.identityId)doc.identitySince=today();
   if(coll==='objectives'&&path==='videoId'&&v){const vid=S.data.videos[v];const t=S.data.templates[base.fromTemplate];const plain=(t&&t.objTitle)||'Vidéo';if(vid&&(!base.title||base.title.trim()===plain))doc.title=`${plain} ${vid.title||''}`.trim()}
   if(coll==='krs'&&path==='done')doc.doneAt=v?today():null;
+  if(coll==='krs'&&path==='week'&&base.week&&v!==base.week&&!base.done)doc.reschedules=[...(base.reschedules||[]),{from:base.week,to:v||null,at:today()}];
   put(coll,id,doc);
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
-  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled'].includes(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
+  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled','week'].includes(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.morning)S.mOpen={d:el.dataset.morning,open:el.open}},true);
 document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}});
@@ -1666,6 +1697,15 @@ const ACT={
   'idea-cat':a=>{S.ideaCat=a.dataset.v;saveUi();renderMain(true)},
   'todo-toggle':a=>{const t=S.day||today();saveTodos(t,todoItems(t).map(i=>i.id===a.dataset.id?{...i,done:!i.done}:i))},
   'todo-del':a=>{const t=S.day||today();saveTodos(t,todoItems(t).filter(i=>i.id!==a.dataset.id))},
+  'kr-scope':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;const el=document.getElementById('scope-'+k.id);const v=(el&&el.value||'').trim();if(!v||v===krTitle(k)){toast('Écris la nouvelle formulation de l’étape');return}
+    put('krs',k.id,{...k,title:v,scopes:[...(k.scopes||[]),{from:krTitle(k),to:v,at:today()}]});toast('Périmètre réduit : l’étape reste à faire');renderSheet()},
+  'kr-abandon':a=>{S.ab={id:a.dataset.id,step:1,reason:''};openSheet('abandon','krs',a.dataset.id)},
+  'ab-next':()=>{const el=document.getElementById('ab-reason');if(S.ab){S.ab.reason=(el&&el.value||'').trim();S.ab.step=2}renderSheet();const b=$('#sheet-panel [data-act="ab-back"]');if(b)b.focus()},
+  'ab-back':()=>{if(S.ab)S.ab.step=1;renderSheet();const el=document.getElementById('ab-reason');if(el)el.focus()},
+  'ab-alt':()=>{S.ab=null;dismissSheet()},
+  'ab-confirm':a=>{if(a.disabled)return;a.disabled=true;const k=S.data.krs[a.dataset.id];const ab=S.ab;S.ab=null;if(!k||!ab||ab.step!==2||k.abandoned){dismissSheet();return}
+    put('krs',k.id,{...k,abandoned:{at:today(),reason:ab.reason||''}});toast('Étape abandonnée : elle reste dans l’historique');dismissSheet()},
+  'kr-reactivate':a=>{const k=S.data.krs[a.dataset.id];if(!k||!k.abandoned)return;const{abandoned,...rest}=k;put('krs',k.id,{...rest,abandonHistory:[...(k.abandonHistory||[]),abandoned],reactivations:[...(k.reactivations||[]),{at:today()}]});renderSheet()},
   'prio-pick':()=>openSheet('prio',null,S.day||today()),
   'prio-set':a=>{const t=S.day||today();const pr={kind:a.dataset.kind,id:a.dataset.id,label:((a.querySelector('.t')||{}).textContent||'').trim()};if(a.dataset.week)pr.week=a.dataset.week;setDay(t,{prio:pr,prioDone:false});if(S.sheet)dismissSheet();toast('Priorité du jour choisie')},
   'prio-clear':()=>{setDay(S.day||today(),{prio:null,prioDone:false});dismissSheet()},
@@ -1691,7 +1731,7 @@ const ACT={
   'goto-week':a=>{S.week=a.dataset.mon;S.qtyOpen=null;renderMain(true)},
   'qty-open':a=>{S.qtyOpen=a.dataset.id;renderMain(true);const el=document.getElementById('qty-'+a.dataset.id);if(el)el.focus()},
   'qty-close':()=>{S.qtyOpen=null;renderMain(true)},
-  'plan-week':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;put('krs',k.id,{...k,week:a.dataset.mon});toast('Étape prévue cette semaine')},
+  'plan-week':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;const tr=k.week&&k.week!==a.dataset.mon&&!k.done?[...(k.reschedules||[]),{from:k.week,to:a.dataset.mon,at:today()}]:k.reschedules;put('krs',k.id,{...k,week:a.dataset.mon,...(tr?{reschedules:tr}:{})});toast('Étape prévue cette semaine')},
   'log-del':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;const log={...(k.log||{})};delete log[a.dataset.d];put('krs',k.id,{...k,log});renderSheet()},
   'kr-kind':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;const v=a.dataset.v;
     if(v==='habit'&&!habitOf(k))makeHabitForKr(k.id);
