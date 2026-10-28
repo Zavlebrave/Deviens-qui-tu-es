@@ -12,6 +12,7 @@ L'app s'installe sur ton téléphone et ton ordinateur. Tes données sont synchr
 | `firestore.rules` | La règle de sécurité : chaque compte ne voit que ses propres données |
 | `manifest.webmanifest`, icônes | L'installation sur l'écran d'accueil |
 | `sw.js` | Le fonctionnement hors connexion |
+| `assets/` | L'image d'ambiance (« Le Voyageur contemplant une mer de nuages », C. D. Friedrich, domaine public) et le logo |
 
 Tes données sont stockées dans Firebase sous `users/<ton identifiant>/…`. Elles ne sont jamais dans ce dépôt.
 

@@ -23,8 +23,8 @@ Ces choix restent à confirmer par Ivan : une décision changée se met à jour 
 | D10 | Le fuseau du compte (Réglages, Europe/Paris par défaut) fixe la date métier. Un changement vaut pour l'avenir ; le passé n'est pas déplacé. | Réglages | T47 |
 | D11 | Le rang League of Legends garde son ordre explicite (Fer IV = 0 … Challenger = 30). | Progrès | Lot F |
 | D12 | L'automatisation existante de la publication est conservée. Revenir depuis « Publiée » ne défait rien automatiquement. | Studio | T37 |
-| D13 | Le thème est toujours sombre, quel que soit le réglage du système. Il n'y avait pas de réglage de thème à migrer. | Toutes | T52 |
-| D14 | Le mode concentration et les rappels ne sont pas livrés dans ce lot (voir plus bas). | — | — |
+| D13 | Le thème est toujours sombre, quel que soit le réglage du système. Il n'y avait pas de réglage de thème à migrer. Depuis la refonte « Voyageur », le fond est bleu nuit et l'accent bleu (voir plus bas). | Toutes | T52 |
+| D14 | Le mode concentration est livré sans minuteur synchronisé : le minuteur reste sur l'appareil qui l'a lancé, une seule séance à la fois, et il ne valide jamais rien tout seul. Les rappels ne sont pas livrés. | Aujourd'hui | Refonte « Voyageur » |
 | D15 | Règles par type de donnée. Les ajouts de quantité sont des incréments côté serveur et les validations d'habitude des ajouts ou retraits dans une liste : deux appareils ne s'écrasent pas. Les autres documents suivent « dernière écriture ». À l'import, la fusion garde la version actuelle (ou celle du fichier, au choix) sans créer de copie. | Toutes, Réglages | T39, T40, T44 |
 
 ## Couverture du book
@@ -33,12 +33,21 @@ Ces choix restent à confirmer par Ivan : une décision changée se met à jour 
 - **Partiel** :
   - F38 et F39 : les écritures concurrentes de quantités et de validations fusionnent. Les autres documents (textes, réglages) suivent « dernière écriture » et n'ont pas d'écran de résolution de conflit (T41).
   - F40 : la file hors connexion est celle de Firestore. Elle survit au redémarrage, et la déconnexion avertit s'il reste des envois en attente.
-- **Non réalisé** (lot complémentaire, chapitre 17) :
-  - U19, mode concentration ;
-  - U20, rappels.
+- **Réalisé en première livraison** : U19, mode concentration. « Commencer » ouvre la vue de l'action avec sa cible, un minuteur facultatif (libre, 25, 45 ou 60 minutes), un lien utile et « Terminer ». À la fin, tu confirmes le résultat ou tu saisis la quantité réelle.
+- **Non réalisé** (lot complémentaire, chapitre 17) : U20, rappels.
 - **Limites connues** :
   - les semaines supprimées avant cette version ne sont pas reconstituables (F31) ;
   - la sauvegarde d'avant import est téléchargée en fichier et gardée sur l'appareil qui a lancé l'import.
+
+## Direction artistique « Voyageur » (28 octobre 2026)
+
+Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons proposés en U08 et U09 :
+
+- **Couleurs** : fond bleu nuit `#0D1117`, cartes `#151A22`, accent bleu `#4562F2` à la place du violet. Le texte blanc sur le bouton bleu atteint 4,9:1 et le texte discret 5,2:1 sur les cartes. Le vert, l'orange et le rouge gardent leur sens de statut (U10).
+- **Police** : Outfit pour les titres et le texte, à la place de Quicksand.
+- **Image** : « Le Voyageur contemplant une mer de nuages » (Caspar David Friedrich, 1818, domaine public) en fond du haut des pages, et en logo. L'image vient des maquettes ; une version en meilleure définition peut la remplacer dans `assets/`.
+- **Navigation** : cinq entrées sur ordinateur comme sur téléphone (Aujourd'hui, Identités, Habitudes, Studio, Bilan). Bilan regroupe Revue et Progrès. Le rond du compte ouvre les Réglages.
+- **Aujourd'hui** : cartes Ma priorité, Mon état du matin, Mes habitudes, Mes tâches, Studio, Mes 3 priorités de la semaine et Engagements tenus. Pour une habitude avec version minimale, la barre montre deux paliers (minimum, puis cible) et non un pourcentage (D07).
 
 ## Recette
 
@@ -46,3 +55,7 @@ Ces choix restent à confirmer par Ivan : une décision changée se met à jour 
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Refonte « Voyageur »** : 40 vérifications automatisées, toutes réussies.
+  - Navigation ; Commencer, minuteur, durée prévue, Fermer puis Reprendre ; retour arrière ; Terminer avec confirmation ; saisie de la quantité réelle.
+  - Minimum puis cible ; état du matin ; cartes repliables ; jour passé ; clavier.
+  - Absence de défilement horizontal sur téléphone, sur les sept écrans.

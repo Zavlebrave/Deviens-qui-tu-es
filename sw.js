@@ -1,7 +1,7 @@
 // Garde l'app utilisable hors connexion. Les fichiers de l'app sont pris sur le réseau en priorité,
 // pour que chaque mise à jour publiée soit visible à la prochaine ouverture.
-const CACHE = 'dqte-v1';
-const SHELL = ['./', './index.html', './firebase-config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CACHE = 'dqte-v2';
+const SHELL = ['./', './index.html', './firebase-config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './assets/voyageur.jpg', './assets/voyageur-mini.jpg'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
