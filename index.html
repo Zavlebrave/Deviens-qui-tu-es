@@ -525,6 +525,14 @@ body{font-size:16px}
 .ms-act h4{font-size:15px;font-weight:700}
 .btn-warn{background:var(--neg);color:#111318}
 .howto dl dd{color:var(--fg)}
+.mchart{height:170px}
+.m-band{fill:color-mix(in srgb,var(--pos) 14%,transparent)}
+.m-pt{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;display:grid;place-items:center}
+.m-pt::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--fg);box-shadow:0 0 0 3px var(--surface)}
+.m-pt.on::before,.m-pt:hover::before{background:var(--accent);width:13px;height:13px}
+.m-axis{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--faint);margin-top:-6px}
+.m-add{font-size:15px;font-weight:700;margin-top:18px}
+.mgoal .tag{white-space:normal;text-align:right}
 .today-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0 16px;align-items:start}
 @media (min-width:1100px){.today-grid{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
 details.sec>summary{list-style:none;cursor:pointer;margin-bottom:0}
@@ -1133,10 +1141,10 @@ function objResult(o){const t=o.resType||'none';
   if(t==='metric'){const m=S.data.metrics[o.metricId];return m?metricGoal(m):{done:false,txt:'Indicateur introuvable'}}
   return{none:true,done:false,txt:o.criterion?'Mesure à choisir':'Critère à préciser'}}
 function resStatus(o,r){if(r.none)return{k:'mut',t:''};if(r.done)return{k:'pos',t:'Atteint'};return today()>qRange(o.quarter||qKey(today())).end?{k:'neg',t:'Non atteint'}:{k:'warn',t:'En cours'}}
-function metricGoal(m){const es=mEntries(m);const last=es.length?es[es.length-1][1]:null;const tg=numOrNull(m.target);if(last==null)return{done:false,txt:'Aucune mesure'};if(tg==null)return{done:false,txt:mFmt(m,last)};const dir=mDir(m,es);return{done:dir>=0?last>=tg:last<=tg,txt:`${mFmt(m,last)} · objectif ${mFmt(m,tg)}`}}
-function resultsBlock(i,q){const objs=objectivesOf(q,i.id);const ms=metrics().filter(m=>m.identityId===i.id&&!m.objectiveId);
+function metricGoal(m){const es=mEntries(m);const last=es.length?es[es.length-1][1]:null;if(last==null)return{done:false,txt:'Aucune mesure'};const st=metricStatus(m,last),tt=mTargetTxt(m);return{done:!!st.ok,txt:`${mFmt(m,last)}${tt?` · cible ${tt}`:''}`}}
+function resultsBlock(i,q){const objs=objectivesOf(q,i.id);const ms=metrics().filter(m=>(m.identityId===i.id||(m.objectiveId&&(S.data.objectives[m.objectiveId]||{}).identityId===i.id))&&!objs.some(o=>o.resType==='metric'&&o.metricId===m.id));
   const rows=[...objs.map(o=>{const r=objResult(o);return `<button class="row" data-act="edit-objective" data-id="${o.id}">${av(o.icon,i.color,'sm',o.title)}<span class="m"><span class="t">${esc(o.title||'Objectif sans titre')}</span><span class="s">${o.criterion?esc(o.criterion):'<span class="faint">Critère de réussite à préciser</span>'}</span></span><span class="r"><b>${esc(r.txt)}</b>${tag(resStatus(o,r))}</span></button>`}),
-    ...ms.map(m=>{const g=metricGoal(m);return `<button class="row" data-act="edit-metric" data-id="${m.id}">${av(m.icon,i.color,'sm',m.name)}<span class="m"><span class="t">${esc(m.name||'Indicateur')}</span><span class="s">Indicateur de progrès</span></span><span class="r"><b>${esc(g.txt)}</b>${g.done?tag({k:'pos',t:'Atteint'}):''}</span></button>`})];
+    ...ms.map(m=>{const g=metricGoal(m);return `<button class="row" data-act="edit-metric" data-id="${m.id}">${av(m.icon,i.color,'sm',m.name)}<span class="m"><span class="t">${esc(m.name||'Indicateur')}</span><span class="s">Indicateur${m.objectiveId&&S.data.objectives[m.objectiveId]?` · ${esc(S.data.objectives[m.objectiveId].title||'')}`:''}</span></span><span class="r"><b>${esc(g.txt)}</b>${tag(metricStatus(m,(mEntries(m).slice(-1)[0]||[])[1]))}</span></button>`})];
   return `<div class="part-h"><h3>Mes résultats</h3><span class="muted">${qLabel(q)}</span></div>${rows.length?`<div class="list">${rows.join('')}</div>`:'<p class="empty">Ajoute un objectif et son critère de réussite pour suivre tes résultats.</p>'}`}
 const RES=[['none','Pas de mesure'],['check','Case à cocher'],['count','Compteur'],['metric','Indicateur'],['videos','Vidéos publiées']];
 function resultEditor(o){const id=o.id,t=o.resType||'none',r=objResult(o),st=resStatus(o,r);let body='';
@@ -1213,48 +1221,77 @@ const DIVS=['IV','III','II','I'];
 const rankVal=(t,d)=>t<7?t*4+d:21+t;
 const rankParts=v=>{v=Math.round(+v);return v>=28?[Math.min(9,v-21),null]:[Math.floor(v/4),v%4]};
 const rankLabel=v=>{if(v==null||!isFinite(+v))return '—';const[t,d]=rankParts(v);return d==null?TIERS[t]:`${TIERS[t]} ${DIVS[d]}`};
-const PRESETS=[{key:'poids',name:'Poids',icon:'⚖️',type:'number',unit:'kg',idRe:/champ|box/i,hint:'Champion'},{key:'elo',name:'Elo échecs',icon:'♟️',type:'number',unit:'Elo',target:1800,idRe:/échec|echec/i,hint:'objectif 1 800'},{key:'lol',name:'Rang LoL',icon:'🎮',type:'rank',target:rankVal(6,0),idRe:/diam|lol|league/i,hint:'objectif Diamant IV'}];
+const PRESETS=[{key:'poids',name:'Poids',icon:'⚖️',type:'number',unit:'kg',idRe:/champ|box/i,hint:'Champion'},{key:'elo',name:'Elo échecs',icon:'♟️',type:'number',unit:'Elo',target:1800,dir:'up',idRe:/échec|echec/i,hint:'objectif 1 800'},{key:'lol',name:'Rang LoL',icon:'🎮',type:'rank',target:rankVal(6,0),idRe:/diam|lol|league/i,hint:'objectif Diamant IV'}];
 const metrics=()=>list('metrics').sort(byCreated);
 const numOrNull=v=>v===''||v==null||!isFinite(+v)?null:+v;
 const mEntries=m=>Object.entries(m.history||{}).filter(([,v])=>numOrNull(v)!=null).map(([d,v])=>[d,+v]).sort((a,b)=>a[0].localeCompare(b[0]));
 const mFmt=(m,v)=>v==null?'—':m.type==='rank'?rankLabel(v):`${fmtN(v)}${m.unit?' '+m.unit:''}`;
 const mDiffTxt=(m,d)=>m.type==='rank'?plural(Math.round(d),'division'):`${fmtN(d)}${m.unit?' '+m.unit:''}`;
 function mAt(es,d){let v=null;for(const[x,y] of es){if(x>d)break;v=y}return v}
-/* Le sens du progrès se déduit de l'objectif : au-dessus de la première mesure, il faut monter ; en dessous, descendre */
-function mDir(m,es){const t=numOrNull(m.target);if(t==null||!es.length)return 0;return t>=es[0][1]?1:-1}
+/* F27 : sens de la cible choisi (augmenter, diminuer, rester dans une plage, bornes incluses).
+   Un ancien indicateur sans sens explicite le déduit de sa cible par rapport à la première mesure. */
+function mDirOf(m,es){if(m.dir)return m.dir;const t=numOrNull(m.target);es=es||mEntries(m);return t!=null&&es.length&&t<es[0][1]?'down':'up'}
+function mDir(m,es){const d=mDirOf(m,es);return d==='down'?-1:d==='up'?1:0}
+function dirSign(m,v){const d=mDirOf(m);if(d!=='range')return d==='down'?-1:1;const lo=numOrNull(m.min),hi=numOrNull(m.max);return v==null?0:lo!=null&&v<lo?1:hi!=null&&v>hi?-1:0}
+function metricStatus(m,v){const dir=mDirOf(m);if(v==null)return{k:'mut',t:'Aucune mesure'};
+  if(dir==='range'){const lo=numOrNull(m.min),hi=numOrNull(m.max);if(lo==null&&hi==null)return{k:'mut',t:'Plage à définir'};if(lo!=null&&v<lo)return{k:'warn',t:'Sous la plage',gap:lo-v};if(hi!=null&&v>hi)return{k:'warn',t:'Au-dessus de la plage',gap:v-hi};return{k:'pos',t:'Dans la plage cible',ok:true}}
+  const t=numOrNull(m.target);if(t==null)return{k:'mut',t:'Sans cible'};const ok=dir==='down'?v<=t:v>=t;return ok?{k:'pos',t:'Cible atteinte',ok:true}:{k:'warn',t:'En cours',gap:Math.abs(t-v)}}
+function mTargetTxt(m){const dir=mDirOf(m);if(dir==='range'){const lo=numOrNull(m.min),hi=numOrNull(m.max);return lo!=null&&hi!=null?`entre ${mFmt(m,lo)} et ${mFmt(m,hi)}`:lo!=null?`au moins ${mFmt(m,lo)}`:hi!=null?`au plus ${mFmt(m,hi)}`:''}const t=numOrNull(m.target);return t==null?'':`${dir==='down'?'au plus':'au moins'} ${mFmt(m,t)}`}
 function setMetric(m,d,v){put('metrics',m.id,{...m,history:{...(m.history||{}),[d]:v},updatedAt:nowIso()})}
 function metricForm(m,es){const last=es.length?es[es.length-1][1]:null;const date=`<input type="date" name="date" id="md-${m.id}" value="${today()}" aria-label="Date">`;
   if(m.type==='rank'){const[t,d]=last!=null?rankParts(last):[4,0];
-    return `<form class="mform" data-form="metric" data-id="${m.id}"><select name="tier" id="mt-${m.id}" aria-label="Palier">${TIERS.map((x,i)=>`<option value="${i}" ${i===t?'selected':''}>${x}</option>`).join('')}</select><select name="div" id="mv-${m.id}" aria-label="Division">${DIVS.map((x,i)=>`<option value="${i}" ${i===(d??0)?'selected':''}>${x}</option>`).join('')}</select>${date}<button class="btn sm" type="submit">Enregistrer</button></form>`}
-  return `<form class="mform" data-form="metric" data-id="${m.id}"><input type="number" name="v" id="mv-${m.id}" step="any" inputmode="decimal" placeholder="${last!=null?fmtN(last):'Valeur'}${m.unit?' '+esc(m.unit):''}" aria-label="Nouvelle valeur" required>${date}<button class="btn sm" type="submit">Enregistrer</button></form>`}
+    return `<form class="mform" data-form="metric" data-id="${m.id}"><select name="tier" id="mt-${m.id}" aria-label="Palier">${TIERS.map((x,i)=>`<option value="${i}" ${i===t?'selected':''}>${x}</option>`).join('')}</select><select name="div" id="mv-${m.id}" aria-label="Division">${DIVS.map((x,i)=>`<option value="${i}" ${i===(d??0)?'selected':''}>${x}</option>`).join('')}</select>${date}<button class="btn sm" type="submit">Ajouter la mesure</button></form>`}
+  return `<form class="mform" data-form="metric" data-id="${m.id}"><input type="number" name="v" id="mv-${m.id}" step="any" inputmode="decimal" placeholder="${last!=null?fmtN(last):'Valeur'}${m.unit?' '+esc(m.unit):''}" aria-label="Nouvelle valeur" required>${date}<button class="btn sm" type="submit">Ajouter la mesure</button></form>`}
+/* U05 : seules les mesures réelles sont tracées ; un relevé unique reste un point, jamais une courbe inventée.
+   Toucher un point affiche sa date et sa valeur (pas besoin de survol sur téléphone). */
+function metricChart(m,es,a,b,cid,sign){const pts=es.filter(([d])=>d>=a&&d<=b);if(!pts.length)return `<div class="chart mchart"><div class="c-empty">Pas de mesure sur cette période</div></div>`;
+  const dir=mDirOf(m),tg=numOrNull(m.target),lo=numOrNull(m.min),hi=numOrNull(m.max);const ref=dir==='range'?[lo,hi].filter(v=>v!=null):tg!=null?[tg]:[];
+  const vals=[...pts.map(x=>x[1]),...ref];let y0=Math.min(...vals),y1=Math.max(...vals);const pad=(y1-y0)*.15||(m.type==='rank'?2:Math.max(1,Math.abs(y1)*.02));y0-=pad;y1+=pad;
+  const span=Math.max(1,diffDays(a,b));const X=d=>diffDays(a,d)/span*1000,Y=v=>200-(v-y0)/(y1-y0)*200;
+  const diff=pts.length>1?pts[pts.length-1][1]-pts[0][1]:0;const good=sign&&diff?diff*sign>0:true;
+  const line=pts.length>1?`<path class="l-act ${good?'up':'down'}" d="${pts.map((x,i)=>(i?'L':'M')+X(x[0]).toFixed(1)+' '+Y(x[1]).toFixed(1)).join('')}"/>`:'';
+  const band=dir==='range'&&ref.length?`<rect class="m-band" x="0" width="1000" y="${Y(hi!=null?hi:y1).toFixed(1)}" height="${Math.max(2,Y(lo!=null?lo:y0)-Y(hi!=null?hi:y1)).toFixed(1)}"/>`:'';
+  const tline=dir!=='range'&&tg!=null?`<path class="l-exp" d="M0 ${Y(tg).toFixed(1)}H1000"/>`:'';
+  const dots=pts.map(x=>`<button class="m-pt" style="left:${(X(x[0])/10).toFixed(2)}%;top:${(Y(x[1])/2).toFixed(2)}%" data-act="mpt" data-c="${cid}" data-v="${esc(mFmt(m,x[1]))}" data-d="${esc(fmtD(x[0],true))}" aria-label="Mesure du ${esc(fmtD(x[0],true))} : ${esc(mFmt(m,x[1]))}"></button>`).join('');
+  return `<div class="chart mchart"><svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">${band}${tline}${line}</svg>${dots}</div><div class="m-axis"><span>${esc(fmtD(a))}</span><span>${dir==='range'&&ref.length?'Bande verte : plage cible':tg!=null?'Pointillés : cible':''}</span><span>${esc(fmtD(b))}</span></div>`}
 function metricCard(m,range){const es=mEntries(m),t=today();const cid='mc-'+m.id.replace(/[^a-zA-Z0-9_-]/g,'');
-  const n=range==='m'?30:range==='t'?91:range==='y'?365:Math.min(1500,Math.max(30,es.length?diffDays(es[0][0],t)+1:30));
-  const xs=[...Array(n)].map((_,i)=>addDays(t,i-n+1));const act=xs.map(d=>mAt(es,d));const tgt=numOrNull(m.target);
-  const vals=[...act.filter(v=>v!=null),...(tgt!=null?[tgt]:[])];let y0=vals.length?Math.min(...vals):0,y1=vals.length?Math.max(...vals):1;const pad=(y1-y0)*.15||(m.type==='rank'?2:Math.max(1,Math.abs(y1)*.02));y0-=pad;y1+=pad;
-  const last=es.length?es[es.length-1]:null;const dir=mDir(m,es);const fi=act.findIndex(v=>v!=null);let li=-1;act.forEach((v,i)=>{if(v!=null)li=i});
-  const diff=li>=0?act[li]-act[fi]:0;const rt={m:'sur 1 mois',t:'sur 3 mois',y:'sur 1 an',all:'depuis le début'}[range];
-  const delta=li<0?`<span class="muted">${last?'Aucune mesure sur cette période':'Ajoute ta première mesure ci-dessous'}</span>`:!diff?`<span class="muted">Stable ${rt}</span>`:`<span class="${dir?(diff*dir>0?'up':'down'):'muted'}">${diff>0?'▲ +':'▼ −'}${esc(mDiffTxt(m,Math.abs(diff)))}</span> <span class="muted">${rt}</span>`;
-  let goal='';if(tgt!=null){if(!last)goal=`<p class="hint" style="margin-top:12px">Objectif <b>${esc(mFmt(m,tgt))}</b></p>`;else{const st=es[0][1];const done=dir>=0?last[1]>=tgt:last[1]<=tgt;const p=st===tgt?1:clamp((last[1]-st)/(tgt-st),0,1);
-    goal=`<div class="mgoal"><div><span>Objectif <b>${esc(mFmt(m,tgt))}</b></span><span class="muted">${done?'Atteint 🎉':`encore ${esc(mDiffTxt(m,Math.abs(tgt-last[1])))}`}</span></div>${bar(p,null,idColor(m.identityId))}</div>`}}
-  const i=idOf(m.identityId);
-  return `<section class="sec metric"><div class="sec-h"><button class="mhead" data-act="edit-metric" data-id="${m.id}">${av(m.icon,idColor(m.identityId),'',m.name)}<span><b>${esc(m.name||'Indicateur')}</b><small>${i?esc(i.name):'Sans identité'}</small></span></button><button class="act" data-act="edit-metric" data-id="${m.id}">Historique</button></div>
+  const a=range==='all'?minD(es.length?es[0][0]:t,addDays(t,-29)):addDays(t,-({m:29,t:90,y:364}[range]||90)),b=t;
+  const inR=es.filter(([d])=>d>=a&&d<=b);const last=es.length?es[es.length-1]:null;const st=metricStatus(m,last&&last[1]);
+  const diff=inR.length>1?inR[inR.length-1][1]-inR[0][1]:0;const sign=dirSign(m,last&&last[1]);const rt={m:'sur 1 mois',t:'sur 3 mois',y:'sur 1 an',all:'depuis le début'}[range]||'';
+  const delta=!last?'<span class="muted">Ajoute ta première mesure ci-dessous</span>':inR.length<2?`<span class="muted">${inR.length?'Une seule mesure sur cette période':'Aucune mesure sur cette période'}</span>`:!diff?`<span class="muted">Stable ${rt}</span>`:`<span class="${sign?(diff*sign>0?'up':'down'):'muted'}">${diff>0?'▲ +':'▼ −'}${esc(mDiffTxt(m,Math.abs(diff)))}</span> <span class="muted">${rt}</span>`;
+  const tt=mTargetTxt(m);
+  const goal=tt?`<div class="mgoal"><div><span>Cible : <b>${esc(tt)}</b></span>${last?tag({k:st.k,t:st.t+(st.gap!=null&&!st.ok?` · écart ${mDiffTxt(m,st.gap)}`:'')}):''}</div></div>`:'<p class="hint" style="margin-top:12px">Aucune cible : ajoute-la dans les réglages de l’indicateur pour savoir où tu en es.</p>';
+  const i=idOf(m.identityId),o=S.data.objectives[m.objectiveId];const link=[o&&`Objectif « ${o.title||''} »`,i&&i.name].filter(Boolean).join(' · ')||'Indépendant';
+  return `<section class="sec metric"><div class="sec-h"><button class="mhead" data-act="edit-metric" data-id="${m.id}">${av(m.icon,idColor(m.identityId||(o&&o.identityId)),'',m.name)}<span><b>${esc(m.name||'Indicateur')}</b><small>${esc(link)}</small></span></button><button class="act" data-act="edit-metric" data-id="${m.id}">Réglages</button></div>
   ${hero(cid,last?`Dernière mesure · ${fmtD(last[0],true)}`:'Aucune mesure',last?esc(mFmt(m,last[1])):'—',delta)}
-  ${li>=0?lineChart(cid,{xs,act,exp:tgt!=null?xs.map(()=>tgt):null,y0,y1,fmtV:v=>mFmt(m,v),good:dir&&diff?diff*dir>0:null,expLabel:'objectif'}):''}
-  ${goal}${metricForm(m,es)}</section>`}
+  ${es.length?metricChart(m,es,a,b,cid,sign):''}${goal}
+  ${m.purpose||m.freqHint?`<p class="hint" style="margin-top:8px">${[m.purpose&&`Sert à : ${esc(m.purpose)}`,m.freqHint&&`Saisie souhaitée : ${esc(String(m.freqHint).toLowerCase())}`].filter(Boolean).join(' · ')}</p>`:''}
+  <h3 class="m-add">Ajouter une mesure</h3>${metricForm(m,es)}</section>`}
 function viewProgress(){const ms=metrics(),range=S.range.progress||'t';
   const head=bilanSw()+`<header class="page-head"><h1 class="h1">Progrès</h1><button class="btn sm" data-act="new-metric">Nouvel indicateur</button></header>`;
   const left=PRESETS.filter(p=>!ms.some(m=>m.preset===p.key));
   const presets=left.length?`<div class="presets">${left.map(p=>`<button class="preset" data-act="metric-preset" data-v="${p.key}"><span class="av sm" aria-hidden="true">${p.icon}</span>${esc(p.name)} <small>${esc(p.hint)}</small></button>`).join('')}</div>`:'';
-  if(!ms.length)return head+`<div class="empty-state"><h2>Suis ce qui évolue dans le temps</h2><p class="note">Ton poids, ton Elo aux échecs, ton rang sur League of Legends : une valeur que tu mets à jour quand elle change, et sa courbe vers ton objectif. Touche une suggestion pour commencer.</p>${presets}${addBtn('new-metric','Autre indicateur')}</div>`;
-  return head+`<p class="eyebrow">Mets à jour une valeur quand elle change : la courbe et l’écart à ton objectif suivent.</p>`+pills('prog-range',range,[['m','1M'],['t','3M'],['y','1A'],['all','Tout']])
-  +ms.map(m=>metricCard(m,range)).join('')
+  if(!ms.length)return head+`<div class="empty-state"><h2>Suis ce qui évolue dans le temps</h2><p class="note">Ton poids, ton Elo aux échecs, ton rang sur League of Legends : une valeur que tu mets à jour quand elle change, et sa courbe vers ta cible. Un indicateur observe un résultat ; il ne valide pas d’habitude à ta place.</p>${presets}${addBtn('new-metric','Autre indicateur')}</div>`;
+  const sel=S.metricSel&&ms.some(m=>m.id===S.metricSel)?S.metricSel:'all';const shown=sel==='all'?ms:ms.filter(m=>m.id===sel);
+  return head+`<p class="eyebrow">Mets à jour une valeur quand elle change : la courbe et l’écart à ta cible suivent.</p>`
+  +(ms.length>1?pills('metric-sel',sel,[['all','Tous'],...ms.map(m=>[m.id,m.name||'Indicateur'])]):'')
+  +pills('prog-range',range,[['m','1M'],['t','3M'],['y','1A'],['all','Tout']])
+  +shown.map(m=>metricCard(m,range)).join('')
   +`<section class="sec"><div class="sec-h"><h2>Ajouter un indicateur</h2></div>${presets}${addBtn('new-metric','Autre indicateur')}</section>`}
-function sheetMetric(id){const m=S.data.metrics[id];const es=mEntries(m).reverse();
+function sheetMetric(id){const m=S.data.metrics[id];const es=mEntries(m).reverse();const dir=mDirOf(m);const rank=m.type==='rank';
+  const valF=(path,label,ph)=>rank?F('metrics',id,path,label,{type:'number',options:[['','— Aucune —'],...[...Array(31)].map((_,v)=>[String(v),rankLabel(v)])]}):F('metrics',id,path,label,{type:'number',ph});
+  const cq=qKey(today());const objs=list('objectives').filter(o=>o.quarter>=qShift(cq,-1)||o.id===m.objectiveId).sort(byCreated);
   return sheetTop(esc(m.name||'Nouvel indicateur'),'Indicateur de progrès')+`<section>${iconPicker('metrics',id,m.icon)}
-  ${F('metrics',id,'name','Nom',{ph:'Poids'})}${F('metrics',id,'identityId','Identité',{options:idOptions()})}
+  ${F('metrics',id,'name','Nom',{ph:'Poids'})}
+  <div class="two">${F('metrics',id,'identityId','Identité (facultatif)',{options:idOptions()})}${F('metrics',id,'objectiveId','Objectif lié (facultatif)',{options:[['','— Aucun —'],...objs.map(o=>[o.id,`${o.title||'Sans titre'} · ${qLabel(o.quarter)}`])]})}</div>
+  <p class="hint">Rattaché ou indépendant, chaque mesure n’est saisie qu’une fois : elle apparaît ici, dans Progrès et dans l’identité ou l’objectif lié.</p>
   <div class="field"><span>Type de valeur</span>${pills('metric-type',m.type||'number',[['number','Nombre (kg, Elo…)'],['rank','Rang League of Legends']],`data-id="${id}"`)}</div>
-  ${m.type==='rank'?F('metrics',id,'target','Objectif',{type:'number',options:[['','— Aucun —'],...[...Array(31)].map((_,v)=>[String(v),rankLabel(v)])]}):`<div class="two">${F('metrics',id,'unit','Unité',{ph:'kg, Elo…'})}${F('metrics',id,'target','Objectif',{type:'number',ph:'1800'})}</div>`}
-  <p class="hint">L’objectif trace une ligne en pointillés sur la courbe. S’il est au-dessus de ta première mesure, l’app considère qu’il faut monter ; en dessous, qu’il faut descendre (pour un poids, par exemple).</p></section>
+  ${rank?'':F('metrics',id,'unit','Unité',{ph:'kg, Elo…'})}
+  <div class="field"><span>Sens de la cible</span>${pills('metric-dir',dir,[['up','Augmenter'],['down','Diminuer'],['range','Rester dans une plage']],`data-id="${id}"`)}</div>
+  ${dir==='range'?`<div class="two">${valF('min','Minimum','68')}${valF('max','Maximum','72')}</div>`:valF('target','Cible',dir==='down'?'70':'1800')}
+  <p class="hint">${dir==='range'?'Les deux bornes sont incluses : une valeur égale à une borne est dans la plage.':dir==='down'?'Atteinte quand la valeur est inférieure ou égale à la cible.':'Atteinte quand la valeur est supérieure ou égale à la cible.'}</p></section>
+  <section><h3>Aide-mémoire</h3>${F('metrics',id,'purpose','À quoi te sert cette mesure ?',{ph:'Savoir si je peux combattre en moins de 75 kg'})}
+  ${F('metrics',id,'freqHint','Fréquence de saisie souhaitée',{options:[['','—'],['Chaque jour','Chaque jour'],['Chaque semaine','Chaque semaine'],['Chaque mois','Chaque mois'],['Quand elle change','Quand elle change']],hint:'Un simple rappel : tu peux saisir quand tu veux.'})}</section>
   <section><h3>Historique <small>${es.length}</small></h3>${es.length?`<ul class="log">${es.map(([d,v])=>`<li><span>${fmtD(d,true)}</span><b>${esc(mFmt(m,v))}</b><button class="x" data-act="metric-del" data-id="${id}" data-d="${d}" aria-label="Supprimer la mesure du ${fmtD(d)}">${ICON.x}</button></li>`).join('')}</ul>`:'<p class="hint">Aucune mesure pour l’instant. Ajoute-la depuis l’onglet Progrès.</p>'}</section>
   ${delBtn('del-metric',id,'Supprimer cet indicateur')}`}
 
@@ -1619,6 +1656,7 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   let base=coll==='settings'?settings():S.data[coll][id];
   if(!base&&coll==='reviews')base={week:id,monday:S.reviewWeek,createdAt:nowIso()};
   if(!base)return;
+  if(coll==='metrics'&&(path==='min'||path==='max')){const lo=numOrNull(path==='min'?v:base.min),hi=numOrNull(path==='max'?v:base.max);if(lo!=null&&hi!=null&&lo>hi){toast('Le minimum doit être inférieur ou égal au maximum : valeur non enregistrée.');el.value=base[path]??'';return}}
   let doc=JSON.parse(JSON.stringify(clean(base)));setPath(doc,path,v);doc.updatedAt=nowIso();
   if(coll==='videos'&&path==='stage'&&base.stage!==v){doc.stageLog=[...(base.stageLog||[]),{stage:v,date:today()}];if(v==='publie'&&(!doc.publishDate||doc.publishDate>today()))doc.publishDate=today()}
   if(coll==='krs'&&path==='current')doc=withHistory(doc);
@@ -1629,7 +1667,7 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   if(coll==='krs'&&path==='week'&&base.week&&v!==base.week&&!base.done)doc.reschedules=[...(base.reschedules||[]),{from:base.week,to:v||null,at:today()}];
   put(coll,id,doc);
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
-  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled','week'].includes(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
+  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','resDone','resTarget','resCurrent','metricId','minEnabled','week','objectiveId','min','max'].includes(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.link==='habit-obj'){linkHabit(el.dataset.id,el.value);return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.morning)S.mOpen={d:el.dataset.morning,open:el.open}},true);
 document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}});
@@ -1744,7 +1782,10 @@ const ACT={
   'new-metric':()=>{const id=create('metrics',{name:'',icon:'📈',type:'number',unit:'',target:null,identityId:'',history:{}});openSheet('metric','metrics',id,true)},
   'edit-metric':a=>openSheet('metric','metrics',a.dataset.id),
   'metric-preset':a=>{const p=PRESETS.find(x=>x.key===a.dataset.v);if(!p)return;const idn=identities().find(i=>p.idRe.test(i.name||''));
-    create('metrics',{name:p.name,icon:p.icon,type:p.type,unit:p.unit||'',target:p.target??null,identityId:idn?idn.id:'',preset:p.key,history:{}});toast(`Indicateur « ${p.name} » ajouté`)},
+    create('metrics',{name:p.name,icon:p.icon,type:p.type,unit:p.unit||'',target:p.target??null,...(p.dir?{dir:p.dir}:{}),identityId:idn?idn.id:'',preset:p.key,history:{}});toast(`Indicateur « ${p.name} » ajouté`)},
+  'metric-dir':a=>{const m=S.data.metrics[a.dataset.id];if(!m)return;put('metrics',m.id,{...m,dir:a.dataset.v});renderSheet()},
+  'metric-sel':a=>{S.metricSel=a.dataset.v;renderMain(true)},
+  'mpt':a=>{const c=a.dataset.c;const v=document.getElementById(c+'-v'),d=document.getElementById(c+'-d');if(v){v.textContent=a.dataset.v;const e=v.previousElementSibling;if(e)e.textContent='Mesure sélectionnée'}if(d)d.innerHTML=`<span class="muted">Mesure du ${esc(a.dataset.d)}</span>`;document.querySelectorAll('.m-pt.on').forEach(x=>x.classList.remove('on'));a.classList.add('on')},
   'metric-type':a=>{const m=S.data.metrics[a.dataset.id];if(!m||m.type===a.dataset.v)return;put('metrics',m.id,{...m,type:a.dataset.v,target:null});renderSheet()},
   'metric-del':a=>{const m=S.data.metrics[a.dataset.id];if(!m)return;const history={...(m.history||{})};delete history[a.dataset.d];put('metrics',m.id,{...m,history});renderSheet()},
   'del-metric':a=>{del('metrics',a.dataset.id);dropSheet()},
