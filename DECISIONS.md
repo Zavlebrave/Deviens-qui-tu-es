@@ -245,6 +245,7 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - Glisser sur la courbe affiche « Habitudes tenues ce jour-là » et « jeudi 29 octobre : 1 faite sur 3 prévues ».
   - Un jour compte les habitudes prévues ce jour-là ; une « X fois par semaine » n'y compte que si elle est faite ce jour-là.
 - **Unités** : une unité saisie au pluriel passe au singulier pour 1 (« 1 séance », « 1 mot »).
+- **Identités s'ouvre toujours sur la semaine en cours** depuis le menu, avec les objectifs de la semaine (« 0 / 3 »). La vue Trimestre (« 0 / 21 »), ouverte par « Détail » sur la carte du trimestre ou par le sélecteur, ne sert que le temps de la consulter. Elle n'est plus mémorisée, ni entre deux onglets, ni à la réouverture de l'app.
 
 ## Recette
 

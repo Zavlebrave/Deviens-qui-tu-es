@@ -1167,8 +1167,8 @@ const S={
   tab:'today', day:null, quarter:qKey(today()), habitWeek:monday(today()), reviewWeek:monday(today()),
   okrMode:'week', week:monday(today()), qtyOpen:null, studio:'pipeline', ideaCat:'Tout', ideaF:{status:'',tier:'',subj:'',sort:'score'}, ideaQuery:'', allIdeas:false, range:{okr:'q',habits:'m',progress:'t'}, sheet:null, pendingImport:null, fold:{}
 };
-try{const v=JSON.parse(localStorage.getItem('dqte:ui')||'{}');if(v.studio)S.studio=v.studio;if(v.ideaCat!=null)S.ideaCat=v.ideaCat;if(v.ideaF)S.ideaF={...S.ideaF,...v.ideaF};if(v.range)S.range={...S.range,...v.range};if(v.okrMode)S.okrMode=v.okrMode;if(v.fold&&typeof v.fold==='object')S.fold={...v.fold}}catch(e){}
-function saveUi(){try{localStorage.setItem('dqte:ui',JSON.stringify({studio:S.studio,ideaCat:S.ideaCat,ideaF:S.ideaF,range:S.range,okrMode:S.okrMode,fold:S.fold}))}catch(e){}}
+try{const v=JSON.parse(localStorage.getItem('dqte:ui')||'{}');if(v.studio)S.studio=v.studio;if(v.ideaCat!=null)S.ideaCat=v.ideaCat;if(v.ideaF)S.ideaF={...S.ideaF,...v.ideaF};if(v.range)S.range={...S.range,...v.range};if(v.fold&&typeof v.fold==='object')S.fold={...v.fold}}catch(e){}
+function saveUi(){try{localStorage.setItem('dqte:ui',JSON.stringify({studio:S.studio,ideaCat:S.ideaCat,ideaF:S.ideaF,range:S.range,fold:S.fold}))}catch(e){}}
 
 /* ---------- Stockage : base en ligne (claude.ai) ou navigateur ---------- */
 let db=null;
@@ -2730,7 +2730,9 @@ function migrateLevels(){for(const k of list('krs').filter(k=>kindOf(k)==='level
 function migratePrios(){for(const rv of list('reviews')){if(rv.prios||!rv.next||!String(rv.next).trim())continue;const ps={};String(rv.next).split('\n').map(x=>x.replace(/^\s*(\d+[.)]|[-•*])\s*/,'').trim()).filter(Boolean).slice(0,3).forEach((text,i)=>ps['p'+(i+1)]={text,done:false});put('reviews',rv.id,{...rv,prios:ps})}}
 function removeKr(kid){const k=S.data.krs[kid];if(!k)return;const h=S.data.habits[k.habitId];if(h&&h.fromKr===kid)del('habits',h.id);del('krs',kid)}
 const ACT={
-  'tab':a=>{if(S.sheet)closeSheet(true);if(a.dataset.tab==='today')S.day=null;setTab(a.dataset.tab)},
+  'tab':a=>{if(S.sheet)closeSheet(true);if(a.dataset.tab==='today')S.day=null;
+    // Identités depuis le menu : toujours les objectifs de la semaine en cours ; la vue Trimestre ne sert que le temps de la consulter
+    if(a.dataset.tab==='okr'&&S.tab!=='okr'){S.okrMode='week';S.week=monday(today())}setTab(a.dataset.tab)},
   'day-nav':a=>{const t=today();const d=addDays(S.day||t,+a.dataset.d);S.day=d<t?d:null;renderMain(true);window.scrollTo(0,0);navPush()},
   'day-today':()=>{S.day=null;renderMain(true);window.scrollTo(0,0);navPush()},
   'goto-day':a=>{const d=a.dataset.date;S.day=d&&d<today()?d:null;if(S.sheet)closeSheet(true);setTab('today')},
