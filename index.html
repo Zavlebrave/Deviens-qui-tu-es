@@ -1318,9 +1318,10 @@ function krQuarter(kr){if(kr._q)return kr._q;const o=S.data.objectives[kr.object
 function krSpan(kr){const{start,end}=qRange(krQuarter(kr));const c0=(kr.createdAt||'').slice(0,10),sd=startDay(),c=sd&&(!c0||sd>c0)?sd:c0;let s=c&&c>start?c:start;if(s>end)s=start;
   // une quantité vise son échéance : le rythme attendu et la cible par semaine se calculent jusqu'à elle
   // quantité liée à une vidéo : engagement seulement pendant sa phase du rétroplanning ; vidéo sans date : pas encore d'engagement
-  let e=end;if(kindOf(kr)==='qty'){const du=krDue(kr);
-    if(du&&du.src==='pending')s=addDays(end,1);
-    else{if(du&&du.src==='retro'){const r=retroOf(kr);if(r&&r.s>s)s=r.s}if(du&&du.d<e)e=du.d<s?s:du.d}}
+  // objectif à planifier : rien ne compte ; semaine de début choisie : l'engagement commence ce lundi-là
+  let e=end;if(kindOf(kr)==='qty'){const du=krDue(kr),o=krObj(kr),ow=objWeek(o);
+    if(objPlan(o)||(du&&du.src==='pending'))s=addDays(end,1);
+    else{if(ow){if(ow>s)s=ow}else if(du&&du.src==='retro'){const r=retroOf(kr);if(r&&r.s>s)s=r.s}if(du&&du.d<e)e=du.d<s?s:du.d}}
   if(e<s)e=s;return{qs:start,s,e,qe:end}}
 /* Échéance d'une preuve : la date saisie dans sa fiche (quantité) ou sa semaine prévue (étape) ; sinon, pour un objectif lié
    à une vidéo, la fin de la phase du rétroplanning qui correspond à son nom ; sinon la fin du trimestre (quantité). */
@@ -1332,7 +1333,14 @@ function retroOf(kr){if(dueMemo.ver!==S.ver)dueMemo={ver:S.ver,m:{}};if(kr.id in
   if(v&&v.stage!=='publie'){const t=krTitle(kr),m=PHASE_RE.find(([re])=>re.test(t));
     if(m){const ph=m[1],p=plan(v);out=!p?{pending:true,ph,v}:{d:ph==='pub'?v.publishDate:addDays(p[ph].end,-1),s:ph==='pub'?addDays(v.publishDate,-6):p[ph].start,ph,v}}}
   return dueMemo.m[kr.id]=out}
-const msWeek=kr=>kr.week||(r=>r&&r.d?monday(r.d):'')(retroOf(kr));
+/* Démarrage d'un objectif : « Dès maintenant » (ou selon le rétroplanning de sa vidéo), « À planifier » (rien ne compte
+   encore) ou une semaine de début. Seuls les engagements prévus comptent, dans la semaine comme dans le trimestre. */
+const krObj=kr=>S.data.objectives[kr.objectiveId];
+const objPlan=o=>!!o&&o.startWeek==='plan';
+const objWeek=o=>o&&o.startWeek&&o.startWeek!=='plan'?o.startWeek:'';
+const msWeek=kr=>objPlan(krObj(kr))?'':kr.week||(r=>r&&r.d?monday(r.d):'')(retroOf(kr));
+/* Une preuve compte au jour d : quantité dont la période a commencé ; étape prévue cette semaine-là ou avant, ou déjà faite */
+const engagedBy=(k,d)=>{if(kindOf(k)==='milestone'){if(k.done&&k.doneAt<=d)return true;const w=msWeek(k);return !!w&&w<=d}return krSpan(k).s<=d};
 function krDue(kr){const ms=kindOf(kr)==='milestone';
   if(ms&&kr.week)return{d:addDays(kr.week,6),src:'week'};
   if(!ms&&kr.due)return{d:kr.due,src:'set'};
@@ -1360,7 +1368,9 @@ function krValue(kr){const k=kindOf(kr);if(k==='level')return +kr.current||0;if(
 function prog(kr,v){const s=krStart(kr),t=krTarget(kr);if(t===s)return t>0&&v>=t?1:0;return clamp((v-s)/(t-s),0,1)}
 const krProgress=kr=>prog(kr,krValue(kr));
 const krProgressAt=(kr,d)=>prog(kr,krValueAt(kr,d));
-function krExpectedAt(kr,d){const{s,e}=krSpan(kr);if(d<s)return 0;if(d>=e)return 1;
+/* Attendu au jour d : une étape n'est attendue qu'une fois sa semaine prévue passée (pas de retard avant son échéance) */
+function krExpectedAt(kr,d){if(kindOf(kr)==='milestone'){const w=msWeek(kr);return w&&d>addDays(w,6)?1:0}
+  const{s,e}=krSpan(kr);if(d<s)return 0;if(d>=e)return 1;
   const h=kindOf(kr)==='habit'&&habitOf(kr);if(h){const a=maxD(s,hStart(h));const tot=occurrences(h,a,e);if(tot)return occurrences(h,a,d)/tot}
   return (diffDays(s,d)+1)/(diffDays(s,e)+1)}
 function krStatus(kr){if(kindOf(kr)==='milestone'&&kr.abandoned&&!kr.done)return{k:'mut',t:'Abandonnée'};const p=krProgress(kr),t=today(),{s,e}=krSpan(kr),x=krExpectedAt(kr,t);
@@ -1392,6 +1402,8 @@ function krWeekTarget(kr,mon){const k=kindOf(kr);const sun=addDays(mon,6);const{
 /* Cible hebdomadaire figée (F13) : calculée au début de la semaine pour chaque quantité, puis conservée dans « plans ».
    Les saisies font avancer le réalisé sans déplacer la cible ; le reste à faire est recalculé la semaine suivante. */
 function qtyAutoTarget(kr,mon){const{qs,s,e,qe}=krSpan(kr);const sun=addDays(mon,6);if(sun<s||mon>qe)return 0;const before=sumLog(kr.log,qs,addDays(mon,-1));const rem=Math.max(0,krTarget(kr)-before);if(mon>e)return rem;const wl=Math.max(1,Math.ceil((diffDays(maxD(mon,s),e)+1)/7));return Math.ceil(rem/wl)}
+/* Une date qui change (échéance, démarrage) recalcule l'objectif figé de la semaine en cours pour ces preuves */
+function dropPlanTargets(ids){const key=isoWeek(monday(today())).key,pl=S.data.plans[key];if(!pl||!pl.targets)return;const tg={...pl.targets};let n=0;for(const id of ids)if(tg[id]!=null){delete tg[id];n++}if(n)put('plans',key,{...clean(pl),targets:tg})}
 function ensurePlan(){if(!ready())return;const mon=monday(today()),key=isoWeek(mon).key;const pl=S.data.plans[key];const tg={...((pl&&pl.targets)||{})};let add=0;
   for(const k of krsOfQuarter(weekQuarter(mon)))if(kindOf(k)==='qty'&&!(+k.weekTarget>0)&&tg[k.id]==null){tg[k.id]=qtyAutoTarget(k,mon);add++}
   if(add)put('plans',key,{...(pl?clean(pl):{createdAt:nowIso()}),week:key,monday:mon,targets:tg})}
@@ -1425,13 +1437,13 @@ function milestoneTag(kr,mon){const sun=addDays(mon,6);
   return `<span class="tag mut">Prévue sem. ${isoWeek(w).w}${rt}</span>`}
 function weekSub(kr,mon){const k=kindOf(kr);
   if(k==='habit'){const h=habitOf(kr);if(!h)return 'Habitude pas encore activée';return mon===monday(today())?`${esc(freqLabel(h))} · ${dueTxt(h)}`:esc(freqLabel(h))}
-  if(k==='qty'){const dl=targetDelta(kr,mon),du=krDue(kr),sp=krSpan(kr);if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>addDays(mon,6))return `À partir du ${fmtD(sp.s)} (rétroplanning)`;return `${dl?esc(dl)+' · ':''}${du&&du.src!=='q'?`échéance ${fmtD(du.d)} · `:''}trimestre ${fmtN(krValue(kr))} / ${fmtN(krTarget(kr))} ${esc(kr.unit||'')}`}
+  if(k==='qty'){const dl=targetDelta(kr,mon),du=krDue(kr),sp=krSpan(kr);if(objPlan(krObj(kr)))return 'À planifier : objectif pas encore démarré';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>addDays(mon,6))return `À partir du ${fmtD(sp.s)}${objWeek(krObj(kr))?'':' (rétroplanning)'}`;return `${dl?esc(dl)+' · ':''}${du&&du.src!=='q'?`échéance ${fmtD(du.d)} · `:''}trimestre ${fmtN(krValue(kr))} / ${fmtN(krTarget(kr))} ${esc(kr.unit||'')}`}
   if(k==='milestone')return milestoneTag(kr,mon);
   if(k==='videos')return 'Automatique · Studio';
   return `Niveau ${fmtN(kr.current)} ${esc(kr.unit||'')} · objectif ${fmtN(krTarget(kr))}`}
 function quarterSub(kr){const k=kindOf(kr);
   if(k==='habit'){const h=habitOf(kr);return h?esc(freqLabel(h)):'Aucune habitude liée'}
-  if(k==='qty'){const du=krDue(kr),sp=krSpan(kr);if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>today())return `À partir du ${fmtD(sp.s)} (rétroplanning) · échéance ${fmtD(du.d)}`;return `${fmtN(krWeekTarget(kr,monday(today())))} ${esc(kr.unit||'')} / semaine pour tenir${du&&du.src!=='q'?` · échéance ${fmtD(du.d)}`:''}`}
+  if(k==='qty'){const du=krDue(kr),sp=krSpan(kr);if(objPlan(krObj(kr)))return 'À planifier : objectif pas encore démarré';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>today())return `À partir du ${fmtD(sp.s)}${objWeek(krObj(kr))?'':' (rétroplanning)'} · échéance ${fmtD(du.d)}`;return `${fmtN(krWeekTarget(kr,monday(today())))} ${esc(kr.unit||'')} / semaine pour tenir${du&&du.src!=='q'?` · échéance ${fmtD(du.d)}`:''}`}
   if(k==='milestone'){const w=msWeek(kr);return kr.done?`Faite le ${fmtD(kr.doneAt)}`:w?`Prévue sem. ${isoWeek(w).w}${kr.week?'':' (rétroplanning)'}`:'À planifier'}
   if(k==='videos')return 'Automatique · Studio';
   return `${esc(kr.unit||'Niveau')} · départ ${fmtN(krStart(kr))}`}
@@ -1450,7 +1462,7 @@ const weekProofs=mon=>allProofs(weekQuarter(mon)).filter(k=>!idPausedWeek(k.iden
 function weekSummary(mon){const q=weekQuarter(mon);const items=[];for(const k of weekProofs(mon)){const s=krWeekScore(k,mon);if(s!=null)items.push({iid:k.identityId,s})}
   const per={};for(const it of items)(per[it.iid]=per[it.iid]||[]).push(it.s);
   return{q,score:items.length?avg(items.map(i=>i.s)):null,per:Object.fromEntries(Object.entries(per).map(([k,v])=>[k,avg(v)])),n:items.length}}
-function qSummary(q){const krs=allProofs(q).filter(k=>!idPausedWeek(k.identityId,monday(today())));const t=today();const actual=avg(krs.map(krProgress)),expected=avg(krs.map(k=>krExpectedAt(k,t)));
+function qSummary(q){const t=today();const krs=allProofs(q).filter(k=>!idPausedWeek(k.identityId,monday(t))&&engagedBy(k,t));const actual=avg(krs.map(krProgress)),expected=avg(krs.map(k=>krExpectedAt(k,t)));
   const per=identities().map(i=>{const mine=krs.filter(k=>k.identityId===i.id);return{...i,p:mine.length?avg(mine.map(krProgress)):null,e:mine.length?avg(mine.map(k=>krExpectedAt(k,t))):null,n:mine.length}});
   return{krs,actual,expected,per}}
 /* Archivage : au premier lancement d'une nouvelle semaine, les semaines terminées sont figées dans la base */
@@ -1469,8 +1481,8 @@ function freqLabel(h){const f=freqOf(h);if(f==='weekly')return `${h.perWeek||3} 
 const wd=s=>(parse(s).getDay()+6)%7;
 function fixedOn(h,s){const f=freqOf(h);if(f==='weekly')return false;if(f==='days')return (h.days||[]).includes(wd(s));return true}
 /* Aujourd'hui n'affiche une habitude que les jours où elle est prévue ; « X fois / semaine » : chaque jour tant que le quota n'est pas atteint */
-const visibleOn=(h,s)=>freqOf(h)==='weekly'?(weekCount(h,monday(s))<(h.perWeek||3)||habitDone(h.id,s)):fixedOn(h,s);
-function nextDue(h,from){if(freqOf(h)==='weekly'){const m=monday(from);return maxD(weekCount(h,m)<(h.perWeek||3)?from:addDays(m,7),hStart(h))}
+const visibleOn=(h,s)=>freqOf(h)==='weekly'?(weekCount(h,monday(s))<wkQuota(h,monday(s))||habitDone(h.id,s)):fixedOn(h,s);
+function nextDue(h,from){if(freqOf(h)==='weekly'){const m=monday(from);return maxD(weekCount(h,m)<wkQuota(h,m)?from:addDays(m,7),hStart(h))}
   for(let i=0;i<8;i++){const d=addDays(maxD(from,hStart(h)),i);if(fixedOn(h,d))return d}return null}
 const fmtDay=(s,long)=>parse(s).toLocaleDateString('fr-FR',long?{weekday:'long',day:'numeric',month:'long'}:{weekday:'short',day:'numeric',month:'short'});
 const DAYS_LONG=['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
@@ -1529,11 +1541,13 @@ function habitCtl(h,d,row){const st=habitState(h.id,d),nm=esc(h.name||''),mode=h
 const startDay=()=>((S.data.settings||{}).main||{}).startDate||'';
 const hStart=h=>{const c=(h.createdAt||'2000-01-01').slice(0,10),sd=startDay();return sd&&sd>c?sd:c};
 const weekCount=(h,mon)=>habitCount(h.id,mon,addDays(mon,6));
-function weekExpected(h,mon){const sun=addDays(mon,6);if(hStart(h)>sun)return 0;return freqOf(h)==='weekly'?(h.perWeek||3):occurrences(h,maxD(mon,hStart(h)),sun)}
+/* Quota « X fois par semaine » ramené aux jours suivis quand le suivi commence en cours de semaine (création, date de départ) */
+function wkQuota(h,mon){const pw=h.perWeek||3,sun=addDays(mon,6),a=maxD(mon,hStart(h));if(a>sun)return 0;const n=diffDays(a,sun)+1;return n>=7?pw:Math.min(n,Math.max(1,Math.round(pw*n/7)))}
+function weekExpected(h,mon){const sun=addDays(mon,6);if(hStart(h)>sun)return 0;return freqOf(h)==='weekly'?wkQuota(h,mon):occurrences(h,maxD(mon,hStart(h)),sun)}
 /* Série recalculée à partir des faits (F23) : cible ou minimum = continuité et +1 (D07) ; un jour prévu manqué l'interrompt.
    Les jours non prévus ne comptent pas. Unité : jours, fois (jours précis) ou semaines. Plus de justification depuis le 29 octobre. */
 function streakOf(h){const t=today(),st=hStart(h),pw=h.perWeek||3;let n=0,frozen=false;
-  if(freqOf(h)==='weekly'){const ok=m=>{const sun=addDays(m,6);return habitCount(h.id,m,sun)+minCount(h.id,m,sun)>=pw};let mon=monday(t);if(ok(mon)){n++;first=false}mon=addDays(mon,-7);
+  if(freqOf(h)==='weekly'){const ok=m=>{const sun=addDays(m,6);return habitCount(h.id,m,sun)+minCount(h.id,m,sun)>=Math.max(1,wkQuota(h,m))};let mon=monday(t);if(ok(mon)){n++;first=false}mon=addDays(mon,-7);
     for(let i=0;i<260&&addDays(mon,6)>=st;i++,mon=addDays(mon,-7)){if(ok(mon)){n++;continue}break}
     return{n,frozen,unit:n>1?'semaines':'semaine'}}
   let d=t;if(fixedOn(h,d)&&habitState(h.id,d)==='none')d=addDays(d,-1);
@@ -1547,7 +1561,7 @@ function rate30(h){const t=today();const a=maxD(addDays(t,-29),hStart(h));const 
 function dayScore(d){let den=0,dn=0;for(const h of trackerHabits()){if(d<hStart(h))continue;const done=habitDone(h.id,d);if(freqOf(h)==='weekly'){den+=(h.perWeek||3)/7;if(done)dn+=1}else if(fixedOn(h,d)){den++;if(done)dn++}}return den?Math.min(1,dn/den):null}
 function weekStats(mon){const t=today();let sc=0,dn=0;const votes={};const tk=new Set(trackerHabits().map(h=>h.id));
   for(const h of habits()){const end=minD(addDays(mon,6),t);if(end<mon)continue;const c=habitCount(h.id,mon,end);votes[h.identityId||'_']=(votes[h.identityId||'_']||0)+c;if(!tk.has(h.id))continue;
-    if(freqOf(h)==='weekly'){if(addDays(mon,6)>=hStart(h)){sc+=(h.perWeek||3);dn+=Math.min(c,h.perWeek||3)}}else{const a=maxD(mon,hStart(h));const e=occurrences(h,a,end);sc+=e;dn+=Math.min(c,e)}}
+    if(freqOf(h)==='weekly'){const qw=wkQuota(h,mon);if(qw){sc+=qw;dn+=Math.min(c,qw)}}else{const a=maxD(mon,hStart(h));const e=occurrences(h,a,end);sc+=e;dn+=Math.min(c,e)}}
   const days=[...Array(7)].map((_,i)=>addDays(mon,i));let td=0,tt=0;for(const d of days){const it=todoItems(d);tt+=it.length;td+=it.filter(x=>x.done).length}
   const moves=[];for(const v of videos()){const lg=v.stageLog||[];lg.forEach((l,i)=>{if(i>0&&l.date>=mon&&l.date<=days[6]&&stageIdx(l.stage)>stageIdx(lg[i-1].stage))moves.push({v,...l})})}
   let pt=0,pd=0,fm=0;for(const d of days){if(d>t||!dayOf(d).prio)continue;const x=prioInfo(d);if(!x||x.missing)continue;pt++;if(x.done)pd++;fm+=+x.p.spent||0}
@@ -1622,7 +1636,7 @@ function planTxt(h){const f=freqOf(h);if(f==='weekly')return `${h.perWeek||3} fo
   const ds=[...(h.days||[])].sort().join('');if(ds==='0123456')return 'Tous les jours';if(ds==='01234')return 'Du lundi au vendredi';if(ds==='56')return 'Le week-end';if(!ds)return 'Aucun jour choisi';
   return (h.days||[]).length===1?`Le ${DAYS_LONG[h.days[0]]}`:`Les ${daysLong(h)}`}
 function hRow(h,d){const st=habitState(h.id,d),on=st==='target',past=d<today(),nm=esc(h.name||'Habitude sans nom'),mode=hMode(h),v=mode==='qty'?habitVal(h.id,d):null,ov=habitOver(h,d);
-  const sub=[mode==='qty'&&qTgt(h)?`Cible : ${qFmt(h,qTgt(h))}`:h.targetLabel||planTxt(h),freqOf(h)==='weekly'?`${weekCount(h,monday(d))}/${h.perWeek||3} cette semaine`:''].filter(Boolean).join(' · ');
+  const sub=[mode==='qty'&&qTgt(h)?`Cible : ${qFmt(h,qTgt(h))}`:h.targetLabel||planTxt(h),freqOf(h)==='weekly'?`${weekCount(h,monday(d))}/${wkQuota(h,monday(d))} cette semaine`:''].filter(Boolean).join(' · ');
   const two=mode!=='simple',seg=on?(ov?'ov':'ok'):'min';
   const lab=on?(ov?`Au-delà · ${qFmt(h,v)}`:v!=null?`Cible atteinte · ${qFmt(h,v)}`:'Validée'):v!=null?`Minimum · ${qFmt(h,v)}`:'Minimum réalisé';
   const state=st==='none'?(v!=null?`<div class="hst"><span class="chip mut">${esc(qFmt(h,v))}, sous le minimum</span></div>`:`<div class="hst due"><span class="hdue">${past?'Non réalisé':'À faire'}</span></div>`)
@@ -1819,7 +1833,7 @@ function morningStrip(t){const d=dayOf(t),e=energyOf(d.energy),sl=sleepOf(d.slee
 function quarterCard(){const t=today(),q=qKey(t),sum=qSummary(q),wks=weeksOfQuarter(q),wi=Math.max(1,wks.indexOf(monday(t))+1),y=t.slice(0,4),pub=publishedInYear(y).length,g=+(settings().goals||{})[y]||0;
   const head=`<div class="ptop"><p class="kicker">Mon trimestre · ${qLabel(q)}</p><button class="linkish" data-act="open-quarter">Détail</button></div>`;
   const foot=`<p class="tq-f">Semaine ${wi} sur ${wks.length}${g?` · ${pub} vidéo${pub>1?'s':''} publiée${pub>1?'s':''} sur ${g} en ${y}`:''}</p>`;
-  if(!sum.krs.length)return `<section class="sec td-q">${head}<p class="empty">Aucune preuve ce trimestre. Ajoute un objectif et ses preuves dans Identités.</p>${foot}</section>`;
+  if(!sum.krs.length)return `<section class="sec td-q">${head}<p class="empty">${allProofs(q).length?'Aucun engagement en cours : tes preuves commencent plus tard ou leurs objectifs sont à planifier.':'Aucune preuve ce trimestre. Ajoute un objectif et ses preuves dans Identités.'}</p>${foot}</section>`;
   const pts=Math.round((sum.actual-sum.expected)*100),tone=pts>=0?'pos':pts>=-5?'warn':'neg';
   return `<section class="sec td-q">${head}<div class="tq-top"><div class="tq-v" id="tdq-v">${pctS(sum.actual)}</div><div class="tq-d" id="tdq-d"><span class="tone-${tone}">${pts===0?'Pile dans le rythme':pts>0?`${pts} pt${pts>1?'s':''} d’avance`:`${-pts} pt${pts<-1?'s':''} de retard`}</span><span class="muted">attendu ${pctS(sum.expected)} à date</span></div></div>
   ${lineChart('tdq',{...okrSeries(q,'q'),expLabel:'attendu'})}${foot}</section>`}
@@ -1857,7 +1871,8 @@ function idWeekRows(mon,past){const ws=weekSummary(mon);const rows=identities().
 function okrSeries(q,range){const{start,end}=qRange(q);const t=today();let a=start,b=end;
   if(range!=='q'){b=minD(t,end);a=addDays(b,range==='w'?-6:-29);if(a<start)a=start}
   const xs=[];for(let d=a;d<=b;d=addDays(d,1))xs.push(d);const krs=allProofs(q);
-  return{xs,act:xs.map(d=>d>t?null:avg(krs.map(k=>krProgressAt(k,d)))),exp:xs.map(d=>avg(krs.map(k=>krExpectedAt(k,d))))}}
+  const on=d=>krs.filter(k=>engagedBy(k,d));
+  return{xs,act:xs.map(d=>d>t?null:avg(on(d).map(k=>krProgressAt(k,d)))),exp:xs.map(d=>avg(on(d).map(k=>krExpectedAt(k,d))))}}
 function viewOKR(){
   const mode=S.okrMode,ids=identities(),cur=monday(today());
   const mon=S.week,q=mode==='week'?weekQuarter(mon):S.quarter;
@@ -1960,7 +1975,7 @@ function hCell(h,d,t,edit){if(d<hStart(h))return '<span class="cell nil" aria-hi
   const al=esc(`${h.name||'Habitude'}, ${fmtDay(d)} : ${lab}`);
   if(!edit||fut)return `<span class="cell ${cls}" role="img" aria-label="${al}" title="${al}">${ic}</span>`;
   return `<button class="cell ${cls}" data-act="${mode==='simple'?'habit-toggle':'hday-open'}" data-id="${h.id}" data-date="${d}" aria-label="${al}"${mode==='simple'?` aria-pressed="${st==='target'}"`:''}>${ic}</button>`}
-function hWeek(h,mon){const sun=addDays(mon,6);return{c:habitCount(h.id,mon,sun)+minCount(h.id,mon,sun),e:freqOf(h)==='weekly'?(h.perWeek||3):occurrences(h,maxD(mon,hStart(h)),sun)}}
+function hWeek(h,mon){const sun=addDays(mon,6);return{c:habitCount(h.id,mon,sun)+minCount(h.id,mon,sun),e:freqOf(h)==='weekly'?wkQuota(h,mon):occurrences(h,maxD(mon,hStart(h)),sun)}}
 function habitTable(mon,edit){const t=today(),sun=addDays(mon,6),days=[...Array(7)].map((_,i)=>addDays(mon,i)),hs=trackerHabits().filter(h=>hStart(h)<=sun);
   if(!hs.length)return '';
   const dh=d=>{const inner=`<b>${DAYS[wd(d)].charAt(0)}</b><small>${parse(d).getDate()}</small>`,cls=`hw-d ${d===t?'today':''}`;
@@ -2089,7 +2104,7 @@ function weekInsights(mon){const t=today(),isCur=mon===monday(t),sun=addDays(mon
   const good=[],bad=[],tips=[];const per=(n,u)=>`${fmtN(n)}${u?' '+u:''}`;
   const nb={};for(const k of weekProofs(mon)){const n=krTitle(k);nb[n]=(nb[n]||0)+1}
   for(const k of weekProofs(mon)){if(idPausedWeek(k.identityId,mon))continue;const kind=kindOf(k),tg=krWeekTarget(k,mon);if(!(tg>0))continue;const ob=(S.data.objectives[k.objectiveId]||{}).title||'';
-    const v=Math.max(0,krWeekValue(k,mon)),r=v/tg,ex=isCur?krWeekExpected(k,mon,t):1,e=ex==null?(isCur?0:1):ex,name=nb[krTitle(k)]>1&&(S.data.objectives[k.objectiveId]||{}).title?`${krTitle(k)} (${S.data.objectives[k.objectiveId].title})`:krTitle(k),u=kind==='qty'?(k.unit||''):'',it={ic:krIcon(k),col:idColor(k.identityId),t:name,n:name,o:ob};
+    const v=Math.max(0,krWeekValue(k,mon)),r=v/tg,ex=isCur?krWeekExpected(k,mon,t):1,e=ex==null?(isCur?0:1):ex,name=nb[krTitle(k)]>1&&(S.data.objectives[k.objectiveId]||{}).title?`${krTitle(k)} (${S.data.objectives[k.objectiveId].title})`:krTitle(k),u=kind==='qty'?(k.unit||''):'',it={ic:krIcon(k),col:idColor(k.identityId),t:name,n:name,o:ob,oid:k.objectiveId};
     // échéance de la preuve, et date avant laquelle agir cette semaine (l'échéance, ou dimanche si elle est plus loin)
     const du=krDue(k),dd=du?du.d:sun,act=isCur?(dd<t?dd:minD(dd,sun)):null,dueL=du&&du.src!=='q'&&dd>sun?` · échéance ${fmtD(dd)}`:'';
     if(kind==='milestone'){if(r>=1)good.push({...it,cat:'ms',s:'Étape franchie'});else{const w=msWeek(k),late=w&&w<mon;bad.push({...it,kr:1,cat:'ms',due:dd>sun?'~later':dd,s:late?`Prévue semaine ${isoWeek(w).w}`:isCur?'Pas encore faite':'Pas faite',w:1});
@@ -2105,7 +2120,7 @@ function weekInsights(mon){const t=today(),isCur=mon===monday(t),sun=addDays(mon
       tips.push({...it,cat:'qty',due:act,amt:per(rest,u),d:`encore ${per(rest,u)}${pd}${dueL}`,t:`${name} : encore ${per(rest,u)}`,p:`${name} : ${per(rest,u)} avant le ${fmtD(act)}`,w:e-r})}
     else{const nt=krWeekTarget(k,addDays(mon,7));tips.push({...it,cat:'qty',due:null,amt:nt>0?per(nt,u):'',d:nt>0?`vise ${per(nt,u)}${kind==='qty'?', rattrapage inclus':''}${du&&du.src!=='q'?` · échéance ${fmtD(dd)}`:''}`:'à reprendre',t:nt>0?`${name} : vise ${per(nt,u)} la semaine prochaine`:`${name} : à reprendre la semaine prochaine`,p:`${name} : ${per(nt>0?nt:tg,u)}`,w:1-r})}}
   for(const h of trackerHabits()){if(hStart(h)>sun)continue;const it={ic:h.icon,col:habitColor(h),t:h.name||'Habitude',n:h.name||'Habitude'},a=maxD(mon,hStart(h));
-    if(freqOf(h)==='weekly'){const c=habitCount(h.id,mon,upto)+minCount(h.id,mon,upto),pw=h.perWeek||3,left=isCur?diffDays(t,sun)+1:0;if(c>=pw)good.push({...it,cat:'hab',s:`${c} / ${pw} cette semaine · objectif atteint`});
+    if(freqOf(h)==='weekly'){const c=habitCount(h.id,mon,upto)+minCount(h.id,mon,upto),pw=wkQuota(h,mon),left=isCur?diffDays(t,sun)+1:0;if(!pw)continue;if(c>=pw)good.push({...it,cat:'hab',s:`${c} / ${pw} cette semaine · objectif atteint`});
       else if(!isCur){bad.push({...it,cat:'hab',days:null,miss:pw-c,s:`${c} / ${pw} cette semaine`,w:1-c/pw});tips.push({...it,cat:'hab',days:null,d:`vise ${Math.min(pw,c+1)} sur ${pw}`,t:`${it.t} : vise ${Math.min(pw,c+1)} sur ${pw} la semaine prochaine`,p:`${it.t} : ${Math.min(pw,c+1)} fois`,w:1-c/pw})}
       else if(pw-c>=left&&pw>c)tips.push({...it,cat:'hab',days:null,d:`encore ${pw-c} d’ici dimanche, sans jour de repos`,t:`${it.t} : encore ${pw-c} d’ici dimanche`,p:`${it.t} : ${pw-c} fois d’ici dimanche`,w:.5});continue}
     const lim=isCur?addDays(t,-1):sun,missD=[];let exp=0,ok=0;for(let d=a;d<=lim;d=addDays(d,1)){if(!fixedOn(h,d))continue;exp++;if(habitState(h.id,d)!=='none')ok++;else missD.push(d)}
@@ -2153,7 +2168,8 @@ function rvSentences(kind,ins,mon,ws,sm){const t=today(),isCur=mon===monday(t),o
 function rvDetail(kind,items,key,nextW){if(!items.length)return '';const tips=kind==='tips',f='rv-det-'+kind;
   const plus=x=>tips&&x.p?`<button class="pill-mini" data-act="rv-tip" data-key="${key}" data-text="${esc(x.p)}" aria-label="Ajouter « ${esc(x.p)} » à tes priorités de la semaine ${nextW}">+ Priorité</button>`:'';
   const G=[['q','Trimestre'],['qty','Preuves'],['ms','Étapes'],['hab','Habitudes'],['fz','Concentration']];
-  const row=x=>{const nm=x.cat==='q'||x.cat==='fz'?x.t:(x.n||x.t),d=x.cat==='q'||x.cat==='fz'?x.s:(tips?x.d:x.s);return `<li>${av(x.ic,x.col,'xs',nm)}<span class="m"><b>${esc(nm)}</b>${d?`<span>${esc(d)}</span>`:''}</span>${plus(x)}</li>`};
+  const unplan=x=>kind==='bad'&&x.oid&&(x.cat==='qty'||x.cat==='ms')?`<button class="pill-mini" data-act="obj-unplan" data-id="${x.oid}" title="Passe l’objectif « ${esc(x.o||'')} » à planifier : ses preuves ne comptent plus tant qu’il n’a pas démarré">Pas encore prévu</button>`:'';
+  const row=x=>{const nm=x.cat==='q'||x.cat==='fz'?x.t:(x.n||x.t),d=x.cat==='q'||x.cat==='fz'?x.s:(tips?x.d:x.s);return `<li>${av(x.ic,x.col,'xs',nm)}<span class="m"><b>${esc(nm)}</b>${d?`<span>${esc(d)}</span>`:''}</span>${plus(x)}${unplan(x)}</li>`};
   const body=G.map(([c,l])=>{const xs=items.filter(x=>(x.cat||'')===c);return xs.length?`<li class="rv-sub">${l}</li>${xs.map(row).join('')}`:''}).join('');
   return `<details class="rv-det" data-fold="${f}" ${S.fold[f]?'open':''}><summary>Voir le détail <span class="n">${items.length}</span><span class="chev" aria-hidden="true">${ICON.chevD}</span></summary><ul class="rv-l">${body}</ul></details>`}
 /* Alertes : affichées seulement s'il y en a. Une vidéo en retard dans le Studio ; un engagement sous 50 % deux semaines
@@ -2405,6 +2421,7 @@ function sheetObjective(id){const o=S.data.objectives[id];const vids=videos().fi
   return sheetTop(esc(o.title||'Nouvel objectif'),'Objectif')+`<section>${iconPicker('objectives',id,o.icon)}
   ${F('objectives',id,'title','Objectif',{ph:'Vidéo Karaba'})}
   <div class="two">${F('objectives',id,'identityId','Identité',{options:idOptions()})}${F('objectives',id,'quarter','Trimestre',{options:quarterOptions()})}</div>
+  ${F('objectives',id,'startWeek','Démarrage',{options:[['',o.videoId?'Dès maintenant, selon le rétroplanning de la vidéo':'Dès maintenant'],['plan','À planifier : rien ne compte encore'],...weeksOfQuarter(o.quarter||qKey(today())).map(m=>[m,`À partir de la semaine ${isoWeek(m).w} · du ${fmtD(m)}`])],hint:'Seuls les engagements prévus comptent : un objectif à planifier n’entre ni dans tes engagements, ni dans la Revue, ni dans le calcul du trimestre.'})}
   ${F('objectives',id,'videoId','Vidéo liée (facultatif)',{options:[['','— Aucune —'],...vids.map(v=>[v.id,v.title||'Sans titre'])],hint:'Ajoute un raccourci vers la fiche de la vidéo dans le Studio.'})}</section>
   <section><h3>Preuves</h3><div class="list">${krsOf(id).map(k=>`<button class="row" data-act="edit-kr" data-id="${k.id}">${av(krIcon(k),idColor(o.identityId),'sm',krTitle(k))}<span class="m"><span class="t">${esc(krTitle(k))}</span><span class="s">${quarterSub(k)}</span></span><span class="r"><b>${pctS(krProgress(k))}</b></span></button>`).join('')}</div>${addBtn('new-kr','Ajouter une preuve',`data-id="${id}"`)}</section>
   <section><div><button class="btn-sec" data-act="save-template" data-id="${id}">Enregistrer comme modèle</button></div></section>
@@ -2590,7 +2607,8 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   let doc=JSON.parse(JSON.stringify(clean(base)));setPath(doc,path,v);doc.updatedAt=nowIso();
   if(coll==='videos'&&path==='stage'&&base.stage!==v){doc.stageLog=[...(base.stageLog||[]),{stage:v,date:today()}];if(v==='publie'&&(!doc.publishDate||doc.publishDate>today()))doc.publishDate=today()}
   if(coll==='krs'&&path==='current')doc=withHistory(doc);
-  if(coll==='krs'&&path==='due'){const key=isoWeek(monday(today())).key,pl=S.data.plans[key];if(pl&&pl.targets&&pl.targets[id]!=null){const tg={...pl.targets};delete tg[id];put('plans',key,{...clean(pl),targets:tg})}}
+  if(coll==='krs'&&path==='due')dropPlanTargets([id]);
+  if(coll==='objectives'&&path==='startWeek')dropPlanTargets(krsOf(id).map(k=>k.id));
   if(coll==='habits'&&path==='identityId'&&v!==base.identityId)doc.identitySince=today();
   if(coll==='objectives'&&path==='videoId'&&v){const vid=S.data.videos[v];const t=S.data.templates[base.fromTemplate];const plain=(t&&t.objTitle)||'Vidéo';if(vid&&(!base.title||base.title.trim()===plain))doc.title=`${plain} ${vid.title||''}`.trim()}
   if(coll==='krs'&&path==='done')doc.doneAt=v?today():null;
@@ -2745,6 +2763,8 @@ const ACT={
   'hq-set':a=>{applyHabit(a.dataset.id,S.hday||today(),'target',+a.dataset.v);dismissSheet()},
   'hq-clear':a=>{applyHabit(a.dataset.id,S.hday||today(),'none',null);dismissSheet()},
   'habits-cfg':()=>openSheet('habits-cfg',null,null),
+  'obj-unplan':a=>{const o=S.data.objectives[a.dataset.id];if(!o)return;const prev=o.startWeek||'',ids=krsOf(o.id).map(k=>k.id);put('objectives',o.id,{...o,startWeek:'plan'});dropPlanTargets(ids);
+    toast(`« ${o.title||'Objectif'} » : à planifier`,{label:'Annuler',fn:()=>{const c=S.data.objectives[o.id];if(c){put('objectives',o.id,{...c,startWeek:prev});dropPlanTargets(ids)}}})},
   'habit-color':a=>{const h=S.data.habits[a.dataset.id];if(!h)return;put('habits',h.id,{...h,color:a.dataset.c});renderSheet()},
   'habit-mode':a=>{const h=S.data.habits[a.dataset.id];if(!h)return;const m=a.dataset.v;put('habits',h.id,{...h,mode:m,minEnabled:m==='tiers'});renderSheet()},
   'hday-set':a=>{applyHabit(a.dataset.id,S.hday||today(),a.dataset.v);dismissSheet()},

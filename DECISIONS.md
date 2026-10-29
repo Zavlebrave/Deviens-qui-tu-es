@@ -213,12 +213,25 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - Dans « Gérer », une poignée ⋮⋮ permet de glisser une habitude pour changer sa place, à la souris ou au doigt, ou avec les flèches haut et bas au clavier.
   - L'ordre est enregistré et suivi partout : tableau, Aujourd'hui, Revue.
 
+## Objectifs pas encore démarrés, quota hebdo au départ (29 octobre 2026)
+
+- **Démarrage d'un objectif**, dans sa fiche : « Dès maintenant » (ou selon le rétroplanning de sa vidéo), « À planifier », ou « À partir de la semaine N ».
+  - Un objectif à planifier ne compte nulle part : ni dans les engagements de la semaine, ni dans la Revue, ni dans le calcul du trimestre. Identités affiche « À planifier : objectif pas encore démarré ».
+  - Une semaine de début fait commencer ses quantités ce lundi-là.
+  - Dans le détail de « Ce qui a coincé », le bouton « Pas encore prévu » sur une preuve passe son objectif à planifier, avec « Annuler ».
+  - Changer le démarrage recalcule l'objectif figé de la semaine en cours pour ces preuves.
+- **Trimestre : seuls les engagements en cours comptent.**
+  - L'avance ou le retard en points et la courbe ne font la moyenne que des preuves déjà commencées au jour considéré. Ce sont les quantités dont la période a commencé, et les étapes prévues ou déjà faites.
+  - Une étape n'est attendue qu'une fois sa semaine prévue passée : elle ne crée pas de retard avant son échéance.
+- **« X fois par semaine » au départ** : quand le suivi commence en cours de semaine (création de l'habitude ou date de départ), le quota de cette semaine est ramené aux jours suivis. 5 fois par semaine avec un départ un jeudi donne 3 cette semaine-là. Ce quota s'applique au tableau, à Aujourd'hui, à la série, au taux et à la Revue.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Objectifs pas encore démarrés, quota hebdo au départ** : 26 vérifications automatisées (13 sur ordinateur, 13 sur téléphone), toutes réussies.
 - **Revue en synthèse, alertes, engagements planifiés, couleur et ordre des habitudes** : 48 vérifications automatisées (24 sur ordinateur, 24 sur téléphone), toutes réussies. Elles couvrent le glisser à la souris et le déplacement au clavier.
 - **Échéances des preuves et Revue par jour** : 40 vérifications automatisées (20 sur ordinateur, 20 sur téléphone), toutes réussies. Elles couvrent les échéances du rétroplanning et choisies, l'objectif et le rythme jusqu'à l'échéance, l'échéance dépassée, le départ en milieu de semaine, les fiches, les sous-titres par jour et par échéance, et Identités.
 - **« Ce qui a coincé » et « À améliorer » en parallèle** : 20 vérifications automatisées (10 sur ordinateur, 10 sur téléphone), toutes réussies.
