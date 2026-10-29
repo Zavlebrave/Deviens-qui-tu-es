@@ -145,6 +145,11 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - habitudes à tenir.
 
   Chaque ligne affiche son compte et ses noms. La déplier montre le détail de chaque piste avec « + Priorité ». L'état replié ou déplié est mémorisé sur l'appareil.
+- **« Ce qui a coincé » structuré de la même façon** (29 octobre) : mêmes catégories, dans le même ordre que « À améliorer ».
+  - Les catégories sont : preuves en retard, étapes pas encore faites, habitudes manquées.
+  - Chaque ligne repliée affiche un titre court, les noms concernés et son compte. Le détail apparaît au dépliage.
+  - Le trimestre est séparé : le constat (« 6 pts de retard », avec le fait et l'attendu) va dans « Ce qui a coincé », l'action (« mets l'accent sur… ») dans « À améliorer ».
+  - Les en-têtes précisent la période : « à ce jour » et « d'ici dimanche » en cours de semaine ; « sur la semaine » et « pour la semaine N » pour une semaine finie.
 - **Repartir de zéro** (Réglages) : une confirmation indique la date de départ (aujourd'hui), ce qui est gardé et ce qui est remis à zéro. L'app enregistre ensuite une sauvegarde complète : un fichier JSON, et une copie sur l'appareil, restaurable depuis « Tes données ». Puis elle remet à zéro tout ce qui a été saisi avant aujourd'hui.
   - **Remis à zéro** : cases d'habitudes et quantités, tâches et matins des jours précédents, revues et semaines sauvegardées, cibles hebdomadaires figées, anciennes justifications.
   - **Preuves** : quantités à 0, étapes décochées, historique de replanification effacé ; titres, cibles et semaines prévues gardés.
@@ -159,6 +164,7 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **« Ce qui a coincé » et « À améliorer » en parallèle** : 20 vérifications automatisées (10 sur ordinateur, 10 sur téléphone), toutes réussies.
 - **Justifications retirées, « À améliorer » par catégorie, Repartir de zéro** : 28 vérifications automatisées, toutes réussies. Elles couvrent le manqué toujours marqué, la série interrompue, les catégories repliées et « + Priorité ». Pour la remise à zéro : configuration gardée, saisies du jour gardées, preuves à zéro, dernière mesure, absence de retard au départ, sauvegarde, puis restauration complète.
 - **Type de preuve « Habitude » retiré** : 17 vérifications automatisées (migration avec historique intact, priorité du jour convertie, fiches, « Gérer », modèles, Identités), toutes réussies. Le parcours en ligne simulé confirme la suppression côté serveur (22 → 18 preuves).
 - **Habitudes en un geste, quantités et tableau compact** : 82 vérifications automatisées (41 sur ordinateur, 41 sur téléphone), plus 5 vérifications contre le Firebase simulé (quantité envoyée, modifiée, effacée, reçue d'un autre appareil). Toutes réussies.

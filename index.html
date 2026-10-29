@@ -999,6 +999,8 @@ button.hw-d:hover{background:var(--surface-2)}
 @container (min-width:820px){.hw-r{grid-template-columns:minmax(0,1fr) repeat(7,54px) 60px}}
 /* Revue : « À améliorer » par catégorie ; remise à zéro */
 .rv-cats{display:flex;flex-direction:column}
+.rv-when{font-size:13px;color:var(--faint);font-weight:500}
+.rv-top1{margin-bottom:0}.rv-top1+.rv-cats .rv-cat:first-child{border-top:1px solid var(--line)}
 .rv-cat{border-top:1px solid var(--line)}
 .rv-l+.rv-cats .rv-cat:first-child,.rv-cats .rv-cat:first-child{border-top:1px solid var(--line)}
 .rv-cats:first-child .rv-cat:first-child{border-top:0}
@@ -2031,45 +2033,51 @@ function weekInsights(mon){const t=today(),isCur=mon===monday(t),sun=addDays(mon
   const nb={};for(const k of weekProofs(mon)){const n=krTitle(k);nb[n]=(nb[n]||0)+1}
   for(const k of weekProofs(mon)){if(idPausedWeek(k.identityId,mon))continue;const kind=kindOf(k),tg=krWeekTarget(k,mon);if(!(tg>0))continue;
     const v=Math.max(0,krWeekValue(k,mon)),r=v/tg,ex=isCur?krWeekExpected(k,mon,t):1,e=ex==null?(isCur?0:1):ex,name=nb[krTitle(k)]>1&&(S.data.objectives[k.objectiveId]||{}).title?`${krTitle(k)} (${S.data.objectives[k.objectiveId].title})`:krTitle(k),u=kind==='qty'?(k.unit||''):'',it={ic:krIcon(k),col:idColor(k.identityId),t:name,n:name};
-    if(kind==='milestone'){if(r>=1)good.push({...it,s:'Étape franchie'});else{const late=k.week&&k.week<mon;bad.push({...it,kr:1,s:late?`En retard · prévue semaine ${isoWeek(k.week).w}`:isCur?'Prévue cette semaine, pas encore faite':'Prévue, pas faite',w:1});tips.push({...it,cat:'ms',d:isCur?'à finir d’ici dimanche':'à replanifier, ou réduire',t:isCur?`Termine « ${name} » d’ici dimanche`:`Replanifie « ${name} », ou réduis son périmètre`,p:`${isCur?'Finir':'Avancer'} : ${name}`,w:1})}continue}
+    if(kind==='milestone'){if(r>=1)good.push({...it,s:'Étape franchie'});else{const late=k.week&&k.week<mon;bad.push({...it,kr:1,cat:'ms',s:late?`En retard · prévue semaine ${isoWeek(k.week).w}`:isCur?'Prévue cette semaine, pas encore faite':'Prévue, pas faite',w:1});tips.push({...it,cat:'ms',d:isCur?'à finir d’ici dimanche':'à replanifier, ou réduire',t:isCur?`Termine « ${name} » d’ici dimanche`:`Replanifie « ${name} », ou réduis son périmètre`,p:`${isCur?'Finir':'Avancer'} : ${name}`,w:1})}continue}
     const val=`${fmtN(v)} / ${per(tg,u)}`;
     if(r>=1){good.push({...it,s:`${val} · cible atteinte`});continue}
     if(isCur&&ex==null)continue;
     if(isCur&&r>=e+0.1){good.push({...it,s:`${val} · en avance sur le rythme`});continue}
     if(isCur&&r>=e-0.05)continue;
-    bad.push({...it,kr:1,s:`${val}${isCur?` · attendu ${fmtN(Math.round(e*tg*10)/10)} à ce jour`:''}`,w:isCur?e-r:1-r});
+    bad.push({...it,kr:1,cat:'qty',s:`${val}${isCur?` · attendu ${fmtN(Math.round(e*tg*10)/10)} à ce jour`:''}`,w:isCur?e-r:1-r});
     const rest=Math.round((tg-v)*10)/10;
     if(isCur)tips.push({...it,cat:'qty',d:kind==='qty'&&daysLeft>1?`encore ${per(rest,u)}, soit ${per(Math.ceil(rest/daysLeft*10)/10,u)} par jour`:`encore ${per(rest,u)}`,t:kind==='qty'&&daysLeft>1?`${name} : encore ${per(rest,u)}, soit ${per(Math.ceil(rest/daysLeft*10)/10,u)} par jour d’ici dimanche`:`${name} : encore ${per(rest,u)} d’ici dimanche`,p:`${name} : ${per(rest,u)} d’ici dimanche`,w:e-r});
     else{const nt=krWeekTarget(k,addDays(mon,7));tips.push({...it,cat:'qty',d:nt>0?`vise ${per(nt,u)}${kind==='qty'?', rattrapage inclus':''}`:'à reprendre',t:nt>0?`${name} : vise ${per(nt,u)} la semaine prochaine${kind==='qty'?' (rattrapage inclus)':''}`:`${name} : à reprendre la semaine prochaine`,p:`${name} : ${per(nt>0?nt:tg,u)}`,w:1-r})}}
   for(const h of trackerHabits()){if(hStart(h)>sun)continue;const it={ic:h.icon,col:habitColor(h),t:h.name||'Habitude',n:h.name||'Habitude'},a=maxD(mon,hStart(h));
     if(freqOf(h)==='weekly'){const c=habitCount(h.id,mon,upto)+minCount(h.id,mon,upto),pw=h.perWeek||3;if(c>=pw)good.push({...it,s:`${c} / ${pw} cette semaine · objectif atteint`});
-      else if(!isCur){bad.push({...it,s:`${c} / ${pw} cette semaine`,w:1-c/pw});tips.push({...it,cat:'hab',d:`vise ${Math.min(pw,c+1)} sur ${pw}`,t:`${it.t} : vise ${Math.min(pw,c+1)} sur ${pw} la semaine prochaine`,p:`${it.t} : ${Math.min(pw,c+1)} fois`,w:1-c/pw})}
+      else if(!isCur){bad.push({...it,cat:'hab',s:`${c} / ${pw} cette semaine`,w:1-c/pw});tips.push({...it,cat:'hab',d:`vise ${Math.min(pw,c+1)} sur ${pw}`,t:`${it.t} : vise ${Math.min(pw,c+1)} sur ${pw} la semaine prochaine`,p:`${it.t} : ${Math.min(pw,c+1)} fois`,w:1-c/pw})}
       else if(pw-c>=daysLeft&&pw>c)tips.push({...it,cat:'hab',d:`encore ${pw-c}, sans jour de repos`,t:`${it.t} : encore ${pw-c} d’ici dimanche, sans jour de repos`,p:`${it.t} : ${pw-c} fois d’ici dimanche`,w:.5});continue}
     const lim=isCur?addDays(t,-1):sun;let exp=0,ok=0,miss=0;for(let d=a;d<=lim;d=addDays(d,1)){if(!fixedOn(h,d))continue;exp++;if(habitState(h.id,d)!=='none')ok++;else miss++}
     if(isCur&&habitState(h.id,t)!=='none'&&fixedOn(h,t)){exp++;ok++}
     if(!exp)continue;const st=streakOf(h);
     if(!miss){if(ok===exp)good.push({...it,s:`${ok} / ${exp}${st.n>=3?` · 🔥 ${st.n} ${st.unit}`:''}`});continue}
-    bad.push({...it,s:`${ok} / ${exp} · ${miss} manqué${miss>1?'s':''}`,w:miss/exp});
+    bad.push({...it,cat:'hab',s:`${ok} / ${exp} · ${miss} manqué${miss>1?'s':''}`,w:miss/exp});
     if(isCur){let rem=0;for(let d=t;d<=sun;d=addDays(d,1))if(fixedOn(h,d)&&habitState(h.id,d)==='none')rem++;if(rem)tips.push({...it,cat:'hab',d:rem>1?`${rem} jours prévus restants`:'1 jour prévu restant',t:`${it.t} : ${rem>1?`les ${rem} prochains jours prévus`:'le prochain jour prévu'}, sans en rater`,p:`${it.t} : ne plus rater`,w:miss/exp})}
     else{const nx=occurrences(h,addDays(mon,7),addDays(mon,13));if(nx){const goal=Math.min(nx,Math.ceil(ok/exp*nx)+1);tips.push({...it,cat:'hab',d:`vise ${goal} sur ${nx} (cette semaine ${ok} sur ${exp})`,t:`${it.t} : vise ${goal} sur ${nx} la semaine prochaine (cette semaine ${ok} sur ${exp})`,p:`${it.t} : ${goal} sur ${nx}`,w:miss/exp})}}}
   if(isCur){const q=weekQuarter(mon),sm=qSummary(q);if(sm.krs.length){const pts=Math.round((sm.actual-sm.expected)*100);
     if(pts>=3)good.unshift({ic:'i:chart',col:'#52E397',t:`Trimestre : ${pts} pts d’avance sur le rythme`,s:`${pctS(sm.actual)} fait, ${pctS(sm.expected)} attendu à date`});
-    else if(pts<=-3){const top=bad.filter(x=>x.kr&&x.w>0).sort((a,b)=>b.w-a.w).slice(0,2).map(x=>x.t);tips.unshift({cat:'q',ic:'i:chart',col:'#F99A45',t:`Trimestre : ${-pts} pts de retard sur le rythme${top.length?`. Mets l’accent sur ${top.join(' et ')}`:''}`,w:9})}}}
+    else if(pts<=-3){const top=bad.filter(x=>x.kr&&x.w>0).sort((a,b)=>b.w-a.w).slice(0,2).map(x=>x.t);bad.push({cat:'q',ic:'i:chart',col:'#F99A45',t:`Trimestre : ${-pts} pts de retard sur le rythme`,s:`${pctS(sm.actual)} fait, ${pctS(sm.expected)} attendu à date`,w:9});
+      if(top.length)tips.unshift({cat:'q',ic:'i:chart',col:'#F99A45',t:`Trimestre : mets l’accent sur ${top.join(' et ')}`,w:9})}}}
   const st=weekStats(mon);if(st.focusMin)good.push({ic:'i:clock',col:'#7FA0FF',t:`${fmtMin(st.focusMin)} de travail concentré`,s:`${st.priosDone} priorité${st.priosDone>1?'s':''} du jour accomplie${st.priosDone>1?'s':''} sur ${st.priosTotal}`});
   return{good,bad:bad.sort((a,b)=>b.w-a.w),tips:tips.sort((a,b)=>b.w-a.w)}}
 /* Tableau des habitudes de la semaine, en lecture seule */
 function habitWeekGrid(mon){const tb=habitTable(mon,false);
   if(!tb)return '<p class="empty">Aucune habitude. Crée-en une dans l’onglet Habitudes : elle apparaîtra ici.</p>';return tb+hwLegend()}
-/* « À améliorer » : le trimestre en une ligne, puis une ligne repliée par catégorie (preuves, étapes, habitudes)
-   avec son compte et ses noms ; le détail et « + Priorité » apparaissent au dépliage */
-function tipsByCat(tips,key,isCur,nextW){if(!tips.length)return `<p class="empty">${isCur?'Tu es dans le rythme : continue comme ça.':'Aucune piste : garde le même rythme la semaine prochaine.'}</p>`;
-  const CAT=[['qty',isCur?'Preuves à rattraper d’ici dimanche':'Preuves à reprendre la semaine prochaine','i:target','#7FA0FF'],['ms',isCur?'Étapes à finir d’ici dimanche':'Étapes à replanifier','i:flag','#F99A45'],['hab',isCur?'Habitudes à tenir jusqu’à dimanche':'Habitudes : la marche de la semaine prochaine','i:repeat','#52E397']];
-  const plus=x=>x.p?`<button class="pill-mini" data-act="rv-tip" data-key="${key}" data-text="${esc(x.p)}" aria-label="Ajouter « ${esc(x.p)} » à tes priorités de la semaine ${nextW}">+ Priorité</button>`:'';
-  const q=tips.filter(x=>x.cat==='q').map(x=>`<li>${av(x.ic,x.col,'xs',x.t)}<span class="m"><span class="tt">${esc(x.t)}</span></span></li>`).join('');
-  const gs=CAT.map(([c,l,ic,col])=>{const xs=tips.filter(x=>x.cat===c);if(!xs.length)return '';
-    return `<details class="rv-cat" data-fold="rvc-${c}" ${S.fold['rvc-'+c]?'open':''}><summary>${av(ic,col,'xs',l)}<span class="m"><b>${esc(l)}</b><span class="nm">${esc(xs.map(x=>x.n||x.t).join(', '))}</span></span><span class="n" aria-label="${xs.length} élément${xs.length>1?'s':''}">${xs.length}</span><span class="chev" aria-hidden="true">${ICON.chevD}</span></summary>
-      <ul class="rv-l">${xs.map(x=>{const nm=x.n||x.t;return `<li>${av(x.ic,x.col,'xs',nm)}<span class="m"><b>${esc(nm)}</b>${x.d?`<span>${esc(x.d)}</span>`:''}</span>${plus(x)}</li>`}).join('')}</ul></details>`}).join('');
-  return `${q?`<ul class="rv-l">${q}</ul>`:''}<div class="rv-cats">${gs}</div>`}
+/* « Ce qui a coincé » et « À améliorer » suivent les mêmes catégories, dans le même ordre : preuves, étapes, habitudes.
+   Le trimestre tient en une ligne en tête. Chaque catégorie est une ligne repliée (nom court, noms concernés, compte) ;
+   le détail apparaît au dépliage, avec « + Priorité » côté « À améliorer ». */
+const RV_CAT=[['qty','i:target','#7FA0FF'],['ms','i:flag','#F99A45'],['hab','i:repeat','#52E397']];
+function rvCats(items,mode,key,isCur,nextW){const tips=mode==='tips';
+  if(!items.length)return `<p class="empty">${tips?(isCur?'Tu es dans le rythme : continue comme ça.':'Aucune piste : garde le même rythme la semaine prochaine.'):(isCur?'Rien en retard sur le rythme pour l’instant.':'Rien n’a coincé : bravo.')}</p>`;
+  const L=tips?{qty:isCur?'Preuves à rattraper':'Preuves à reprendre',ms:isCur?'Étapes à finir':'Étapes à replanifier',hab:isCur?'Habitudes à tenir':'Habitudes à relancer'}
+    :{qty:'Preuves en retard',ms:isCur?'Étapes pas encore faites':'Étapes non faites',hab:'Habitudes manquées'};
+  const plus=x=>tips&&x.p?`<button class="pill-mini" data-act="rv-tip" data-key="${key}" data-text="${esc(x.p)}" aria-label="Ajouter « ${esc(x.p)} » à tes priorités de la semaine ${nextW}">+ Priorité</button>`:'';
+  const known=RV_CAT.map(c=>c[0]),top=items.filter(x=>x.cat==='q'||!known.includes(x.cat));
+  const line=x=>`<li>${av(x.ic,x.col,'xs',x.t)}<span class="m">${tips?`<span class="tt">${esc(x.t)}</span>`:`<b>${esc(x.t)}</b>${x.s?`<span>${esc(x.s)}</span>`:''}`}</span>${plus(x)}</li>`;
+  const gs=RV_CAT.map(([c,ic,col])=>{const xs=items.filter(x=>x.cat===c);if(!xs.length)return '';const l=L[c],f=(tips?'rvc-':'rvb-')+c;
+    return `<details class="rv-cat" data-fold="${f}" ${S.fold[f]?'open':''}><summary>${av(ic,col,'xs',l)}<span class="m"><b>${esc(l)}</b><span class="nm">${esc(xs.map(x=>x.n||x.t).join(', '))}</span></span><span class="n" aria-label="${xs.length} élément${xs.length>1?'s':''}">${xs.length}</span><span class="chev" aria-hidden="true">${ICON.chevD}</span></summary>
+      <ul class="rv-l">${xs.map(x=>{const nm=x.n||x.t,d=tips?x.d:x.s;return `<li>${av(x.ic,x.col,'xs',nm)}<span class="m"><b>${esc(nm)}</b>${d?`<span>${esc(d)}</span>`:''}</span>${plus(x)}</li>`}).join('')}</ul></details>`}).join('');
+  return `${top.length?`<ul class="rv-l rv-top1">${top.map(line).join('')}</ul>`:''}<div class="rv-cats">${gs}</div>`}
 function viewReview(){
   const mon=S.reviewWeek,sun=addDays(mon,6),wk=isoWeek(mon),key=wk.key,rev=S.data.reviews[key]||{},t=today(),isCur=mon===monday(t),past=mon<monday(t);
   const ws=weekStats(mon),sm=weekSummary(mon),pm=weekSummary(addDays(mon,-7)),ins=weekInsights(mon),nSaved=savedWeeks().length,wm=weekMood(mon),nextW=isoWeek(addDays(mon,7)).w;
@@ -2090,8 +2098,8 @@ function viewReview(){
     ${sm.score==null?'':lineChart('rv',{xs:days,act:days.map(d=>d>t?null:weekScoreAt(mon,d)),exp:days.map(d=>weekExpectedAt(mon,d)),fmtX:d=>parse(d).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'short'}),live:isCur})}</section>
   <div class="rv-3">
     <section class="sec rv-b good"><div class="sec-h"><h2><span class="rv-i">${ICON.okc}</span>Ce qui a bien marché</h2>${ins.good.length?`<span class="cnt">${ins.good.length}</span>`:''}</div>${list(ins.good,'good',isCur?'Rien de terminé pour l’instant : la semaine continue.':'Rien de marquant cette semaine.')}</section>
-    <section class="sec rv-b bad"><div class="sec-h"><h2><span class="rv-i">${ICON.alert}</span>Ce qui a coincé</h2>${ins.bad.length?`<span class="cnt">${ins.bad.length}</span>`:''}</div>${list(ins.bad,'bad',isCur?'Rien en retard sur le rythme pour l’instant.':'Rien n’a coincé : bravo.')}</section>
-    <section class="sec rv-b tips"><div class="sec-h"><h2><span class="rv-i">${picSvg('target')}</span>À améliorer</h2></div>${tipsByCat(ins.tips,key,isCur,nextW)}</section>
+    <section class="sec rv-b bad"><div class="sec-h"><h2><span class="rv-i">${ICON.alert}</span>Ce qui a coincé</h2><span class="rv-when">${isCur?'à ce jour':'sur la semaine'}</span></div>${rvCats(ins.bad,'bad',key,isCur,nextW)}</section>
+    <section class="sec rv-b tips"><div class="sec-h"><h2><span class="rv-i">${picSvg('target')}</span>À améliorer</h2><span class="rv-when">${isCur?'d’ici dimanche':`pour la semaine ${nextW}`}</span></div>${rvCats(ins.tips,'tips',key,isCur,nextW)}</section>
   </div>
   <div class="cols">
     <section class="sec"><div class="sec-h"><h2>Habitudes de la semaine</h2><button class="act" data-act="tab" data-tab="habits">Habitudes</button></div>${habitWeekGrid(mon)}</section>
