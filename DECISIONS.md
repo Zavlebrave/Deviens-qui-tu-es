@@ -158,12 +158,42 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - **Date de départ** : enregistrée dans les réglages. Avant elle, aucune habitude n'est attendue ni manquée. Le rythme attendu des preuves démarre ce jour-là, sans retard au départ, et les semaines précédentes ne sont pas sauvegardées automatiquement.
   - La remise à zéro est un bouton plutôt qu'une action automatique : elle part du compte connecté sur ton appareil, au moment choisi, avec la sauvegarde téléchargée sur cet appareil.
 
+## Échéances des preuves et Revue par jour (29 octobre 2026)
+
+- **Échéance d'une preuve**, de la plus forte à la plus faible :
+  1. la date choisie dans sa fiche (Quantité : champ « Échéance ») ou sa semaine prévue (Étape) ;
+  2. sinon, pour un objectif lié à une vidéo, la fin de la phase du rétroplanning qui correspond à son nom :
+     - script, intro, plan → fin du plan et script ;
+     - montage → fin du montage ;
+     - titre, miniature → titre et miniature ;
+     - voix → enregistrement ;
+     - recherche, problématiques → recherche ;
+     - angle, promesse → angle ;
+     - publication → date de publication.
+  3. sinon la fin du trimestre (Quantité). Une étape sans semaine ni rétroplanning reste « À planifier ».
+- **Calculs** :
+  - Le rythme attendu et l'objectif par semaine d'une quantité visent son échéance. Une échéance cette semaine fait de tout le reste l'objectif de la semaine.
+  - Échéance passée sans avoir fini : tout le reste est attendu, et l'objectif de chaque semaine suivante est tout le reste.
+  - Une étape sans semaine prend celle de son échéance du rétroplanning (« Prévue sem. 46 (rétroplanning) »).
+  - Changer l'échéance recalcule l'objectif figé de la semaine en cours pour cette preuve.
+  - Le rythme attendu d'une semaine commence au premier jour suivi (date de départ ou de création). Un départ un jeudi n'attend donc pas 4 jours sur 7 dès le premier jour.
+- **Affichage** :
+  - La fiche d'une Quantité indique la date retenue et sa source.
+  - La fiche d'une Étape propose « Selon le rétroplanning : semaine N ».
+  - Identités affiche l'échéance d'une quantité quand ce n'est pas la fin du trimestre.
+- **Revue, regroupée par jour** à l'intérieur de chaque catégorie dépliée :
+  - **Habitudes** : un sous-titre par jour (« Lundi 26 », « Hier · mercredi 28 », « Aujourd'hui · jeudi 29 »). Les habitudes concernées sont en pastilles : manquées ce jour-là dans « Ce qui a coincé », encore prévues dans « À améliorer ». Une habitude « X fois par semaine » est sous « Cette semaine ».
+  - **Preuves et étapes**, côté « Ce qui a coincé » : regroupées par échéance (« Échéance passée · mardi 27 », « Échéance · samedi 31 »). Les échéances au-delà de dimanche sont réunies sous « Échéance plus tard », avec la date sous chaque preuve.
+  - **Preuves et étapes**, côté « À améliorer » : regroupées par date avant laquelle agir (« En retard · échéance mardi 27 », « Avant samedi 31 », « Avant dimanche 1 »). La quantité par jour est calculée jusqu'à cette date, et une échéance plus lointaine est rappelée sous la preuve.
+  - En retard sur le trimestre, « mets l'accent sur » cite d'abord les preuves à l'échéance la plus proche.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Échéances des preuves et Revue par jour** : 40 vérifications automatisées (20 sur ordinateur, 20 sur téléphone), toutes réussies. Elles couvrent les échéances du rétroplanning et choisies, l'objectif et le rythme jusqu'à l'échéance, l'échéance dépassée, le départ en milieu de semaine, les fiches, les sous-titres par jour et par échéance, et Identités.
 - **« Ce qui a coincé » et « À améliorer » en parallèle** : 20 vérifications automatisées (10 sur ordinateur, 10 sur téléphone), toutes réussies.
 - **Justifications retirées, « À améliorer » par catégorie, Repartir de zéro** : 28 vérifications automatisées, toutes réussies. Elles couvrent le manqué toujours marqué, la série interrompue, les catégories repliées et « + Priorité ». Pour la remise à zéro : configuration gardée, saisies du jour gardées, preuves à zéro, dernière mesure, absence de retard au départ, sauvegarde, puis restauration complète.
 - **Type de preuve « Habitude » retiré** : 17 vérifications automatisées (migration avec historique intact, priorité du jour convertie, fiches, « Gérer », modèles, Identités), toutes réussies. Le parcours en ligne simulé confirme la suppression côté serveur (22 → 18 preuves).
