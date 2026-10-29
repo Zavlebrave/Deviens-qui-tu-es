@@ -225,12 +225,34 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - Une étape n'est attendue qu'une fois sa semaine prévue passée : elle ne crée pas de retard avant son échéance.
 - **« X fois par semaine » au départ** : quand le suivi commence en cours de semaine (création de l'habitude ou date de départ), le quota de cette semaine est ramené aux jours suivis. 5 fois par semaine avec un départ un jeudi donne 3 cette semaine-là. Ce quota s'applique au tableau, à Aujourd'hui, à la série, au taux et à la Revue.
 
+## Lancement d'une identité, bonus, chiffres des habitudes (29 octobre 2026)
+
+- **Lancement**, dans la fiche d'une identité : « Dès maintenant », un lundi prévu (« Le lundi 2 nov. »), ou « À lancer moi-même ». Le bouton « Lancer maintenant » lance l'identité le jour même.
+  - Avant le lancement, aucune preuve de l'identité n'est attendue : ni engagements de la semaine, ni Revue, ni calcul du trimestre.
+  - Une étape prévue avant le lancement passe à la semaine du lancement.
+  - Le démarrage de l'objectif s'ajoute à celui de l'identité : la date la plus tardive l'emporte, et « à planifier » l'emporte sur tout.
+- **Bonus** : ce qui est fait avant le lancement compte en bonus. Il avance l'objectif du trimestre et réduit les objectifs des semaines suivantes.
+  - Identités affiche « 1 en bonus » sur la preuve.
+  - La Revue dit « Semaine de lancement pour « Boxe amateur » : rien n'est attendu, tout compte en bonus », puis « En bonus : 1 séance pour… », avec une catégorie « Bonus avant lancement » dans le détail.
+- **Signalé** :
+  - Identités : badge « Lancement le 2 nov. » ou « À lancer », et un bandeau avec « Lancer maintenant ».
+  - Aujourd'hui et Revue : « Lancement le 2 nov. » à la place du taux.
+- **Première semaine partielle** (lancement, départ ou phase qui commence en cours de semaine) : l'objectif de la semaine d'une quantité est ramené aux jours restants.
+- **Habitudes, chiffres compréhensibles** :
+  - Le grand chiffre devient « Habitudes tenues cette semaine », avec « 4 faites sur 9 prévues jusqu'ici ».
+  - Une habitude « X fois par semaine » ne compte, dans la semaine en cours, que lorsqu'elle est faite. Elle n'abaisse donc pas le taux avant dimanche.
+  - La courbe est expliquée sous elle (« jour par jour, la part des habitudes prévues que tu as faites »).
+  - Glisser sur la courbe affiche « Habitudes tenues ce jour-là » et « jeudi 29 octobre : 1 faite sur 3 prévues ».
+  - Un jour compte les habitudes prévues ce jour-là ; une « X fois par semaine » n'y compte que si elle est faite ce jour-là.
+- **Unités** : une unité saisie au pluriel passe au singulier pour 1 (« 1 séance », « 1 mot »).
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Lancement d'une identité, bonus, chiffres des habitudes** : 40 vérifications automatisées (20 sur ordinateur, 20 sur téléphone), toutes réussies.
 - **Objectifs pas encore démarrés, quota hebdo au départ** : 26 vérifications automatisées (13 sur ordinateur, 13 sur téléphone), toutes réussies.
 - **Revue en synthèse, alertes, engagements planifiés, couleur et ordre des habitudes** : 48 vérifications automatisées (24 sur ordinateur, 24 sur téléphone), toutes réussies. Elles couvrent le glisser à la souris et le déplacement au clavier.
 - **Échéances des preuves et Revue par jour** : 40 vérifications automatisées (20 sur ordinateur, 20 sur téléphone), toutes réussies. Elles couvrent les échéances du rétroplanning et choisies, l'objectif et le rythme jusqu'à l'échéance, l'échéance dépassée, le départ en milieu de semaine, les fiches, les sous-titres par jour et par échéance, et Identités.

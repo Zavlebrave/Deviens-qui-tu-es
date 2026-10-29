@@ -1044,6 +1044,11 @@ button.hw-d:hover{background:var(--surface-2)}
 .drag:hover,.drag:focus-visible{color:var(--fg);background:var(--surface-2)}
 .dg-row.dragging{z-index:5;transition:none;background:var(--surface-2);box-shadow:0 10px 28px rgba(0,0,0,.5)}
 .dg-row.dragging .drag{cursor:grabbing}
+.badge.lnch{background:var(--accent-bg);color:var(--accent-2)}
+.lnch-b{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px;padding:12px 14px;border-radius:14px;background:var(--accent-bg);box-shadow:inset 3px 0 0 var(--accent)}
+.lnch-b>span{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 240px;font-size:14px;color:var(--muted)}
+.lnch-b b{color:var(--fg);font-size:15px}
+.hab-cap{margin:2px 0 14px}
 .howto.rz{box-shadow:inset 3px 0 0 var(--neg)}
 .btn.btn-warn{background:var(--neg);color:#fff}.btn.btn-warn:hover{filter:brightness(1.08)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -1319,9 +1324,9 @@ function krSpan(kr){const{start,end}=qRange(krQuarter(kr));const c0=(kr.createdA
   // une quantité vise son échéance : le rythme attendu et la cible par semaine se calculent jusqu'à elle
   // quantité liée à une vidéo : engagement seulement pendant sa phase du rétroplanning ; vidéo sans date : pas encore d'engagement
   // objectif à planifier : rien ne compte ; semaine de début choisie : l'engagement commence ce lundi-là
-  let e=end;if(kindOf(kr)==='qty'){const du=krDue(kr),o=krObj(kr),ow=objWeek(o);
-    if(objPlan(o)||(du&&du.src==='pending'))s=addDays(end,1);
-    else{if(ow){if(ow>s)s=ow}else if(du&&du.src==='retro'){const r=retroOf(kr);if(r&&r.s>s)s=r.s}if(du&&du.d<e)e=du.d<s?s:du.d}}
+  let e=end;if(kindOf(kr)==='qty'){const du=krDue(kr),st=krStartOf(kr);
+    if(st==='plan'||(du&&du.src==='pending'))s=addDays(end,1);
+    else{if(du&&du.src==='retro'&&!objWeek(krObj(kr))){const r=retroOf(kr);if(r&&r.s>s)s=r.s}if(st&&st>s)s=st;if(du&&du.d<e)e=du.d<s?s:du.d}}
   if(e<s)e=s;return{qs:start,s,e,qe:end}}
 /* Échéance d'une preuve : la date saisie dans sa fiche (quantité) ou sa semaine prévue (étape) ; sinon, pour un objectif lié
    à une vidéo, la fin de la phase du rétroplanning qui correspond à son nom ; sinon la fin du trimestre (quantité). */
@@ -1338,7 +1343,14 @@ function retroOf(kr){if(dueMemo.ver!==S.ver)dueMemo={ver:S.ver,m:{}};if(kr.id in
 const krObj=kr=>S.data.objectives[kr.objectiveId];
 const objPlan=o=>!!o&&o.startWeek==='plan';
 const objWeek=o=>o&&o.startWeek&&o.startWeek!=='plan'?o.startWeek:'';
-const msWeek=kr=>objPlan(krObj(kr))?'':kr.week||(r=>r&&r.d?monday(r.d):'')(retroOf(kr));
+/* Lancement d'une identité : « Dès maintenant », une date prévue, ou « À lancer » (rien ne compte avant « Lancer maintenant »).
+   Avant le lancement, rien n'est attendu : ce qui est fait compte en bonus et avance les objectifs du trimestre. */
+const idLaunch=i=>(i&&i.launch)||'';
+const idNotLaunched=(i,d)=>{const l=idLaunch(i);return l==='plan'||(!!l&&l>(d||today()))};
+const launchTxt=i=>{const l=idLaunch(i);return l==='plan'?'À lancer':`Lancement le ${fmtD(l)}`};
+function krStartOf(kr){const o=krObj(kr),i=idOf((o&&o.identityId)||kr.identityId),il=idLaunch(i),ow=(o&&o.startWeek)||'';
+  if(il==='plan'||ow==='plan')return 'plan';return il>ow?il:ow}
+const msWeek=kr=>{const st=krStartOf(kr);if(st==='plan')return '';const w=kr.week||(r=>r&&r.d?monday(r.d):'')(retroOf(kr));return w&&st&&w<monday(st)?monday(st):w};
 /* Une preuve compte au jour d : quantité dont la période a commencé ; étape prévue cette semaine-là ou avant, ou déjà faite */
 const engagedBy=(k,d)=>{if(kindOf(k)==='milestone'){if(k.done&&k.doneAt<=d)return true;const w=msWeek(k);return !!w&&w<=d}return krSpan(k).s<=d};
 function krDue(kr){const ms=kindOf(kr)==='milestone';
@@ -1401,7 +1413,7 @@ function krWeekTarget(kr,mon){const k=kindOf(kr);const sun=addDays(mon,6);const{
   return 0}
 /* Cible hebdomadaire figée (F13) : calculée au début de la semaine pour chaque quantité, puis conservée dans « plans ».
    Les saisies font avancer le réalisé sans déplacer la cible ; le reste à faire est recalculé la semaine suivante. */
-function qtyAutoTarget(kr,mon){const{qs,s,e,qe}=krSpan(kr);const sun=addDays(mon,6);if(sun<s||mon>qe)return 0;const before=sumLog(kr.log,qs,addDays(mon,-1));const rem=Math.max(0,krTarget(kr)-before);if(mon>e)return rem;const wl=Math.max(1,Math.ceil((diffDays(maxD(mon,s),e)+1)/7));return Math.ceil(rem/wl)}
+function qtyAutoTarget(kr,mon){const{qs,s,e,qe}=krSpan(kr);const sun=addDays(mon,6);if(sun<s||mon>qe)return 0;const before=sumLog(kr.log,qs,addDays(mon,-1));const rem=Math.max(0,krTarget(kr)-before);if(mon>e)return rem;const a=maxD(mon,s),wl=Math.max(1,Math.ceil((diffDays(a,e)+1)/7));if(a>mon)return Math.ceil(rem/wl*Math.min(1,(diffDays(a,minD(sun,e))+1)/7));return Math.ceil(rem/wl)}
 /* Une date qui change (échéance, démarrage) recalcule l'objectif figé de la semaine en cours pour ces preuves */
 function dropPlanTargets(ids){const key=isoWeek(monday(today())).key,pl=S.data.plans[key];if(!pl||!pl.targets)return;const tg={...pl.targets};let n=0;for(const id of ids)if(tg[id]!=null){delete tg[id];n++}if(n)put('plans',key,{...clean(pl),targets:tg})}
 function ensurePlan(){if(!ready())return;const mon=monday(today()),key=isoWeek(mon).key;const pl=S.data.plans[key];const tg={...((pl&&pl.targets)||{})};let add=0;
@@ -1437,17 +1449,17 @@ function milestoneTag(kr,mon){const sun=addDays(mon,6);
   return `<span class="tag mut">Prévue sem. ${isoWeek(w).w}${rt}</span>`}
 function weekSub(kr,mon){const k=kindOf(kr);
   if(k==='habit'){const h=habitOf(kr);if(!h)return 'Habitude pas encore activée';return mon===monday(today())?`${esc(freqLabel(h))} · ${dueTxt(h)}`:esc(freqLabel(h))}
-  if(k==='qty'){const dl=targetDelta(kr,mon),du=krDue(kr),sp=krSpan(kr);if(objPlan(krObj(kr)))return 'À planifier : objectif pas encore démarré';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>addDays(mon,6))return `À partir du ${fmtD(sp.s)}${objWeek(krObj(kr))?'':' (rétroplanning)'}`;return `${dl?esc(dl)+' · ':''}${du&&du.src!=='q'?`échéance ${fmtD(du.d)} · `:''}trimestre ${fmtN(krValue(kr))} / ${fmtN(krTarget(kr))} ${esc(kr.unit||'')}`}
+  if(k==='qty'){const dl=targetDelta(kr,mon),du=krDue(kr),sp=krSpan(kr);if(krStartOf(kr)==='plan')return objPlan(krObj(kr))?'À planifier : objectif pas encore démarré':'À lancer : identité pas encore lancée';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>addDays(mon,6))return `À partir du ${fmtD(sp.s)}${(r=>r&&r.s===sp.s)(retroOf(kr))?' (rétroplanning)':''}`;return `${dl?esc(dl)+' · ':''}${du&&du.src!=='q'?`échéance ${fmtD(du.d)} · `:''}trimestre ${fmtN(krValue(kr))} / ${fmtN(krTarget(kr))} ${esc(kr.unit||'')}`}
   if(k==='milestone')return milestoneTag(kr,mon);
   if(k==='videos')return 'Automatique · Studio';
   return `Niveau ${fmtN(kr.current)} ${esc(kr.unit||'')} · objectif ${fmtN(krTarget(kr))}`}
 function quarterSub(kr){const k=kindOf(kr);
   if(k==='habit'){const h=habitOf(kr);return h?esc(freqLabel(h)):'Aucune habitude liée'}
-  if(k==='qty'){const du=krDue(kr),sp=krSpan(kr);if(objPlan(krObj(kr)))return 'À planifier : objectif pas encore démarré';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>today())return `À partir du ${fmtD(sp.s)}${objWeek(krObj(kr))?'':' (rétroplanning)'} · échéance ${fmtD(du.d)}`;return `${fmtN(krWeekTarget(kr,monday(today())))} ${esc(kr.unit||'')} / semaine pour tenir${du&&du.src!=='q'?` · échéance ${fmtD(du.d)}`:''}`}
+  if(k==='qty'){const du=krDue(kr),sp=krSpan(kr);if(krStartOf(kr)==='plan')return objPlan(krObj(kr))?'À planifier : objectif pas encore démarré':'À lancer : identité pas encore lancée';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>today())return `À partir du ${fmtD(sp.s)}${(r=>r&&r.s===sp.s)(retroOf(kr))?' (rétroplanning)':''} · échéance ${fmtD(du.d)}`;return `${fmtN(krWeekTarget(kr,monday(today())))} ${esc(kr.unit||'')} / semaine pour tenir${du&&du.src!=='q'?` · échéance ${fmtD(du.d)}`:''}`}
   if(k==='milestone'){const w=msWeek(kr);return kr.done?`Faite le ${fmtD(kr.doneAt)}`:w?`Prévue sem. ${isoWeek(w).w}${kr.week?'':' (rétroplanning)'}`:'À planifier'}
   if(k==='videos')return 'Automatique · Studio';
   return `${esc(kr.unit||'Niveau')} · départ ${fmtN(krStart(kr))}`}
-function weekVal(k,mon){const kind=kindOf(k);if(kind==='milestone')return k.done&&k.doneAt<=addDays(mon,6)?'Faite':'À faire';if(kind==='level')return signed(krWeekValue(k,mon),k.unit||'');return `${fmtN(krWeekValue(k,mon))} / ${fmtN(krWeekTarget(k,mon))}`}
+function weekVal(k,mon){const kind=kindOf(k);if(kind==='milestone')return k.done&&k.doneAt<=addDays(mon,6)?'Faite':'À faire';if(kind==='level')return signed(krWeekValue(k,mon),k.unit||'');const v=krWeekValue(k,mon),tg=krWeekTarget(k,mon);if(!(tg>0))return v>0?`${fmtN(v)} en bonus`:'—';return `${fmtN(v)} / ${fmtN(tg)}`}
 const editAttr=k=>k.virtual?`data-act="edit-habit" data-id="${k.habitId}"`:`data-act="edit-kr" data-id="${k.id}"`;
 /* Engagements d'un trimestre : les preuves des objectifs, plus les habitudes d'entretien, rattachées à une identité
    sans objectif (F07). Une habitude sans identité reste un suivi indépendant, hors du taux d'engagements. */
@@ -1558,10 +1570,12 @@ function streakTxt(h){const x=streakOf(h);return `🔥 ${x.n} ${x.unit}`}
 function rate30Txt(h){const t=today();const a=maxD(addDays(t,-29),hStart(h));const exp=occurrences(h,a,t);if(!exp)return '30 derniers jours : rien de prévu';const c=habitCount(h.id,a,t),mi=minCount(h.id,a,t);
   return `30 derniers jours : ${pctS(Math.min(1,c/exp))} (${c} sur ${exp} prévu${exp>1?'s':''})${mi?` · ${plural(mi,'minimum')}`:''}`}
 function rate30(h){const t=today();const a=maxD(addDays(t,-29),hStart(h));const exp=occurrences(h,a,t);if(!exp)return null;return Math.min(1,habitCount(h.id,a,t)/exp)}
-function dayScore(d){let den=0,dn=0;for(const h of trackerHabits()){if(d<hStart(h))continue;const done=habitDone(h.id,d);if(freqOf(h)==='weekly'){den+=(h.perWeek||3)/7;if(done)dn+=1}else if(fixedOn(h,d)){den++;if(done)dn++}}return den?Math.min(1,dn/den):null}
+/* Un jour : habitudes prévues ce jour-là (jours fixés, ou « X fois par semaine » faite ce jour-là) et celles faites */
+function dayCounts(d){let sched=0,done=0;for(const h of trackerHabits()){if(d<hStart(h))continue;const dn=habitDone(h.id,d);if(freqOf(h)==='weekly'){if(dn){sched++;done++}}else if(fixedOn(h,d)){sched++;if(dn)done++}}return{sched,done}}
+function dayScore(d){const c=dayCounts(d);return c.sched?c.done/c.sched:null}
 function weekStats(mon){const t=today();let sc=0,dn=0;const votes={};const tk=new Set(trackerHabits().map(h=>h.id));
   for(const h of habits()){const end=minD(addDays(mon,6),t);if(end<mon)continue;const c=habitCount(h.id,mon,end);votes[h.identityId||'_']=(votes[h.identityId||'_']||0)+c;if(!tk.has(h.id))continue;
-    if(freqOf(h)==='weekly'){const qw=wkQuota(h,mon);if(qw){sc+=qw;dn+=Math.min(c,qw)}}else{const a=maxD(mon,hStart(h));const e=occurrences(h,a,end);sc+=e;dn+=Math.min(c,e)}}
+    if(freqOf(h)==='weekly'){const qw=wkQuota(h,mon);if(qw){sc+=addDays(mon,6)>=t?Math.min(c,qw):qw;dn+=Math.min(c,qw)}}else{const a=maxD(mon,hStart(h));const e=occurrences(h,a,end);sc+=e;dn+=Math.min(c,e)}}
   const days=[...Array(7)].map((_,i)=>addDays(mon,i));let td=0,tt=0;for(const d of days){const it=todoItems(d);tt+=it.length;td+=it.filter(x=>x.done).length}
   const moves=[];for(const v of videos()){const lg=v.stageLog||[];lg.forEach((l,i)=>{if(i>0&&l.date>=mon&&l.date<=days[6]&&stageIdx(l.stage)>stageIdx(lg[i-1].stage))moves.push({v,...l})})}
   let pt=0,pd=0,fm=0;for(const d of days){if(d>t||!dayOf(d).prio)continue;const x=prioInfo(d);if(!x||x.missing)continue;pt++;if(x.done)pd++;fm+=+x.p.spent||0}
@@ -1613,22 +1627,23 @@ const pills=(act,cur,opts,attrs='')=>`<div class="pills" role="group">${opts.map
 
 /* Graphique en ligne façon Trade Republic : courbe réelle + trajectoire attendue en pointillés ; survol ou doigt pour lire une date */
 const CH={};
-function lineChart(id,{xs,act,exp,y0=0,y1=1,fmtV=pctS,fmtX=null,live=true,good=null,expLabel='attendu'}){
+function lineChart(id,{xs,act,exp,y0=0,y1=1,fmtV=pctS,fmtX=null,live=true,good=null,expLabel='attendu',lab=null,det=null}){
   const n=xs.length;const X=i=>n<=1?500:i/(n-1)*1000;const Y=v=>200-(clamp(v,y0,y1)-y0)/((y1-y0)||1)*200;
   const path=arr=>{let p='';(arr||[]).forEach((v,i)=>{if(v==null)return;p+=(p?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)});return p};
   let li=-1;act.forEach((v,i)=>{if(v!=null)li=i});
   if(li<0)return `<div class="chart"><div class="c-empty">Pas encore de données sur cette période</div></div>`;
   const fi=act.findIndex(v=>v!=null);
   const up=good!=null?good:exp?act[li]>=exp[li]-.005:act[li]>=act[fi];
-  CH[id]={xs,act,exp,fmtV,fmtX,X,Y,expLabel};
+  CH[id]={xs,act,exp,fmtV,fmtX,X,Y,expLabel,lab,det};
   return `<div class="chart" data-chart="${id}"><svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">${exp?`<path class="l-exp" d="${path(exp)}"/>`:''}<path class="l-act ${up?'up':'down'}" d="${path(act)}"/></svg>
   <i class="c-dot ${up?'up':'down'} ${live?'live':''}" style="left:${(X(li)/10).toFixed(2)}%;top:${(Y(act[li])/2).toFixed(2)}%"></i><i class="c-scrub" hidden></i><i class="c-dot c-sd ${up?'up':'down'}" hidden></i><div class="c-hit" role="img" aria-label="Courbe de progression"></div></div>`}
 function scrub(el,clientX){const id=el.dataset.chart;const c=CH[id];if(!c)return;const r=el.getBoundingClientRect();const n=c.xs.length;let i=Math.round(clamp((clientX-r.left)/r.width,0,1)*(n-1));while(i>0&&c.act[i]==null)i--;if(c.act[i]==null)return;
   const sl=el.querySelector('.c-scrub'),sd=el.querySelector('.c-sd');sl.hidden=false;sd.hidden=false;sl.style.left=sd.style.left=(c.X(i)/10)+'%';sd.style.top=(c.Y(c.act[i])/2)+'%';
   const v=$('#'+id+'-v'),d=$('#'+id+'-d');if(v&&!c.orig)c.orig=[v.innerHTML,d?d.innerHTML:''];if(v)v.textContent=c.fmtV(c.act[i]);
-  if(d)d.innerHTML=`<span class="muted">${esc(c.fmtX?c.fmtX(c.xs[i]):fmtD(c.xs[i],true))}${c.exp?` · ${esc(c.expLabel||'attendu')} ${esc(c.fmtV(c.exp[i]))}`:''}</span>`}
-function unscrub(el){const id=el.dataset.chart;const c=CH[id];if(!c)return;el.querySelector('.c-scrub').hidden=true;el.querySelector('.c-sd').hidden=true;if(c.orig){const v=$('#'+id+'-v'),d=$('#'+id+'-d');if(v)v.innerHTML=c.orig[0];if(d)d.innerHTML=c.orig[1];c.orig=null}}
-const hero=(id,label,v,d)=>`<div class="hero"><p class="eyebrow">${label}</p><div class="hero-v" id="${id}-v">${v}</div><div class="hero-d" id="${id}-d">${d}</div></div>`;
+  const l=$('#'+id+'-l');if(l&&c.lab){if(c.origL==null)c.origL=l.textContent;l.textContent=c.lab}
+  if(d)d.innerHTML=`<span class="muted">${esc(c.det?c.det(c.xs[i]):c.fmtX?c.fmtX(c.xs[i]):fmtD(c.xs[i],true))}${c.exp?` · ${esc(c.expLabel||'attendu')} ${esc(c.fmtV(c.exp[i]))}`:''}</span>`}
+function unscrub(el){const id=el.dataset.chart;const c=CH[id];if(!c)return;el.querySelector('.c-scrub').hidden=true;el.querySelector('.c-sd').hidden=true;if(c.orig){const v=$('#'+id+'-v'),d=$('#'+id+'-d');if(v)v.innerHTML=c.orig[0];if(d)d.innerHTML=c.orig[1];c.orig=null}if(c.origL!=null){const l=$('#'+id+'-l');if(l)l.textContent=c.origL;c.origL=null}}
+const hero=(id,label,v,d)=>`<div class="hero"><p class="eyebrow" id="${id}-l">${label}</p><div class="hero-v" id="${id}-v">${v}</div><div class="hero-d" id="${id}-d">${d}</div></div>`;
 
 /* Ligne d'habitude d'Aujourd'hui : pictogramme, cible, état en deux paliers (minimum puis cible), série et case.
    La barre montre un palier franchi, pas un pourcentage (D07). Glisser la ligne vers la droite valide aussi. */
@@ -1863,9 +1878,9 @@ function engCard(t){const real=today(),mon=monday(t),past=mon<monday(real),reset
   return `<details class="sec fold eng" data-fold="eng" ${S.fold.eng?'open':''}><summary><span class="et">Engagements tenus <span class="dsk">cette semaine</span></span><span class="ebar ${tn}" aria-hidden="true"><i style="width:${((sc||0)*100).toFixed(1)}%"></i></span><span class="en">${all.length?`${kept} / ${all.length}`:''}</span><span class="ep">${sc==null?'—':pctS(sc)}</span><span class="chev" aria-hidden="true">${ICON.chevD}</span></summary>
   <div class="fold-b"><p class="hint">Semaine ${isoWeek(t).w} · ${qLabel(weekQuarter(mon))}${past?'':` · nouvelle semaine dans ${plural(reset,'jour')}`}</p>${idWeekRows(mon,past)}</div></details>`}
 /* Le taux de la semaine de chaque identité ; toucher une ligne ouvre l'identité dans Identités */
-function idWeekRows(mon,past){const ws=weekSummary(mon);const rows=identities().map(i=>({i,v:ws.per[i.id],paused:idPausedWeek(i.id,mon)})).filter(x=>x.v!=null||x.paused);
+function idWeekRows(mon,past){const ws=weekSummary(mon);const rows=identities().map(i=>({i,v:ws.per[i.id],paused:idPausedWeek(i.id,mon),nl:idNotLaunched(i,addDays(mon,6))})).filter(x=>x.v!=null||x.paused||x.nl);
   if(!rows.length)return '<p class="empty">Aucun engagement prévu cette semaine.</p>';
-  return `<div class="idw">${rows.map(({i,v,paused})=>{const tn=paused?'mut':rateTone(v,past).k;return `<button class="idw-r" data-act="jump" data-id="${i.id}" data-mon="${mon}">${av(i.icon,i.color,'xs',i.name)}<span class="idw-n">${esc(i.name||'Identité')}</span>${paused?'<span class="muted idw-p">En pause</span>':`<span class="idw-b" aria-hidden="true"><i style="width:${(Math.min(1,v)*100).toFixed(1)}%;background:${toneVar(tn)}"></i></span><b class="tone-${tn}">${pctS(v)}</b>`}</button>`}).join('')}</div>`}
+  return `<div class="idw">${rows.map(({i,v,paused,nl})=>{const tn=paused?'mut':rateTone(v,past).k;return `<button class="idw-r" data-act="jump" data-id="${i.id}" data-mon="${mon}">${av(i.icon,i.color,'xs',i.name)}<span class="idw-n">${esc(i.name||'Identité')}</span>${paused?'<span class="muted idw-p">En pause</span>':nl&&v==null?`<span class="muted idw-p">${esc(launchTxt(i))}</span>`:`<span class="idw-b" aria-hidden="true"><i style="width:${(Math.min(1,v)*100).toFixed(1)}%;background:${toneVar(tn)}"></i></span><b class="tone-${tn}">${pctS(v)}</b>`}</button>`}).join('')}</div>`}
 
 /* ---------- Vue : Identités (semaine / trimestre) ---------- */
 function okrSeries(q,range){const{start,end}=qRange(q);const t=today();let a=start,b=end;
@@ -1906,7 +1921,7 @@ const idBadge=i=>{const st=ID_ST[i.status];return st?`<span class="badge ${st[1]
 /* U21 : ce qui a réellement été fait cette semaine pour l'identité, sans système de points */
 const deTitle=t=>/^[aeiouyhàâäéèêëîïôöùûüœæ]/i.test(t)?`d’${t}`:`de ${t}`;
 function proofSummary(i,mon){const parts=[];for(const k of weekProofs(mon).filter(k=>k.identityId===i.id)){const v=krWeekValue(k,mon),kind=kindOf(k);if(!(v>0))continue;
-    parts.push(kind==='milestone'?krTitle(k):kind==='qty'?`${fmtN(v)}${k.unit?' '+k.unit:''} ${deTitle(krTitle(k))}`:`${fmtN(v)} × ${krTitle(k)}`)}
+    parts.push(kind==='milestone'?krTitle(k):kind==='qty'?`${fmtN(v)}${k.unit?' '+unitN(v,k.unit):''} ${deTitle(krTitle(k))}${krWeekTarget(k,mon)>0?'':' (bonus)'}`:`${fmtN(v)} × ${krTitle(k)}`)}
   return parts.length?`Cette semaine : ${parts.join(', ')}.`:'Aucune preuve encore cette semaine.'}
 /* Une identité = une carte repliable (état mémorisé). Repliée, elle garde l'essentiel : nom, phrase, taux de la semaine. */
 function identityBlock(i,q,mode,mon,sc){
@@ -1914,10 +1929,12 @@ function identityBlock(i,q,mode,mon,sc){
   const paused=mode==='week'?idPausedWeek(i.id,mon):i.status==='pause';
   const ss=mode==='week'?weekProofs(mon).filter(k=>k.identityId===i.id).map(k=>krWeekScore(k,mon)).filter(x=>x!=null):[],kept=ss.filter(x=>x>=1).length;
   const rate=paused?'<span class="muted">En pause</span>':sc?`<b>${mode==='week'?rateHtml(sc.v,mon<cur):pctS(sc.v)}</b><span class="muted">${mode==='week'?`${kept} / ${ss.length} tenu${ss.length>1?'s':''}`:'du trimestre'}</span>`:'<span class="tone-mut">Aucun engagement</span>';
+  const nl=idNotLaunched(i,mode==='week'?addDays(mon,6):today());
   const open=S.fold['id-'+i.id]===true||identities().length===1;
   const sub=i.statement?esc(i.statement):objs.length?esc(objs.map(o=>o.title||'Objectif').join(' · ')):'<span class="faint">Écris ta phrase d’identité</span>';
-  return `<details class="sec idc" id="id-${esc(i.id)}" data-fold="id-${esc(i.id)}" ${open?'open':''}><summary>${av(i.icon,i.color,'lg',i.name)}<span class="idc-m"><span class="nm">${esc(i.name||'Identité sans nom')}${idBadge(i)}</span><span class="stl">${sub}</span></span><span class="idc-r">${rate}</span><span class="chev" aria-hidden="true">${ICON.chevD}</span></summary>
+  return `<details class="sec idc" id="id-${esc(i.id)}" data-fold="id-${esc(i.id)}" ${open?'open':''}><summary>${av(i.icon,i.color,'lg',i.name)}<span class="idc-m"><span class="nm">${esc(i.name||'Identité sans nom')}${idBadge(i)}</span><span class="stl">${sub}</span></span><span class="idc-r">${nl&&!(sc&&ss.length)?`<span class="badge lnch">${esc(launchTxt(i))}</span>`:rate}</span><span class="chev" aria-hidden="true">${ICON.chevD}</span></summary>
   <div class="idc-b">
+  ${nl?`<div class="lnch-b"><span><b>${idLaunch(i)==='plan'?'Pas encore lancée':`Lancement le ${esc(fmtDay(idLaunch(i),true))}`}</b>Avant le lancement, rien n’est attendu : ce que tu fais compte en bonus et avance tes objectifs.</span><button class="btn sm" data-act="id-launch" data-id="${i.id}">Lancer maintenant</button></div>`:''}
   <div class="idc-top"><p class="id-sum">${mode==='week'&&!paused?esc(proofSummary(i,mon)):paused?`Identité en pause : aucune attente ${mode==='week'?'cette semaine':'pour l’instant'}. Ses objectifs et son historique sont conservés.`:''}</p><button class="linkish" data-act="edit-identity" data-id="${i.id}">Modifier</button></div>
   ${i.vision||beliefs.length?`<p class="id-vis">${i.vision?`<b>Vision</b> ${esc(i.vision)}`:''}${i.vision&&beliefs.length?'<br>':''}${beliefs.map(esc).join(' · ')}</p>`:''}
   ${objs.map(o=>objBlock(o,i,mode,mon)).join('')}
@@ -1937,7 +1954,7 @@ function groupBlock(key,icon,title,ks,i,mode,mon,foot){const sun=addDays(mon,6);
 function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());const isCur=mon===cur;const actDate=mode==='week'&&mon<cur?addDays(mon,6):today();
   let rb,rs,sub,bp,be=null,col;
   if(mode==='week'){const t=krWeekTarget(k,mon),r=t>0?krWeekRate(k,mon):null,past=mon<cur,paused=idPausedWeek(k.identityId,mon);sub=paused?'<span class="muted">Identité en pause</span>':weekSub(k,mon);rb=weekVal(k,mon);
-    rs=paused||(kind==='milestone'&&!(t>0))?'':rateHtml(r,past);col=toneVar(rateTone(r,past).k);
+    rs=paused||(!(t>0)&&(kind==='milestone'||krSpan(k).s>addDays(mon,6)))?'':rateHtml(r,past);col=toneVar(rateTone(r,past).k);
     if(kind==='milestone'&&k.abandoned&&!k.done){rb='Abandonnée';rs=t>0?'<span class="muted">0 % · compte cette semaine</span>':'';col='var(--faint)'}
     bp=r==null?0:Math.min(1,r);if(isCur&&kind!=='milestone'&&!paused){const x=krWeekExpected(k,mon,today());be=x>0?x:null}}
   else{const st=krStatus(k);rb=kind==='milestone'?(k.done?'Faite':'À faire'):`${fmtN(krValue(k))} / ${fmtN(krTarget(k))}`;rs=pctS(krProgress(k));sub=`${tag(st)} · ${quarterSub(k)}`;bp=krProgress(k);be=krExpectedAt(k,today());col=toneVar(st.k)}
@@ -2010,8 +2027,10 @@ function viewHabits(){
   if(!hs.length)return head+`<div class="empty-state"><h2>Ton traqueur d’habitudes</h2><p class="note">Les petits gestes de tous les jours : exercices du matin, douche froide, lecture… Ils se cochent ici et dans Aujourd’hui, à part du score de tes identités.</p><button class="btn" data-act="new-habit">Créer une habitude</button></div>`;
   const ws=weekStats(monday(t)),pw=weekStats(addDays(monday(t),-7));
   const n=range==='w'?7:range==='m'?30:90;const xs=[...Array(n)].map((_,i)=>addDays(t,i-n+1));const act=xs.map(dayScore);
-  return head+hero('hab','Traqueur tenu cette semaine',ws.rate==null?'—':pctS(ws.rate),ws.rate!=null&&pw.rate!=null&&pw.sched?dPts(ws.rate-pw.rate,'vs semaine dernière'):`<span class="muted">${ws.done} cases cochées sur ${ws.sched} prévues</span>`)
-  +lineChart('hab',{xs,act,exp:null})+pills('hab-range',range,[['w','1S'],['m','1M'],['t','3M']])+
+  const cnt=`${ws.done} faite${ws.done>1?'s':''} sur ${ws.sched} prévue${ws.sched>1?'s':''} jusqu’ici`;
+  return head+hero('hab','Habitudes tenues cette semaine',ws.rate==null?'—':pctS(ws.rate),ws.rate!=null&&pw.rate!=null&&pw.sched?`${dPts(ws.rate-pw.rate,'vs semaine dernière')}<span class="muted"> · ${cnt}</span>`:`<span class="muted">${cnt}</span>`)
+  +lineChart('hab',{xs,act,exp:null,lab:'Habitudes tenues ce jour-là',det:d=>{const c=dayCounts(d);return `${fmtDay(d,true)} : ${c.done} faite${c.done>1?'s':''} sur ${c.sched} prévue${c.sched>1?'s':''}`}})+pills('hab-range',range,[['w','1S'],['m','1M'],['t','3M']])+
+  `<p class="hint hab-cap">La courbe montre, jour par jour, la part des habitudes prévues que tu as faites. Glisse le doigt dessus pour lire un jour.</p>`+
   `<section class="sec"><div class="sec-h"><h2>Semaine ${isoWeek(mon).w}</h2>${qnav('hweek',fmtD(mon))}</div>${habitTable(mon,true)||'<p class="empty">Aucune habitude cette semaine-là.</p>'}${hwLegend()}
   <p class="hint" style="margin-top:8px">Touche une case : une habitude simple se coche, un second appui l’enlève. Minimum et cible, ou quantité : la case ouvre la saisie. 🌙 : ta qualité de sommeil, à part du calcul.</p></section>`}
 
@@ -2100,8 +2119,10 @@ function sheetMetric(id){const m=S.data.metrics[id];const es=mEntries(m).reverse
 /* Revue (F29-F32), version « coup d'œil » : les chiffres de la semaine et leur courbe, ce qui a bien marché, ce qui a coincé,
    des pistes ajustées à l'avance ou au retard pris, la grille des habitudes, les identités, l'humeur ; puis le bilan et la clôture.
    Les valeurs des semaines passées sont recalculées depuis les faits : une correction s'y reflète, les textes ne bougent pas. */
+/* « 1 séance », « 1 heure » : l'unité saisie au pluriel passe au singulier pour 1 */
+const unitN=(n,u)=>u&&Math.abs(n)<=1&&/[^s]s$/i.test(u.trim())&&!/\s/.test(u.trim())?u.trim().slice(0,-1):u;
 function weekInsights(mon){const t=today(),isCur=mon===monday(t),sun=addDays(mon,6),upto=isCur?t:sun;
-  const good=[],bad=[],tips=[];const per=(n,u)=>`${fmtN(n)}${u?' '+u:''}`;
+  const good=[],bad=[],tips=[];const per=(n,u)=>`${fmtN(n)}${u?' '+unitN(n,u):''}`;
   const nb={};for(const k of weekProofs(mon)){const n=krTitle(k);nb[n]=(nb[n]||0)+1}
   for(const k of weekProofs(mon)){if(idPausedWeek(k.identityId,mon))continue;const kind=kindOf(k),tg=krWeekTarget(k,mon);if(!(tg>0))continue;const ob=(S.data.objectives[k.objectiveId]||{}).title||'';
     const v=Math.max(0,krWeekValue(k,mon)),r=v/tg,ex=isCur?krWeekExpected(k,mon,t):1,e=ex==null?(isCur?0:1):ex,name=nb[krTitle(k)]>1&&(S.data.objectives[k.objectiveId]||{}).title?`${krTitle(k)} (${S.data.objectives[k.objectiveId].title})`:krTitle(k),u=kind==='qty'?(k.unit||''):'',it={ic:krIcon(k),col:idColor(k.identityId),t:name,n:name,o:ob,oid:k.objectiveId};
@@ -2134,6 +2155,8 @@ function weekInsights(mon){const t=today(),isCur=mon===monday(t),sun=addDays(mon
     if(pts>=3)good.unshift({cat:'q',pts,ic:'i:chart',col:'#52E397',t:`Trimestre : ${pts} pts d’avance sur le rythme`,s:`${pctS(sm.actual)} fait, ${pctS(sm.expected)} attendu à date`});
     else if(pts<=-3){const top=bad.filter(x=>x.kr&&x.w>0).sort((a,b)=>(a.due||'').localeCompare(b.due||'')||b.w-a.w).slice(0,2).map(x=>x.t);bad.push({cat:'q',pts:-pts,ic:'i:chart',col:'#F99A45',t:`Trimestre : ${-pts} pts de retard sur le rythme`,s:`${pctS(sm.actual)} fait, ${pctS(sm.expected)} attendu à date`,w:9});
       if(top.length)tips.unshift({cat:'q',focus:top,ic:'i:chart',col:'#F99A45',t:`Trimestre : mets l’accent sur ${top.join(' et ')}`,w:9})}}}
+  for(const k of allProofs(weekQuarter(mon))){if(kindOf(k)!=='qty'||engagedBy(k,sun))continue;const v=Math.max(0,krWeekValue(k,mon));if(!(v>0))continue;const o=krObj(k)||{},i=idOf(o.identityId)||{},u=k.unit||'';
+    good.push({ic:krIcon(k),col:idColor(o.identityId),t:krTitle(k),n:krTitle(k),o:o.title||'',idn:i.name||'',cat:'bonus',amt:per(v,u),s:`${per(v,u)} en bonus, avant le lancement`})}
   const st=weekStats(mon);if(st.focusMin)good.push({cat:'fz',ic:'i:clock',col:'#7FA0FF',t:`${fmtMin(st.focusMin)} de travail concentré`,s:`${st.priosDone} priorité${st.priosDone>1?'s':''} du jour accomplie${st.priosDone>1?'s':''} sur ${st.priosTotal}`});
   return{good,bad:bad.sort((a,b)=>b.w-a.w),tips:tips.sort((a,b)=>b.w-a.w)}}
 /* Tableau des habitudes de la semaine, en lecture seule */
@@ -2149,6 +2172,8 @@ function rvSentences(kind,ins,mon,ws,sm){const t=today(),isCur=mon===monday(t),o
     const go=topBy(ins.good.filter(x=>(x.cat==='qty'||x.cat==='ms')&&x.o),x=>x.o);if(go.length)out.push(`Belle avancée sur ${etList(go.map(qt))}.`);
     const q=ins.good.find(x=>x.cat==='q');if(q)out.push(`Tu as <b>${q.pts} pts d’avance</b> sur le rythme du trimestre.`);
     const bs=ins.good.filter(x=>x.cat==='hab'&&x.sk>=3).sort((a,b)=>b.sk-a.sk)[0];if(bs)out.push(`Meilleure série : ${esc(bs.n)}, ${bs.sk} ${bs.skU} d’affilée.`);
+    const ln=isCur?identities().filter(i=>i.status!=='pause'&&idNotLaunched(i,addDays(mon,6))):[];if(ln.length)out.unshift(`Semaine de lancement pour ${etList(ln.map(i=>qt(i.name||'Identité')))} : rien n’est attendu, tout compte en bonus.`);
+    const bn=ins.good.filter(x=>x.cat==='bonus');if(bn.length)out.push(`En bonus : ${etList(bn.slice(0,2).map(x=>`${esc(x.amt)} pour ${qt(x.n)}`))}${bn.length>2?` et ${bn.length-2} autre${bn.length>3?'s':''}`:''}.`);
     const fz=ins.good.find(x=>x.cat==='fz');if(fz)out.push(`${esc(fz.t.charAt(0).toUpperCase()+fz.t.slice(1))}.`);
     const sc=er??hr;if(out.length&&sc!=null&&sc>=.8)out.push('Bravo !');else if(out.length&&sc!=null&&sc>=.5)out.push('Continue comme ça.');
     if(!out.length)out.push(isCur?'Rien de terminé pour l’instant : la semaine continue.':'Rien de marquant cette semaine.')}
@@ -2167,7 +2192,7 @@ function rvSentences(kind,ins,mon,ws,sm){const t=today(),isCur=mon===monday(t),o
 /* Détail d'un bloc : replié, par catégorie (trimestre, preuves, étapes, habitudes, temps concentré) */
 function rvDetail(kind,items,key,nextW){if(!items.length)return '';const tips=kind==='tips',f='rv-det-'+kind;
   const plus=x=>tips&&x.p?`<button class="pill-mini" data-act="rv-tip" data-key="${key}" data-text="${esc(x.p)}" aria-label="Ajouter « ${esc(x.p)} » à tes priorités de la semaine ${nextW}">+ Priorité</button>`:'';
-  const G=[['q','Trimestre'],['qty','Preuves'],['ms','Étapes'],['hab','Habitudes'],['fz','Concentration']];
+  const G=[['q','Trimestre'],['qty','Preuves'],['ms','Étapes'],['bonus','Bonus avant lancement'],['hab','Habitudes'],['fz','Concentration']];
   const unplan=x=>kind==='bad'&&x.oid&&(x.cat==='qty'||x.cat==='ms')?`<button class="pill-mini" data-act="obj-unplan" data-id="${x.oid}" title="Passe l’objectif « ${esc(x.o||'')} » à planifier : ses preuves ne comptent plus tant qu’il n’a pas démarré">Pas encore prévu</button>`:'';
   const row=x=>{const nm=x.cat==='q'||x.cat==='fz'?x.t:(x.n||x.t),d=x.cat==='q'||x.cat==='fz'?x.s:(tips?x.d:x.s);return `<li>${av(x.ic,x.col,'xs',nm)}<span class="m"><b>${esc(nm)}</b>${d?`<span>${esc(d)}</span>`:''}</span>${plus(x)}${unplan(x)}</li>`};
   const body=G.map(([c,l])=>{const xs=items.filter(x=>(x.cat||'')===c);return xs.length?`<li class="rv-sub">${l}</li>${xs.map(row).join('')}`:''}).join('');
@@ -2409,9 +2434,15 @@ window.addEventListener('popstate',e=>{const st=e.state;navLock=true;try{
 function closeSheet(silent){const s=S.sheet;S.sheet=null;$('#sheet').hidden=true;$('#sheet-panel').innerHTML='';if(!silent&&S.sheetTrig){S.refocus=S.sheetTrig;S.sheetTrig=null}
   if(s&&s.isNew&&s.coll){const d=S.data[s.coll][s.id];if(d&&!String(d.title||d.name||d.text||'').trim()){if(s.coll==='krs')removeKr(s.id);else del(s.coll,s.id)}}
   if(!silent)schedule()}
+function launchField(i){const t=today(),l=idLaunch(i),q=qKey(t),nq=qKey(addDays(qRange(q).end,1));
+  const mons=[...weeksOfQuarter(q),...weeksOfQuarter(nq)].filter(m=>m>t).slice(0,10).map(m=>[m,`Le lundi ${fmtD(m)} (semaine ${isoWeek(m).w})`]);
+  if(l&&l!=='plan'&&!mons.some(x=>x[0]===l))mons.unshift([l,l<=t?`Lancée le ${fmtDay(l,true)}`:`Le ${fmtDay(l,true)}`]);
+  return `${F('identities',i.id,'launch','Lancement',{options:[['','Dès maintenant'],['plan','À lancer moi-même (bouton « Lancer maintenant »)'],...mons],hint:'Avant le lancement, rien n’est attendu : ce que tu fais compte en bonus et avance tes objectifs du trimestre. Les engagements commencent à la date de lancement.'})}
+  ${idNotLaunched(i)?`<div style="margin:-4px 0 14px"><button class="btn sm" data-act="id-launch" data-id="${i.id}">Lancer maintenant</button></div>`:''}`}
 function sheetIdentity(id){const i=S.data.identities[id];return sheetTop(esc(i.name||'Nouvelle identité'),'Identité')+`
   <section>${iconPicker('identities',id,i.icon)}${F('identities',id,'name','Nom',{ph:'Champion'})}
   <div class="field"><span>Statut</span>${pills('id-status',i.status||'',[['prioritaire','Prioritaire'],['entretenue','Entretenue'],['pause','En pause']],`data-id="${id}"`)}<span class="hint">Prioritaire et entretenue organisent ton attention, sans changer le calcul. En pause : plus aucune attente pour cette identité ; ses objectifs et son historique sont conservés.</span></div>
+  ${launchField(i)}
   ${F('identities',id,'statement','Phrase d’identité',{ph:'Je suis un créateur qui approfondit ses idées et termine ses vidéos.',hint:'Au présent, à la première personne, avec un comportement concret.'})}
   ${F('identities',id,'beliefs','Croyances',{area:1,rows:4,ph:'Une par ligne'})}
   ${F('identities',id,'vision','Vision',{area:1,rows:2,ph:'Où veux-tu en être fin 2027 ?'})}
@@ -2609,13 +2640,14 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   if(coll==='krs'&&path==='current')doc=withHistory(doc);
   if(coll==='krs'&&path==='due')dropPlanTargets([id]);
   if(coll==='objectives'&&path==='startWeek')dropPlanTargets(krsOf(id).map(k=>k.id));
+  if(coll==='identities'&&path==='launch')dropPlanTargets(list('krs').filter(k=>(krObj(k)||{}).identityId===id).map(k=>k.id));
   if(coll==='habits'&&path==='identityId'&&v!==base.identityId)doc.identitySince=today();
   if(coll==='objectives'&&path==='videoId'&&v){const vid=S.data.videos[v];const t=S.data.templates[base.fromTemplate];const plain=(t&&t.objTitle)||'Vidéo';if(vid&&(!base.title||base.title.trim()===plain))doc.title=`${plain} ${vid.title||''}`.trim()}
   if(coll==='krs'&&path==='done')doc.doneAt=v?today():null;
   if(coll==='krs'&&path==='week'&&base.week&&v!==base.week&&!base.done)doc.reschedules=[...(base.reschedules||[]),{from:base.week,to:v||null,at:today()}];
   put(coll,id,doc);
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
-  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','metricId','minEnabled','week','objectiveId','min','max','due'].includes(path)||/^remaining\./.test(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
+  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','metricId','minEnabled','week','objectiveId','min','max','due','launch'].includes(path)||/^remaining\./.test(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.vstage){setStage(el.dataset.vstage,el.value);return}if(el.dataset&&el.dataset.ifilter){S.ideaF={...S.ideaF,[el.dataset.ifilter]:el.value};saveUi();renderMain(true);return}if(el.dataset&&el.dataset.cfg){cfgRename(el.dataset.cfg,el.dataset.old,el.value.trim());return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.fold&&S.fold[el.dataset.fold]!==el.open){S.fold[el.dataset.fold]=el.open;saveUi()}},true);
 /* Téléphone : la barre du haut est transparente sur l'image, puis devient opaque dès que la page défile */
@@ -2763,6 +2795,8 @@ const ACT={
   'hq-set':a=>{applyHabit(a.dataset.id,S.hday||today(),'target',+a.dataset.v);dismissSheet()},
   'hq-clear':a=>{applyHabit(a.dataset.id,S.hday||today(),'none',null);dismissSheet()},
   'habits-cfg':()=>openSheet('habits-cfg',null,null),
+  'id-launch':a=>{const i=S.data.identities[a.dataset.id];if(!i)return;put('identities',i.id,{...i,launch:today()});dropPlanTargets(list('krs').filter(k=>(krObj(k)||{}).identityId===i.id).map(k=>k.id));
+    toast(`« ${i.name||'Identité'} » lancée : les engagements commencent aujourd’hui`);if(S.sheet)renderSheet()},
   'obj-unplan':a=>{const o=S.data.objectives[a.dataset.id];if(!o)return;const prev=o.startWeek||'',ids=krsOf(o.id).map(k=>k.id);put('objectives',o.id,{...o,startWeek:'plan'});dropPlanTargets(ids);
     toast(`« ${o.title||'Objectif'} » : à planifier`,{label:'Annuler',fn:()=>{const c=S.data.objectives[o.id];if(c){put('objectives',o.id,{...c,startWeek:prev});dropPlanTargets(ids)}}})},
   'habit-color':a=>{const h=S.data.habits[a.dataset.id];if(!h)return;put('habits',h.id,{...h,color:a.dataset.c});renderSheet()},
