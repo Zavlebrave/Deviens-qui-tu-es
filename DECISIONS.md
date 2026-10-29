@@ -187,12 +187,39 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - **Preuves et étapes**, côté « À améliorer » : regroupées par date avant laquelle agir (« En retard · échéance mardi 27 », « Avant samedi 31 », « Avant dimanche 1 »). La quantité par jour est calculée jusqu'à cette date, et une échéance plus lointaine est rappelée sous la preuve.
   - En retard sur le trimestre, « mets l'accent sur » cite d'abord les preuves à l'échéance la plus proche.
 
+## Revue en synthèse, alertes, engagements planifiés ; couleur et ordre des habitudes (29 octobre 2026)
+
+- **Revue en synthèse** : chaque bloc se lit en deux à quatre phrases simples, calculées depuis les faits. Le détail est replié sous « Voir le détail », par catégorie (trimestre, preuves, étapes, habitudes, concentration), avec « + Priorité » côté « À améliorer ». La lecture par jour et les catégories dépliables sont retirées.
+  - **Ce qui a bien marché** :
+    - les taux d'engagements et d'habitudes, seulement s'ils atteignent au moins 50 % ;
+    - les objectifs où des preuves ont avancé ;
+    - l'avance sur le trimestre, la meilleure série, le temps concentré ;
+    - « Bravo ! » à 80 % ou plus.
+  - **Ce qui a coincé** : le retard du trimestre en points, le nombre d'engagements en retard et leurs objectifs principaux, le nombre de jours d'habitude manqués avec les deux habitudes les plus manquées.
+  - **À améliorer** :
+    - l'accent pour le trimestre, s'il ne répète pas une preuve déjà citée ;
+    - ce qu'il reste à faire d'ici dimanche, ou à viser la semaine suivante ;
+    - les étapes à finir ;
+    - les habitudes à ne plus rater.
+- **Engagements planifiés seulement** :
+  - Une preuve Quantité d'un objectif lié à une vidéo ne devient un engagement qu'à partir du début de sa phase dans le rétroplanning.
+  - Si la vidéo n'a pas encore de date de publication, ses preuves ne sont pas engagées : Identités affiche « Pas encore planifiée : vidéo sans date ».
+  - Une preuve dont la phase n'a pas commencé affiche « À partir du … (rétroplanning) ».
+- **Alertes** : un bloc en tête de la Revue, affiché seulement s'il y a une alerte. Toucher une alerte ouvre la vidéo ou la preuve.
+  - Une vidéo en retard dans le Studio (sur la semaine en cours).
+  - Un engagement à moins de 50 % deux semaines de suite. Ce sont les deux dernières semaines finies ; pour une semaine passée, cette semaine et la précédente. Rattraper une des deux semaines fait disparaître l'alerte.
+- **Habitudes** :
+  - La couleur du pictogramme se choisit dans la fiche (12 couleurs).
+  - Dans « Gérer », une poignée ⋮⋮ permet de glisser une habitude pour changer sa place, à la souris ou au doigt, ou avec les flèches haut et bas au clavier.
+  - L'ordre est enregistré et suivi partout : tableau, Aujourd'hui, Revue.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Revue en synthèse, alertes, engagements planifiés, couleur et ordre des habitudes** : 48 vérifications automatisées (24 sur ordinateur, 24 sur téléphone), toutes réussies. Elles couvrent le glisser à la souris et le déplacement au clavier.
 - **Échéances des preuves et Revue par jour** : 40 vérifications automatisées (20 sur ordinateur, 20 sur téléphone), toutes réussies. Elles couvrent les échéances du rétroplanning et choisies, l'objectif et le rythme jusqu'à l'échéance, l'échéance dépassée, le départ en milieu de semaine, les fiches, les sous-titres par jour et par échéance, et Identités.
 - **« Ce qui a coincé » et « À améliorer » en parallèle** : 20 vérifications automatisées (10 sur ordinateur, 10 sur téléphone), toutes réussies.
 - **Justifications retirées, « À améliorer » par catégorie, Repartir de zéro** : 28 vérifications automatisées, toutes réussies. Elles couvrent le manqué toujours marqué, la série interrompue, les catégories repliées et « + Priorité ». Pour la remise à zéro : configuration gardée, saisies du jour gardées, preuves à zéro, dernière mesure, absence de retard au départ, sauvegarde, puis restauration complète.
