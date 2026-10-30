@@ -891,6 +891,20 @@ details.idc[open]>summary{margin-bottom:0}
 }
 .mstrip{display:inline-flex;align-items:center;gap:6px 16px;flex-wrap:wrap;margin-top:14px;padding:8px 16px;border-radius:999px;background:color-mix(in srgb,var(--surface) 78%,transparent);border:1px solid var(--line);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-size:15px;text-align:left;min-height:44px}
 .mstrip:hover{border-color:var(--line-2)}
+.wx{margin-top:12px;font-size:16px;color:var(--muted)}
+.wx-b{display:inline-flex;align-items:center;gap:9px;text-align:left;min-height:32px;border-radius:8px}
+.wx-b b{color:var(--fg);font-weight:600}
+.wx-b:hover span:last-child{color:var(--fg)}
+.wx .wi{display:inline-flex;flex:none}.wx .wi svg{width:21px;height:21px}
+.wx .wi.sun,.wx .wi.sunset{color:var(--warn)}.wx .wi.cloud{color:var(--faint)}.wx .wi.rain{color:var(--accent-2)}
+.wx-search{display:flex;gap:10px;margin-top:14px}
+.wx-search input{flex:1;min-width:0;height:46px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2)}
+.wx-search .btn{flex:none;align-self:center}
+.wx-res{display:flex;flex-direction:column;margin-top:10px;border-top:1px solid var(--line)}
+.wx-res button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:11px 4px;border-bottom:1px solid var(--line);text-align:left;min-height:44px}
+.wx-res button span{font-size:13px;color:var(--muted)}
+.wx-res button:hover b{color:var(--accent-2)}
+.wx-set{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
 .ms-c{display:inline-flex;align-items:center;gap:7px}
 .ms-c b{font-weight:500}
 .ms-c.empty b{color:var(--faint)}
@@ -1157,7 +1171,7 @@ const KINDS=[['qty','Quantité','Mots, heures… tu ajoutes ce que tu fais.'],['
 const COLORS=['#FF7A45','#E8B10E','#4C7DFF','#9B6BFF','#19B9A8','#FF5D8F','#6CC56C','#8E9AAF'];
 const HCOLORS=[...COLORS,'#2ED3DC','#7FA0FF','#FD5661','#C3D35C'];
 const PICTOS=['🥊','🏆','💪','🏃','🧘','😴','🌅','🥗','💧','📚','✍️','🎬','🎙️','🎞️','🖼️','💡','🧠','♟️','🎮','💼','💻','🚀','📈','💰','✈️','🎯','🔥','⭐','🗣️','❤️','🎵','🙏'];
-const DEF={phases:{angle:5,recherche:20,ecriture:10,voix:2,montage:10,marge:2},complexity:{legere:.6,moyenne:.8,lourde:1},goals:{'2026':4,'2027':7},capacity:20,hoursPerVideo:45,channel:'Zav le brave',tz:'Europe/Paris'};
+const DEF={phases:{angle:5,recherche:20,ecriture:10,voix:2,montage:10,marge:2},complexity:{legere:.6,moyenne:.8,lourde:1},goals:{'2026':4,'2027':7},capacity:20,hoursPerVideo:45,channel:'Zav le brave',firstName:'Ivan',tz:'Europe/Paris'};
 const COLLS=['settings','identities','objectives','krs','habits','habitlog','todos','days','metrics','plans','justifs','reviews','videos','ideas','templates'];
 
 /* ---------- Etat ---------- */
@@ -1664,7 +1678,7 @@ function hRow(h,d){const st=habitState(h.id,d),on=st==='target',past=d<today(),n
 /* Aujourd'hui (U01, maquettes « Voyageur ») : état du matin, priorité, habitudes, tâches, Studio, priorités de la semaine
    et engagements tenus. Une grille de cartes sur ordinateur, une colonne sur téléphone.
    Les flèches de la date remontent dans les jours passés pour les revoir ou les corriger. */
-function viewToday(){
+function viewToday(){greetK=today()+'|'+isEvening();
   const real=today(),t=S.day&&S.day<real?S.day:real,past=t<real,ago=diffDays(t,real);
   const dateTxt=parse(t).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   const items=todoItems(t),done=items.filter(i=>i.done).length;
@@ -1672,7 +1686,7 @@ function viewToday(){
   const rv=S.data.reviews[isoWeek(real).key]||{};
   const remind=!past&&wd(real)===6&&!(rv.closedAt&&rv.auto===false)?`<section class="sec remind"><div class="sec-h"><h2>C’est dimanche : ta revue</h2></div><p class="note">Fais le bilan de ta semaine (ce qui a marché, ce qui a bloqué, tes 3 priorités), puis clôture-la.</p><div style="margin-top:14px"><button class="btn" data-act="open-review">Faire ma revue</button></div></section>`:'';
   const head=`<header class="today-head"><div class="eyebrow"><button class="dnav" data-act="day-nav" data-d="-1" aria-label="Jour précédent">${ICON.left}</button><span class="cap">${esc(dateTxt)}</span>${past?`<button class="dnav" data-act="day-nav" data-d="1" aria-label="Jour suivant">${ICON.right}</button>`:''}</div>
-  <h1 class="h1">${past?(ago===1?'Hier':`Il y a ${ago} jours`):'Aujourd’hui'}</h1>${morningStrip(t)}${past?`<p class="past-note">Tu revois un jour passé : tout reste modifiable. <button class="act" data-act="day-today">Revenir à aujourd’hui</button></p>`:''}</header>`;
+  <h1 class="h1">${past?(ago===1?'Hier':`Il y a ${ago} jours`):esc(greeting())}</h1>${past?'':wxLine()}${morningStrip(t)}${past?`<p class="past-note">Tu revois un jour passé : tout reste modifiable. <button class="act" data-act="day-today">Revenir à aujourd’hui</button></p>`:''}</header>`;
   const habitsSec=`<section class="sec td-habits"><div class="sec-h"><h2>Mes habitudes</h2><span class="sec-r">${hs.length?`<span class="cnt">${hd} / ${hs.length}</span>`:''}<button class="chev-btn" data-act="tab" data-tab="habits" aria-label="Ouvrir Habitudes">${ICON.chevR}</button></span></div>
       ${hs.length?`<div class="hlist">${hs.map(h=>hRow(h,t)).join('')}</div>`:`<p class="empty">${past?'Aucune habitude prévue ce jour-là.':'Aucune habitude prévue aujourd’hui. Ajoute-en une dans l’onglet Habitudes.'}</p>`}</section>`;
   const carry=past?[]:carryCandidates(t),yest=addDays(t,-1);
@@ -1839,6 +1853,60 @@ const MOOD_L={'🤩':'Rayonnant','🙂':'Serein','😐':'Neutre','😠':'Agacé'
 function face(n){if(n<0)return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M8.8 15h6.4"/></svg>';
   const mouth=['M7.6 13.4c.9 2.5 2.4 3.8 4.4 3.8s3.5-1.3 4.4-3.8z','M8 14.2c1 1.5 2.3 2.2 4 2.2s3-.7 4-2.2','M8.6 15.2h6.8','M8.5 16.5c1-1.2 2.2-1.8 3.5-1.8s2.5.6 3.5 1.8','M8.3 16.8c1-1.5 2.2-2.2 3.7-2.2s2.7.7 3.7 2.2'][n];
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.6" fill="currentColor"/><circle cx="9" cy="10.2" r="1.25" fill="#0D1117"/><circle cx="15" cy="10.2" r="1.25" fill="#0D1117"/>${n===3?'<path d="m7.4 7.6 3 1.4M16.6 7.6l-3 1.4" stroke="#0D1117" stroke-width="1.6" stroke-linecap="round"/>':''}<path d="${mouth}" ${n===0?'fill="#0D1117"':'fill="none" stroke="#0D1117" stroke-width="1.7" stroke-linecap="round"'}/></svg>`}
+/* Accueil : « Bonjour » de 5 h à 17 h, « Bonsoir » ensuite, à l'heure du fuseau du compte */
+const HMF={};
+function nowMin(){let tz=DEF_TZ;try{tz=(S.data.settings.main||{}).tz||DEF_TZ}catch(e){}
+  try{const f=HMF[tz]||(HMF[tz]=new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}));const p=f.formatToParts(new Date()),g=k=>+(p.find(x=>x.type===k)||{}).value||0;return g('hour')%24*60+g('minute')}
+  catch(e){const d=new Date();return d.getHours()*60+d.getMinutes()}}
+const isEvening=()=>{const m=nowMin();return m>=17*60||m<5*60};
+function greeting(){const n=String(settings().firstName||'').trim();return (isEvening()?'Bonsoir':'Bonjour')+(n?' '+n:'')}
+/* Météo d'accueil (Open-Meteo, gratuit et sans compte) : jusqu'à 17 h la température actuelle et le pic du jour,
+   à partir de 17 h l'heure du coucher du soleil. Seules les coordonnées de la ville choisie sont envoyées.
+   Le relevé est gardé 30 minutes sur l'appareil ; hors connexion ou en cas d'échec, la ligne n'apparaît pas. */
+const WX_KEY='dqte:wx',WX_TTL=30*60e3;let wxMem=null,wxBusy=false,wxFailAt=0;
+const wxLoc=()=>{const w=settings().weather;return w&&!w.off&&w.lat!=null&&w.lon!=null?w:null};
+const wxCoord=w=>`${(+w.lat).toFixed(2)},${(+w.lon).toFixed(2)}`;
+const wxNow=d=>new Date(Date.now()+(+d.utc_offset_seconds||0)*1000).toISOString().slice(0,16);
+function wxCache(w){if(!wxMem)try{wxMem=JSON.parse(localStorage.getItem(WX_KEY)||'null')}catch(e){}
+  const c=wxMem;return c&&c.k===wxCoord(w)&&c.d&&c.d.daily&&(c.d.daily.time||[])[0]===wxNow(c.d).slice(0,10)?c:null}
+async function wxLoad(){const w=wxLoc();if(!w||wxBusy||navigator.onLine===false)return;const c=wxCache(w);if(c&&Date.now()-c.at<WX_TTL)return;if(Date.now()-wxFailAt<5*60e3)return;
+  wxBusy=true;try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${(+w.lat).toFixed(3)}&longitude=${(+w.lon).toFixed(3)}&current=temperature_2m,weather_code&daily=temperature_2m_max,sunset&timezone=auto&forecast_days=1`);
+    if(!r.ok)throw new Error('météo '+r.status);const d=await r.json();if(!d||!d.current||!d.daily)throw new Error('météo incomplète');
+    wxMem={k:wxCoord(w),at:Date.now(),d};try{localStorage.setItem(WX_KEY,JSON.stringify(wxMem))}catch(e){}}
+  catch(e){wxFailAt=Date.now()}finally{wxBusy=false}
+  const el=document.getElementById('wx');if(el)el.outerHTML=wxLine()}
+const WX_IC={
+  cloud:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.2 19h10.1a4.2 4.2 0 0 0 .5-8.37A5.8 5.8 0 0 0 6.6 9.4 4.8 4.8 0 0 0 7.2 19z"/></svg>',
+  rain:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.2 15.2h10.1a3.9 3.9 0 0 0 .5-7.77A5.4 5.4 0 0 0 6.8 6.3a4.5 4.5 0 0 0 .4 8.9z"/><path d="M8.5 18l-1 2.4M12.5 18l-1 2.4M16.5 18l-1 2.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  sunset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18.5h18M6.6 18.5a5.4 5.4 0 0 1 10.8 0"/><path d="M12 3.5v6M9.4 7.2 12 9.8l2.6-2.6M4.3 12.6l1.5 1M19.7 12.6l-1.5 1"/></svg>'};
+/* Code météo (WMO) : un mot et un pictogramme */
+function wxSky(c){c=+c;if(c<=1)return[c?'plutôt ensoleillé':'ensoleillé',ICON.sun,'sun'];if(c===2)return['éclaircies',ICON.sun,'sun'];if(c===3)return['couvert',WX_IC.cloud,'cloud'];
+  if(c===45||c===48)return['brouillard',WX_IC.cloud,'cloud'];if(c>=51&&c<=57)return['bruine',WX_IC.rain,'rain'];if((c>=61&&c<=67)||(c>=80&&c<=82))return['pluie',WX_IC.rain,'rain'];
+  if((c>=71&&c<=77)||c===85||c===86)return['neige',WX_IC.cloud,'cloud'];if(c>=95)return['orage',WX_IC.rain,'rain'];return['',WX_IC.cloud,'cloud']}
+const hFr=iso=>{const[h,m]=String(iso).slice(11,16).split(':');return `${+h} h ${m}`};
+const tC=v=>`${Math.round(+v)} °C`;
+function wxLine(){const st=settings().weather||{};if(st.off)return '';
+  const w=wxLoc();if(!w)return `<p class="wx" id="wx"><button class="linkish" data-act="wx-open">Ajouter la météo de ta ville</button></p>`;
+  const c=wxCache(w);if(!c||Date.now()-c.at>=WX_TTL)setTimeout(wxLoad,0);if(!c)return '<p class="wx" id="wx" hidden></p>';
+  const d=c.d,city=w.name||'ta ville';let ic,cls,txt,lab;
+  if(isEvening()){const ss=(d.daily.sunset||[])[0];if(!ss)return '<p class="wx" id="wx" hidden></p>';const gone=wxNow(d)>=String(ss).slice(0,16);
+    ic=WX_IC.sunset;cls='sunset';txt=`Le soleil ${gone?'s’est couché':'se couche'} à <b>${hFr(ss)}</b>`;lab=`Le soleil ${gone?'s’est couché':'se couche'} à ${hFr(ss)} à ${city}`}
+  else{const[sky,si,sc]=wxSky(d.current.weather_code),mx=(d.daily.temperature_2m_max||[])[0];ic=si;cls=sc;
+    txt=`<b>${tC(d.current.temperature_2m)}</b> en ce moment${sky?`, ${sky}`:''}${mx!=null?` · pic à <b>${tC(mx)}</b>`:''}`;
+    lab=`${tC(d.current.temperature_2m)} en ce moment à ${city}${sky?`, ${sky}`:''}${mx!=null?`, pic à ${tC(mx)} aujourd’hui`:''}`}
+  return `<p class="wx" id="wx"><button class="wx-b" data-act="wx-open" aria-label="${esc(lab)}. Changer de ville" title="${esc(city)}"><span class="wi ${cls}">${ic}</span><span>${txt}</span></button></p>`}
+/* Toutes les minutes (et au retour sur l'app) : nouveau jour ou passage au soir, l'accueil se redessine ; la météo se rafraîchit */
+let greetK='';
+function greetTick(){if(document.hidden||S.tab!=='today'||!ready())return;const k=today()+'|'+isEvening();if(greetK&&k!==greetK)renderMain();greetK=k;wxLoad()}
+setInterval(greetTick,60e3);document.addEventListener('visibilitychange',greetTick);
+function setWx(w){put('settings','main',{...clean(S.data.settings.main||{}),weather:w});S.wxRes=null;S.wxMsg='';S.wxQ=''}
+function sheetWx(){const w=settings().weather||{},on=w.lat!=null&&!w.off,r=S.wxRes;
+  return sheetTop('Météo','Accueil')+`<section><p class="note">${on?`Ville : <b style="color:var(--fg)">${esc(w.name||'Ma position')}</b>${w.region?` · ${esc(w.region)}`:''}`:w.off?'La météo est masquée sur l’accueil.':'Choisis ta ville : le matin, la température et son pic de la journée ; à partir de 17 h, l’heure du coucher du soleil.'}</p>
+  <div class="wx-search"><input id="wx-q" type="search" enterkeyhint="search" autocomplete="off" placeholder="Nom de ta ville" aria-label="Chercher une ville" value="${esc(S.wxQ||'')}"><button class="btn sm" data-act="wx-search">Chercher</button></div>
+  ${S.wxMsg?`<p class="hint" role="status" style="margin-top:8px">${esc(S.wxMsg)}</p>`:''}
+  ${r&&r.length?`<div class="wx-res">${r.map((x,i)=>`<button data-act="wx-pick" data-i="${i}"><b>${esc(x.name)}</b><span>${esc(x.region)}</span></button>`).join('')}</div>`:''}
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">${navigator.geolocation?'<button class="btn-sec" data-act="wx-geo">Utiliser ma position</button>':''}${w.off?'':'<button class="btn-sec" data-act="wx-off">Ne pas afficher la météo</button>'}</div>
+  <p class="hint" style="margin-top:16px">Données Open-Meteo, gratuites et sans compte : seules les coordonnées de la ville sont envoyées (arrondies à 1 km environ pour ta position). Hors connexion, la ligne météo n’apparaît pas.</p></section>`}
 /* F05 : l'état du matin tient dans une bande sous le titre ; la toucher ouvre la fiche pour le noter */
 function morningStrip(t){const d=dayOf(t),e=energyOf(d.energy),sl=sleepOf(d.sleep),mn=d.mood?MOODS.indexOf(d.mood):-1,lvl=n=>n>=4?'pos':n===3?'mid':'low',ml=mn>=0?MOOD_L[d.mood]:'';
   const chip=(ic,cls,v,l)=>`<span class="ms-c ${v?'':'empty'}"><span class="mi ${cls}">${ic}</span><b>${v?esc(v):'—'}</b><span class="sr"> ${l}</span></span>`;
@@ -1979,7 +2047,8 @@ function stepQty(k,d,dir,from){const r3=x=>Math.round(x*1000)/1000;const n=qtySt
 
 /* ---------- Vue : Habitudes ---------- */
 /* Tableau de la semaine : une ligne par habitude, une colonne par jour. Habitude simple : un appui coche, un second décoche.
-   Minimum et cible, ou quantité : l'appui ouvre la saisie. Jour non prévu : un simple point. Turquoise : au-delà de la cible. */
+   Minimum et cible, ou quantité : l'appui ouvre la saisie. Jour non prévu : un simple point. Turquoise : au-delà de la cible.
+   Jour passé non fait : manqué, y compris pour « X fois par semaine » tant que le quota de la semaine n'est pas atteint. */
 const fmtS=v=>v>=10000?`${Math.round(v/1000)}k`:v>=1000?`${nf.format(Math.round(v/100)/10)}k`:fmtN(v);
 function hCell(h,d,t,edit){if(d<hStart(h))return '<span class="cell nil" aria-hidden="true"></span>';
   const mode=hMode(h),st=habitState(h.id,d),wk=freqOf(h)==='weekly',sch=wk||fixedOn(h,d),fut=d>t,v=mode==='qty'?habitVal(h.id,d):null;let cls,ic='',lab;
@@ -1988,7 +2057,7 @@ function hCell(h,d,t,edit){if(d<hStart(h))return '<span class="cell nil" aria-hi
   else if(v!=null){cls='part';ic=`<b>${fmtS(v)}</b>`;lab=`${qFmt(h,v)}, sous le minimum`}
   else{
     if(!sch){cls='off';lab='jour non prévu'}else if(fut){cls='fut';lab='à venir'}
-    else if(d===t){cls='tod';lab='à faire'}else if(wk){cls='free';lab='pas fait'}else{cls='miss';ic=ICON.x;lab='manqué'}}
+    else if(d===t){cls='tod';lab='à faire'}else if(wk&&(w=>w.c>=w.e)(hWeek(h,monday(d)))){cls='free';lab='pas nécessaire : quota de la semaine atteint'}else{cls='miss';ic=ICON.x;lab='manqué'}}
   const al=esc(`${h.name||'Habitude'}, ${fmtDay(d)} : ${lab}`);
   if(!edit||fut)return `<span class="cell ${cls}" role="img" aria-label="${al}" title="${al}">${ic}</span>`;
   return `<button class="cell ${cls}" data-act="${mode==='simple'?'habit-toggle':'hday-open'}" data-id="${h.id}" data-date="${d}" aria-label="${al}"${mode==='simple'?` aria-pressed="${st==='target'}"`:''}>${ic}</button>`}
@@ -2356,6 +2425,11 @@ function viewSettings(){
   const st=settings();const b=p=>`data-bind="settings:main:${p}" data-type="number"`;const y=new Date().getFullYear();
   return `<header class="page-head"><h1 class="h1">Réglages</h1></header>
   <div class="set-grid">
+    <section class="sec" id="accueil"><div class="sec-h"><h2>Accueil</h2></div>
+      <div class="form-grid"><label class="field"><span>Ton prénom</span><input id="st-first" value="${esc(st.firstName||'')}" autocomplete="given-name" data-bind="settings:main:firstName"></label></div>
+      <div class="wx-set"><p class="note">Météo : ${(w=>w.off?'masquée':w.lat!=null?`<b style="color:var(--fg)">${esc(w.name||'Ma position')}</b>`:'aucune ville')(st.weather||{})}</p><button class="act" data-act="wx-open">${(st.weather||{}).lat!=null?'Changer':'Choisir'}</button></div>
+      <p class="hint" style="margin-top:8px">« Bonjour » jusqu’à 17 h, « Bonsoir » ensuite. Météo Open-Meteo : la température et son pic le matin, le coucher du soleil à partir de 17 h.</p>
+    </section>
     <section class="sec"><div class="sec-h"><h2>Rétroplanning des vidéos</h2></div><p class="note">Durée de chaque phase en jours pour une vidéo « Lourde ». Le planning se calcule à rebours depuis la date de sortie.</p>
       <div class="form-grid">${PHASES.map(p=>`<label class="field"><span>${p.label}</span><input id="ph-${p.k}" type="number" min="0" value="${st.phases[p.k]}" ${b('phases.'+p.k)}></label>`).join('')}<label class="field"><span>Marge avant sortie</span><input id="ph-marge" type="number" min="0" value="${st.phases.marge}" ${b('phases.marge')}></label></div>
       <div class="form-grid">${Object.entries(CPLX).map(([k,l])=>`<label class="field"><span>Coefficient ${l.toLowerCase()}</span><input id="cx-${k}" type="number" step="0.05" min="0.1" value="${st.complexity[k]}" ${b('complexity.'+k)}></label>`).join('')}</div>
@@ -2407,7 +2481,7 @@ function freqEditor(h){const f=freqOf(h);const days=Array.isArray(h.days)?h.days
   ${f==='days'?`<div class="days">${DAYS.map((d,i)=>`<button data-act="habit-day" data-id="${h.id}" data-d="${i}" aria-pressed="${days.includes(i)}">${d}</button>`).join('')}</div>`:''}`}
 function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
   $('#sheet-panel').classList.toggle('is-focus',s.kind==='focus');
-  const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry,focus:sheetFocus,morning:sheetMorning,'prio-link':sheetPrioLink,'idea-cfg':sheetIdeaCfg,'habits-cfg':sheetHabitsCfg,reset:sheetReset}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;if(s.kind==='focus'&&!fzTimer)fzTimer=setInterval(fzTick,1000);return}
+  const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry,focus:sheetFocus,morning:sheetMorning,'prio-link':sheetPrioLink,'idea-cfg':sheetIdeaCfg,'habits-cfg':sheetHabitsCfg,reset:sheetReset,wx:sheetWx}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;if(s.kind==='focus'&&!fzTimer)fzTimer=setInterval(fzTick,1000);return}
   const fn={abandon:sheetAbandon,hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
@@ -2655,7 +2729,8 @@ window.addEventListener('scroll',()=>{const m=$('.mtop');if(m)m.classList.toggle
 /* Les textes s'enregistrent pendant la saisie (brouillon conservé même si l'app est fermée avant de quitter le champ) */
 const bindT={};
 document.addEventListener('input',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.bind&&(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&['text','url','search',''].includes(el.type)))){const k=el.id||el.dataset.bind;clearTimeout(bindT[k]);bindT[k]=setTimeout(()=>{if(el.isConnected)bindChange(el)},700)}});
-document.addEventListener('input',e=>{if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='wx-q'){e.preventDefault();ACT['wx-search']()}});
+document.addEventListener('input',e=>{if(e.target.id==='wx-q')S.wxQ=e.target.value;if(e.target.id==='idea-q'){S.ideaQuery=e.target.value;filterIdeas()}
   if(e.target.id==='hq-v'){const f=e.target.form,h=f&&S.data.habits[f.dataset.id],st=$('#hq-st');if(h&&st)st.innerHTML=hqStatus(h,+e.target.value||0)}});
 document.addEventListener('submit',e=>{const f=e.target;if(f.dataset.form==='qty'){e.preventDefault();const k=S.data.krs[f.dataset.id];const inp=f.querySelector('input[type=number]');const amt=+inp.value;if(!k||inp.value===''||!isFinite(amt)||!amt)return;const dIn=f.querySelector('input[name=date]');const d=(dIn&&dIn.value)||f.dataset.date||today();
     if(amt<0){const m=monday(d);if(krWeekValue(k,m)+amt<0){toast('Correction impossible : le total de la semaine deviendrait négatif');return}}
@@ -2884,6 +2959,18 @@ const ACT={
   'del-idea':a=>{del('ideas',a.dataset.id);dropSheet()},
   'export':()=>exportData(),
   'reset-open':()=>openSheet('reset',null,null),
+  'wx-open':()=>{S.wxRes=null;S.wxMsg='';openSheet('wx',null,null)},
+  'wx-search':async()=>{const q=(($('#wx-q')||{}).value||'').trim();S.wxQ=q;if(q.length<2){S.wxMsg='Tape au moins deux lettres.';renderSheet();return}
+    S.wxMsg='Recherche…';S.wxRes=null;renderSheet();
+    try{const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=fr&format=json`);if(!r.ok)throw new Error('recherche '+r.status);const d=await r.json();
+      S.wxRes=(d.results||[]).map(x=>({name:x.name,region:[x.admin1,x.country].filter(Boolean).join(', '),lat:+(+x.latitude).toFixed(3),lon:+(+x.longitude).toFixed(3)}));S.wxMsg=S.wxRes.length?'':`Aucune ville trouvée pour « ${q} ».`}
+    catch(e){S.wxRes=null;S.wxMsg='Recherche impossible : vérifie ta connexion.'}
+    if(S.sheet&&S.sheet.kind==='wx')renderSheet()},
+  'wx-pick':a=>{const x=(S.wxRes||[])[+a.dataset.i];if(!x)return;setWx({name:x.name,region:x.region,lat:x.lat,lon:x.lon});closeSheet();toast(`Météo : ${x.name}`)},
+  'wx-geo':()=>{S.wxMsg='Localisation…';renderSheet();
+    navigator.geolocation.getCurrentPosition(p=>{setWx({name:'Ma position',lat:+p.coords.latitude.toFixed(2),lon:+p.coords.longitude.toFixed(2)});if(S.sheet&&S.sheet.kind==='wx')closeSheet();toast('Météo : ta position')},
+      ()=>{S.wxMsg='Position refusée ou indisponible : cherche plutôt ta ville.';if(S.sheet&&S.sheet.kind==='wx')renderSheet()},{timeout:10000,maximumAge:36e5})},
+  'wx-off':()=>{setWx({off:true});closeSheet();toast('Météo masquée',{label:'Annuler',fn:()=>openSheet('wx',null,null)})},
   'reset-go':async()=>{dismissSheet();await resetTracking();renderMain(true)},
   'sign-out':()=>{if((SYNC.inflight||Object.keys(SYNC.failed).length)&&!confirm('Des modifications ne sont pas encore synchronisées. Si tu te déconnectes maintenant, elles pourraient être perdues. Te déconnecter quand même ?'))return;if(window.DQ_BACKEND&&window.DQ_BACKEND.signOut)window.DQ_BACKEND.signOut()},
   'sync-retry':()=>retrySync(),

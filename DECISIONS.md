@@ -247,12 +247,35 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Unités** : une unité saisie au pluriel passe au singulier pour 1 (« 1 séance », « 1 mot »).
 - **Identités s'ouvre toujours sur la semaine en cours** depuis le menu, avec les objectifs de la semaine (« 0 / 3 »). La vue Trimestre (« 0 / 21 »), ouverte par « Détail » sur la carte du trimestre ou par le sélecteur, ne sert que le temps de la consulter. Elle n'est plus mémorisée, ni entre deux onglets, ni à la réouverture de l'app.
 
+## Habitude hebdo manquée, salutation et météo d'accueil (30 octobre 2026)
+
+- **Habitude « X fois par semaine »** : un jour passé non fait est marqué manqué (✕), comme pour les autres habitudes.
+  - Le ✕ s'efface quand le quota de la semaine est atteint. Les jours non faits deviennent alors des jours libres (« pas nécessaire : quota de la semaine atteint »).
+  - Les jours avant le départ du suivi (Repartir de zéro) restent hors suivi.
+  - Le calcul du taux et de la Revue ne change pas.
+- **Salutation** : le titre d'Aujourd'hui devient « Bonjour Ivan » de 5 h à 17 h, puis « Bonsoir Ivan ».
+  - L'heure est lue dans le fuseau du compte (Réglages → Calendrier).
+  - Le prénom se règle dans Réglages → Accueil (« Ivan » par défaut). Vide, le titre dit seulement « Bonjour » ou « Bonsoir ».
+  - Un jour passé garde « Hier » ou « Il y a N jours ».
+  - L'app ouverte se met à jour seule chaque minute et au retour sur l'app : passage de 17 h, nouveau jour.
+- **Météo d'accueil**, sous la salutation, données Open-Meteo (gratuit, sans compte ni clé) :
+  - Jusqu'à 17 h : « 12 °C en ce moment, couvert · pic à 17 °C ».
+  - À partir de 17 h : « Le soleil se couche à 17 h 28 », puis « s'est couché » une fois l'heure passée.
+  - La ville se choisit par recherche, ou avec « Utiliser ma position ». La position est arrondie à environ 1 km. Toucher la ligne météo rouvre ce choix.
+  - Seules les coordonnées sont envoyées à Open-Meteo. Elles sont enregistrées dans les réglages du compte, donc partagées entre téléphone et ordinateur.
+  - Le relevé est gardé 30 minutes sur l'appareil. Hors connexion, en cas d'échec ou le lendemain sans nouveau relevé, la ligne n'apparaît pas.
+  - « Ne pas afficher la météo » retire la ligne et l'invitation.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Habitude hebdo manquée, salutation, météo** : 88 vérifications automatisées (44 sur ordinateur, 44 sur téléphone), toutes réussies, avec Open-Meteo simulé.
+  - Habitude hebdo : ✕ et jour libre une fois le quota atteint.
+  - Salutation : de 4 h 30 à 23 h 30, fuseau, passage de 17 h app ouverte, prénom modifié ou vide.
+  - Météo : recherche de ville, position acceptée ou refusée, matin, soir, relevé gardé puis rafraîchi, lendemain, échec, hors connexion, masquage.
 - **Lancement d'une identité, bonus, chiffres des habitudes** : 40 vérifications automatisées (20 sur ordinateur, 20 sur téléphone), toutes réussies.
 - **Objectifs pas encore démarrés, quota hebdo au départ** : 26 vérifications automatisées (13 sur ordinateur, 13 sur téléphone), toutes réussies.
 - **Revue en synthèse, alertes, engagements planifiés, couleur et ordre des habitudes** : 48 vérifications automatisées (24 sur ordinateur, 24 sur téléphone), toutes réussies. Elles couvrent le glisser à la souris et le déplacement au clavier.
