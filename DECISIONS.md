@@ -275,12 +275,23 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Taux de la semaine** (« Habitudes tenues cette semaine ») : une habitude prévue aujourd'hui et pas encore faite ne compte qu'à minuit. Faite, elle compte tout de suite. Le taux ne baisse donc plus chaque matin. C'est la règle déjà appliquée aux habitudes « X fois par semaine ».
 - **Inchangés** : le tableau de la semaine (✕ sur les jours passés seulement), Aujourd'hui, et la Revue des semaines passées.
 
+## Habitude « X fois par semaine » manquée : comptée partout (31 octobre 2026)
+
+- **Constat** : vendredi affichait « 6 faites sur 6 prévues », alors que « Se coucher à 22h30 » n'avait été fait ni jeudi ni vendredi. Le tableau marquait bien ✕. Mais la courbe et le compte du jour ne comptaient une habitude hebdomadaire que les jours où elle était faite.
+- **Règle unique**, la même pour le tableau, la courbe, le compte du jour et le taux de la semaine : un jour passé non fait est manqué tant que le quota de la semaine n'est pas atteint.
+  - Chaque jour manqué (✕) compte comme prévu et non fait. Vendredi passe à « 6 faites sur 7 prévues ».
+  - Taux de la semaine : les jours manqués comptent dans la limite du quota.
+  - Quota atteint plus tard dans la semaine : les ✕ disparaissent, et les jours concernés ne comptent plus comme manqués.
+  - Aujourd'hui, une habitude pas encore faite n'est pas encore manquée.
+- **Remplace** la règle du 29 octobre, selon laquelle une « X fois par semaine » ne comptait, dans la semaine en cours, que lorsqu'elle était faite.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **« X fois par semaine » manquée comptée partout** : 20 vérifications automatisées (10 sur ordinateur, 10 sur téléphone), toutes réussies. Elles couvrent le compte du jour, la courbe et son libellé, le taux de la semaine, le ✕ du tableau, la journée en cours et le quota atteint plus tard.
 - **Courbe des habitudes sans la journée en cours** : 24 vérifications automatisées (12 sur ordinateur, 12 sur téléphone), toutes réussies. Elles couvrent la situation d'Ivan (jeudi en partie, vendredi complet, samedi en cours), la journée complète, la case retirée, le lendemain, la vue 1M, le premier jour et le taux de la semaine.
 - **Habitude hebdo manquée, salutation, météo** : 88 vérifications automatisées (44 sur ordinateur, 44 sur téléphone), toutes réussies, avec Open-Meteo simulé.
   - Habitude hebdo : ✕ et jour libre une fois le quota atteint.

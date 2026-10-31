@@ -1567,6 +1567,10 @@ function habitCtl(h,d,row){const st=habitState(h.id,d),nm=esc(h.name||''),mode=h
 const startDay=()=>((S.data.settings||{}).main||{}).startDate||'';
 const hStart=h=>{const c=(h.createdAt||'2000-01-01').slice(0,10),sd=startDay();return sd&&sd>c?sd:c};
 const weekCount=(h,mon)=>habitCount(h.id,mon,addDays(mon,6));
+/* « X fois par semaine » : un jour passé non fait est manqué tant que le quota de la semaine n'est pas atteint.
+   Le tableau (✕), la courbe et le taux de la semaine utilisent cette même règle. */
+const wkReached=(h,d)=>(w=>w.c>=w.e)(hWeek(h,monday(d)));
+const wkMissOn=(h,d)=>d<today()&&d>=hStart(h)&&!habitDone(h.id,d)&&!wkReached(h,d);
 /* Quota « X fois par semaine » ramené aux jours suivis quand le suivi commence en cours de semaine (création, date de départ) */
 function wkQuota(h,mon){const pw=h.perWeek||3,sun=addDays(mon,6),a=maxD(mon,hStart(h));if(a>sun)return 0;const n=diffDays(a,sun)+1;return n>=7?pw:Math.min(n,Math.max(1,Math.round(pw*n/7)))}
 function weekExpected(h,mon){const sun=addDays(mon,6);if(hStart(h)>sun)return 0;return freqOf(h)==='weekly'?wkQuota(h,mon):occurrences(h,maxD(mon,hStart(h)),sun)}
@@ -1584,13 +1588,15 @@ function streakTxt(h){const x=streakOf(h);return `🔥 ${x.n} ${x.unit}`}
 function rate30Txt(h){const t=today();const a=maxD(addDays(t,-29),hStart(h));const exp=occurrences(h,a,t);if(!exp)return '30 derniers jours : rien de prévu';const c=habitCount(h.id,a,t),mi=minCount(h.id,a,t);
   return `30 derniers jours : ${pctS(Math.min(1,c/exp))} (${c} sur ${exp} prévu${exp>1?'s':''})${mi?` · ${plural(mi,'minimum')}`:''}`}
 function rate30(h){const t=today();const a=maxD(addDays(t,-29),hStart(h));const exp=occurrences(h,a,t);if(!exp)return null;return Math.min(1,habitCount(h.id,a,t)/exp)}
-/* Un jour : habitudes prévues ce jour-là (jours fixés, ou « X fois par semaine » faite ce jour-là) et celles faites */
-function dayCounts(d){let sched=0,done=0;for(const h of trackerHabits()){if(d<hStart(h))continue;const dn=habitDone(h.id,d);if(freqOf(h)==='weekly'){if(dn){sched++;done++}}else if(fixedOn(h,d)){sched++;if(dn)done++}}return{sched,done}}
+/* Un jour : habitudes prévues ce jour-là (jours fixés ; « X fois par semaine » faite ou manquée ce jour-là) et celles faites */
+function dayCounts(d){let sched=0,done=0;for(const h of trackerHabits()){if(d<hStart(h))continue;const dn=habitDone(h.id,d);if(freqOf(h)==='weekly'){if(dn){sched++;done++}else if(wkMissOn(h,d))sched++}else if(fixedOn(h,d)){sched++;if(dn)done++}}return{sched,done}}
 function dayScore(d){const c=dayCounts(d);return c.sched?c.done/c.sched:null}
-/* Semaine en cours : ce qui reste à faire aujourd'hui ne compte qu'à minuit ; ce qui est déjà fait compte tout de suite */
+/* Semaine en cours : ce qui reste à faire aujourd'hui ne compte qu'à minuit ; ce qui est déjà fait compte tout de suite.
+   « X fois par semaine » : chaque jour manqué (✕) compte, dans la limite du quota. */
 function weekStats(mon){const t=today();let sc=0,dn=0;const votes={};const tk=new Set(trackerHabits().map(h=>h.id));
   for(const h of habits()){const end=minD(addDays(mon,6),t);if(end<mon)continue;const c=habitCount(h.id,mon,end);votes[h.identityId||'_']=(votes[h.identityId||'_']||0)+c;if(!tk.has(h.id))continue;
-    if(freqOf(h)==='weekly'){const qw=wkQuota(h,mon);if(qw){sc+=addDays(mon,6)>=t?Math.min(c,qw):qw;dn+=Math.min(c,qw)}}
+    if(freqOf(h)==='weekly'){const qw=wkQuota(h,mon);if(qw){let miss=0;const cur=addDays(mon,6)>=t;if(cur)for(let d=maxD(mon,hStart(h));d<t;d=addDays(d,1))if(wkMissOn(h,d))miss++;
+      sc+=cur?Math.min(qw,Math.min(c,qw)+miss):qw;dn+=Math.min(c,qw)}}
     else{const a=maxD(mon,hStart(h)),live=end===t;let e=occurrences(h,a,live?addDays(t,-1):end);if(live&&t>=a&&fixedOn(h,t)&&habitDone(h.id,t))e++;sc+=e;dn+=Math.min(c,e)}}
   const days=[...Array(7)].map((_,i)=>addDays(mon,i));let td=0,tt=0;for(const d of days){const it=todoItems(d);tt+=it.length;td+=it.filter(x=>x.done).length}
   const moves=[];for(const v of videos()){const lg=v.stageLog||[];lg.forEach((l,i)=>{if(i>0&&l.date>=mon&&l.date<=days[6]&&stageIdx(l.stage)>stageIdx(lg[i-1].stage))moves.push({v,...l})})}
@@ -2059,7 +2065,7 @@ function hCell(h,d,t,edit){if(d<hStart(h))return '<span class="cell nil" aria-hi
   else if(v!=null){cls='part';ic=`<b>${fmtS(v)}</b>`;lab=`${qFmt(h,v)}, sous le minimum`}
   else{
     if(!sch){cls='off';lab='jour non prévu'}else if(fut){cls='fut';lab='à venir'}
-    else if(d===t){cls='tod';lab='à faire'}else if(wk&&(w=>w.c>=w.e)(hWeek(h,monday(d)))){cls='free';lab='pas nécessaire : quota de la semaine atteint'}else{cls='miss';ic=ICON.x;lab='manqué'}}
+    else if(d===t){cls='tod';lab='à faire'}else if(wk&&wkReached(h,d)){cls='free';lab='pas nécessaire : quota de la semaine atteint'}else{cls='miss';ic=ICON.x;lab='manqué'}}
   const al=esc(`${h.name||'Habitude'}, ${fmtDay(d)} : ${lab}`);
   if(!edit||fut)return `<span class="cell ${cls}" role="img" aria-label="${al}" title="${al}">${ic}</span>`;
   return `<button class="cell ${cls}" data-act="${mode==='simple'?'habit-toggle':'hday-open'}" data-id="${h.id}" data-date="${d}" aria-label="${al}"${mode==='simple'?` aria-pressed="${st==='target'}"`:''}>${ic}</button>`}
