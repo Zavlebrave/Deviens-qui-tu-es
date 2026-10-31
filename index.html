@@ -1587,9 +1587,11 @@ function rate30(h){const t=today();const a=maxD(addDays(t,-29),hStart(h));const 
 /* Un jour : habitudes prévues ce jour-là (jours fixés, ou « X fois par semaine » faite ce jour-là) et celles faites */
 function dayCounts(d){let sched=0,done=0;for(const h of trackerHabits()){if(d<hStart(h))continue;const dn=habitDone(h.id,d);if(freqOf(h)==='weekly'){if(dn){sched++;done++}}else if(fixedOn(h,d)){sched++;if(dn)done++}}return{sched,done}}
 function dayScore(d){const c=dayCounts(d);return c.sched?c.done/c.sched:null}
+/* Semaine en cours : ce qui reste à faire aujourd'hui ne compte qu'à minuit ; ce qui est déjà fait compte tout de suite */
 function weekStats(mon){const t=today();let sc=0,dn=0;const votes={};const tk=new Set(trackerHabits().map(h=>h.id));
   for(const h of habits()){const end=minD(addDays(mon,6),t);if(end<mon)continue;const c=habitCount(h.id,mon,end);votes[h.identityId||'_']=(votes[h.identityId||'_']||0)+c;if(!tk.has(h.id))continue;
-    if(freqOf(h)==='weekly'){const qw=wkQuota(h,mon);if(qw){sc+=addDays(mon,6)>=t?Math.min(c,qw):qw;dn+=Math.min(c,qw)}}else{const a=maxD(mon,hStart(h));const e=occurrences(h,a,end);sc+=e;dn+=Math.min(c,e)}}
+    if(freqOf(h)==='weekly'){const qw=wkQuota(h,mon);if(qw){sc+=addDays(mon,6)>=t?Math.min(c,qw):qw;dn+=Math.min(c,qw)}}
+    else{const a=maxD(mon,hStart(h)),live=end===t;let e=occurrences(h,a,live?addDays(t,-1):end);if(live&&t>=a&&fixedOn(h,t)&&habitDone(h.id,t))e++;sc+=e;dn+=Math.min(c,e)}}
   const days=[...Array(7)].map((_,i)=>addDays(mon,i));let td=0,tt=0;for(const d of days){const it=todoItems(d);tt+=it.length;td+=it.filter(x=>x.done).length}
   const moves=[];for(const v of videos()){const lg=v.stageLog||[];lg.forEach((l,i)=>{if(i>0&&l.date>=mon&&l.date<=days[6]&&stageIdx(l.stage)>stageIdx(lg[i-1].stage))moves.push({v,...l})})}
   let pt=0,pd=0,fm=0;for(const d of days){if(d>t||!dayOf(d).prio)continue;const x=prioInfo(d);if(!x||x.missing)continue;pt++;if(x.done)pd++;fm+=+x.p.spent||0}
@@ -1641,11 +1643,11 @@ const pills=(act,cur,opts,attrs='')=>`<div class="pills" role="group">${opts.map
 
 /* Graphique en ligne façon Trade Republic : courbe réelle + trajectoire attendue en pointillés ; survol ou doigt pour lire une date */
 const CH={};
-function lineChart(id,{xs,act,exp,y0=0,y1=1,fmtV=pctS,fmtX=null,live=true,good=null,expLabel='attendu',lab=null,det=null}){
+function lineChart(id,{xs,act,exp,y0=0,y1=1,fmtV=pctS,fmtX=null,live=true,good=null,expLabel='attendu',lab=null,det=null,empty=''}){
   const n=xs.length;const X=i=>n<=1?500:i/(n-1)*1000;const Y=v=>200-(clamp(v,y0,y1)-y0)/((y1-y0)||1)*200;
   const path=arr=>{let p='';(arr||[]).forEach((v,i)=>{if(v==null)return;p+=(p?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)});return p};
   let li=-1;act.forEach((v,i)=>{if(v!=null)li=i});
-  if(li<0)return `<div class="chart"><div class="c-empty">Pas encore de données sur cette période</div></div>`;
+  if(li<0)return `<div class="chart"><div class="c-empty">${esc(empty||'Pas encore de données sur cette période')}</div></div>`;
   const fi=act.findIndex(v=>v!=null);
   const up=good!=null?good:exp?act[li]>=exp[li]-.005:act[li]>=act[fi];
   CH[id]={xs,act,exp,fmtV,fmtX,X,Y,expLabel,lab,det};
@@ -2095,11 +2097,15 @@ function viewHabits(){
   const head=`<header class="page-head"><h1 class="h1">Habitudes</h1><button class="btn-sec hd-cfg" data-act="habits-cfg" aria-label="Gérer mes habitudes">${ICON.settings}<span>Gérer</span></button></header>`;
   if(!hs.length)return head+`<div class="empty-state"><h2>Ton traqueur d’habitudes</h2><p class="note">Les petits gestes de tous les jours : exercices du matin, douche froide, lecture… Ils se cochent ici et dans Aujourd’hui, à part du score de tes identités.</p><button class="btn" data-act="new-habit">Créer une habitude</button></div>`;
   const ws=weekStats(monday(t)),pw=weekStats(addDays(monday(t),-7));
-  const n=range==='w'?7:range==='m'?30:90;const xs=[...Array(n)].map((_,i)=>addDays(t,i-n+1));const act=xs.map(dayScore);
+  /* Une journée entre dans la courbe une fois terminée ; aujourd'hui y entre plus tôt si tout ce qui était prévu est fait.
+     La courbe commence au premier jour suivi (création des habitudes, Repartir de zéro) pour occuper toute la largeur. */
+  const tc=dayCounts(t),tDone=tc.sched>0&&tc.done>=tc.sched,last=tDone?t:addDays(t,-1);
+  const n=range==='w'?7:range==='m'?30:90,first=maxD(addDays(last,1-n),hs.reduce((m,h)=>minD(m,hStart(h)),t));
+  const xs=first>last?[]:[...Array(diffDays(first,last)+1)].map((_,i)=>addDays(first,i)),act=xs.map(dayScore);
   const cnt=`${ws.done} faite${ws.done>1?'s':''} sur ${ws.sched} prévue${ws.sched>1?'s':''} jusqu’ici`;
   return head+hero('hab','Habitudes tenues cette semaine',ws.rate==null?'—':pctS(ws.rate),ws.rate!=null&&pw.rate!=null&&pw.sched?`${dPts(ws.rate-pw.rate,'vs semaine dernière')}<span class="muted"> · ${cnt}</span>`:`<span class="muted">${cnt}</span>`)
-  +lineChart('hab',{xs,act,exp:null,lab:'Habitudes tenues ce jour-là',det:d=>{const c=dayCounts(d);return `${fmtDay(d,true)} : ${c.done} faite${c.done>1?'s':''} sur ${c.sched} prévue${c.sched>1?'s':''}`}})+pills('hab-range',range,[['w','1S'],['m','1M'],['t','3M']])+
-  `<p class="hint hab-cap">La courbe montre, jour par jour, la part des habitudes prévues que tu as faites. Glisse le doigt dessus pour lire un jour.</p>`+
+  +lineChart('hab',{xs,act,exp:null,live:last===t,lab:'Habitudes tenues ce jour-là',empty:'La courbe commence demain : une journée y entre une fois terminée.',det:d=>{const c=dayCounts(d);return `${fmtDay(d,true)} : ${c.done} faite${c.done>1?'s':''} sur ${c.sched} prévue${c.sched>1?'s':''}`}})+pills('hab-range',range,[['w','1S'],['m','1M'],['t','3M']])+
+  `<p class="hint hab-cap">La courbe montre, jour par jour, la part des habitudes prévues que tu as faites. La journée en cours y entre à minuit, ou dès que tout est fait. Glisse le doigt dessus pour lire un jour.</p>`+
   `<section class="sec"><div class="sec-h"><h2>Semaine ${isoWeek(mon).w}</h2>${qnav('hweek',fmtD(mon))}</div>${habitTable(mon,true)||'<p class="empty">Aucune habitude cette semaine-là.</p>'}${hwLegend()}
   <p class="hint" style="margin-top:8px">Touche une case : une habitude simple se coche, un second appui l’enlève. Minimum et cible, ou quantité : la case ouvre la saisie. 🌙 : ta qualité de sommeil, à part du calcul.</p></section>`}
 

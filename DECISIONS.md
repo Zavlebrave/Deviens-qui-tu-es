@@ -266,12 +266,22 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - Le relevé est gardé 30 minutes sur l'appareil. Hors connexion, en cas d'échec ou le lendemain sans nouveau relevé, la ligne n'apparaît pas.
   - « Ne pas afficher la météo » retire la ligne et l'invitation.
 
+## Courbe des habitudes : la journée en cours ne fait plus plonger (31 octobre 2026)
+
+- **Constat** : à 11 h 36, la courbe chutait le samedi et virait au rouge, alors que la veille était à 100 %. La journée en cours était comptée comme terminée : ce qui restait à faire comptait comme raté.
+- **Courbe** : une journée y entre une fois terminée, à minuit. Aujourd'hui y entre plus tôt quand tout ce qui était prévu est fait ; le point « en direct » n'apparaît que dans ce cas.
+- **Départ** : la courbe commence au premier jour suivi (création des habitudes, Repartir de zéro), même en vue 1S, 1M ou 3M. Elle occupe donc toute la largeur au lieu de se tasser à droite.
+- **Premier jour de suivi** : « La courbe commence demain : une journée y entre une fois terminée. »
+- **Taux de la semaine** (« Habitudes tenues cette semaine ») : une habitude prévue aujourd'hui et pas encore faite ne compte qu'à minuit. Faite, elle compte tout de suite. Le taux ne baisse donc plus chaque matin. C'est la règle déjà appliquée aux habitudes « X fois par semaine ».
+- **Inchangés** : le tableau de la semaine (✕ sur les jours passés seulement), Aujourd'hui, et la Revue des semaines passées.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Courbe des habitudes sans la journée en cours** : 24 vérifications automatisées (12 sur ordinateur, 12 sur téléphone), toutes réussies. Elles couvrent la situation d'Ivan (jeudi en partie, vendredi complet, samedi en cours), la journée complète, la case retirée, le lendemain, la vue 1M, le premier jour et le taux de la semaine.
 - **Habitude hebdo manquée, salutation, météo** : 88 vérifications automatisées (44 sur ordinateur, 44 sur téléphone), toutes réussies, avec Open-Meteo simulé.
   - Habitude hebdo : ✕ et jour libre une fois le quota atteint.
   - Salutation : de 4 h 30 à 23 h 30, fuseau, passage de 17 h app ouverte, prénom modifié ou vide.
