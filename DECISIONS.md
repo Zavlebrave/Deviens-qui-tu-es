@@ -285,12 +285,23 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - Aujourd'hui, une habitude pas encore faite n'est pas encore manquée.
 - **Remplace** la règle du 29 octobre, selon laquelle une « X fois par semaine » ne comptait, dans la semaine en cours, que lorsqu'elle était faite.
 
+## Quantité au-delà de ce qui était prévu : turquoise (12 novembre 2026)
+
+- **Avant** : une quantité qui dépassait de plus de 20 % l'objectif de la semaine passait en rouge, avec « Cible dépassée » (règle F11 du book). Sa fiche disait « Cible dépassée : tu peux t'arrêter ici ».
+- **Maintenant**, dépasser ce qui était prévu est un bon signe, montré en turquoise comme pour les habitudes :
+  - **Vue Semaine** : pile la cible reste en vert (« 100 % »). Au-delà, même de peu, le pourcentage, son libellé et la barre passent en turquoise : « 4 / 3 · 133 % · au-delà ».
+  - **Fiche de la preuve** : « Au-delà de l'objectif de la semaine : +1 séance. Ce surplus avance ton trimestre et allège les semaines suivantes. » La fin de la phrase n'apparaît que si l'objectif par semaine est calculé ; un objectif fixé à la main ne bouge pas.
+  - **Vue Trimestre** : une quantité au-delà de l'objectif du trimestre affiche « Au-delà de l'objectif » et son vrai pourcentage (« 133 % ») en turquoise. Elle dit « +1 séance en plus de l'objectif » au lieu du rythme à tenir. Pile l'objectif : « Atteint » et « Plus rien à faire ce trimestre ».
+- **Le rouge reste réservé** à ce qui manque : « À faire », « Non réalisé », « En retard », « Non atteint ».
+- **Inchangé** : les taux d'engagements (semaine, identités, Revue, trimestre) plafonnent toujours chaque preuve à 100 %. Le surplus d'une semaine ne compense donc pas une autre preuve en retard.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Quantité au-delà en turquoise** : 22 vérifications automatisées (11 sur ordinateur, 11 sur téléphone), toutes réussies. Elles couvrent les seuils de couleur, la vue Semaine (texte, couleur, barre), la fiche avec un objectif fixé ou calculé, la cible pile atteinte en vert et la vue Trimestre.
 - **« X fois par semaine » manquée comptée partout** : 20 vérifications automatisées (10 sur ordinateur, 10 sur téléphone), toutes réussies. Elles couvrent le compte du jour, la courbe et son libellé, le taux de la semaine, le ✕ du tableau, la journée en cours et le quota atteint plus tard.
 - **Courbe des habitudes sans la journée en cours** : 24 vérifications automatisées (12 sur ordinateur, 12 sur téléphone), toutes réussies. Elles couvrent la situation d'Ivan (jeudi en partie, vendredi complet, samedi en cours), la journée complète, la case retirée, le lendemain, la vue 1M, le premier jour et le taux de la semaine.
 - **Habitude hebdo manquée, salutation, météo** : 88 vérifications automatisées (44 sur ordinateur, 44 sur téléphone), toutes réussies, avec Open-Meteo simulé.
