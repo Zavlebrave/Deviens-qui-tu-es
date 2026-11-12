@@ -1339,9 +1339,10 @@ function krSpan(kr){const{start,end}=qRange(krQuarter(kr));const c0=(kr.createdA
   // une quantité vise son échéance : le rythme attendu et la cible par semaine se calculent jusqu'à elle
   // quantité liée à une vidéo : engagement seulement pendant sa phase du rétroplanning ; vidéo sans date : pas encore d'engagement
   // objectif à planifier : rien ne compte ; semaine de début choisie : l'engagement commence ce lundi-là
+  // date de lancement choisie dans la fiche : rien n'est attendu avant elle
   let e=end;if(kindOf(kr)==='qty'){const du=krDue(kr),st=krStartOf(kr);
     if(st==='plan'||(du&&du.src==='pending'))s=addDays(end,1);
-    else{if(du&&du.src==='retro'&&!objWeek(krObj(kr))){const r=retroOf(kr);if(r&&r.s>s)s=r.s}if(st&&st>s)s=st;if(du&&du.d<e)e=du.d<s?s:du.d}}
+    else{if(du&&du.src==='retro'&&!objWeek(krObj(kr))){const r=retroOf(kr);if(r&&r.s>s)s=r.s}if(st&&st>s)s=st;if(kr.startDate&&kr.startDate>s)s=kr.startDate;if(du&&du.d<e)e=du.d<s?s:du.d}}
   if(e<s)e=s;return{qs:start,s,e,qe:end}}
 /* Échéance d'une preuve : la date saisie dans sa fiche (quantité) ou sa semaine prévue (étape) ; sinon, pour un objectif lié
    à une vidéo, la fin de la phase du rétroplanning qui correspond à son nom ; sinon la fin du trimestre (quantité). */
@@ -1624,9 +1625,40 @@ function weekMood(mon){const days=[...Array(7)].map((_,i)=>addDays(mon,i));const
 const stageIdx=k=>Math.max(0,STAGES.findIndex(s=>s.k===k));
 const publishedBetween=(a,b)=>videos().filter(v=>v.stage==='publie'&&v.publishDate&&v.publishDate>=a&&v.publishDate<=b);
 const publishedInYear=y=>publishedBetween(`${y}-01-01`,`${y}-12-31`);
-function plan(v){if(!v.publishDate)return null;const st=settings();const f=st.complexity[v.complexity||'lourde']??1;let end=addDays(v.publishDate,-(+st.phases.marge||0));const out={};
+/* Calendrier d'une vidéo : le rétroplanning calculé à rebours depuis la sortie, ou, une fois ajusté depuis une preuve,
+   les dates enregistrées (v.sched). Titre & miniature suit la recherche et l'écriture, sauf s'il a ses propres dates. */
+function plan(v){if(!v.publishDate)return null;const sc=v.sched;
+  if(sc&&PHASES.every(p=>sc[p.k]&&sc[p.k].start&&sc[p.k].end)){const out={};for(const p of PHASES)out[p.k]={start:sc[p.k].start,end:sc[p.k].end};
+    out.packaging=sc.packaging&&sc.packaging.start&&sc.packaging.end?{start:sc.packaging.start,end:sc.packaging.end}:{start:out.recherche.start,end:out.ecriture.end};
+    out.start=PHASES.reduce((m,p)=>minD(m,out[p.k].start),out.angle.start);return out}
+  const st=settings();const f=st.complexity[v.complexity||'lourde']??1;let end=addDays(v.publishDate,-(+st.phases.marge||0));const out={};
   for(const p of [...PHASES].reverse()){const d=Math.max(1,Math.round((+st.phases[p.k]||0)*f));const start=addDays(end,-d);out[p.k]={start,end};end=start}
   out.packaging={start:out.recherche.start,end:out.ecriture.end};out.start=out.angle.start;return out}
+const videoKrs=vid=>list('objectives').filter(o=>o.videoId===vid).flatMap(o=>krsOf(o.id));
+const shiftPh=(a,n)=>({start:addDays(a.start,n),end:addDays(a.end,n)});
+/* Dates d'une phase changées depuis une preuve (choix d'Ivan, 12 novembre) : la phase prend ces dates, puis les phases
+   suivantes et la date de sortie glissent d'autant en gardant leur durée. Les phases d'avant ne bougent pas.
+   La preuve Publication change la date de sortie. L'objectif de la semaine des preuves de la vidéo est recalculé. */
+function setPhaseDates(vid,ph,s,d){const v=S.data.videos[vid],p=v&&plan(v);if(!p)return false;
+  const prev=clean(v),same=videoKrs(vid).filter(k=>(k.due||k.startDate)&&(r=>r&&r.ph===ph)(retroOf(k))),prevK=same.map(k=>[k.id,clean(k)]);
+  const doc={...clean(v),updatedAt:nowIso()};let msg;
+  if(ph==='pub'){if(!d||d===v.publishDate)return false;doc.publishDate=d;msg=`« ${v.title||'Vidéo'} » : sortie le ${fmtD(d,true)}`}
+  else{const sc={};for(const x of PHASES)sc[x.k]={start:p[x.k].start,end:p[x.k].end};if((v.sched&&v.sched.packaging)||ph==='packaging')sc.packaging={start:p.packaging.start,end:p.packaging.end};
+    const cur=sc[ph],ns=s||cur.start,ne=d?addDays(d,1):cur.end;
+    if(ne<=ns){toast('L’échéance doit tomber après la date de lancement : rien n’a changé.');return false}
+    if(ns===cur.start&&ne===cur.end)return false;
+    const delta=diffDays(cur.end,ne);sc[ph]={start:ns,end:ne};
+    if(ph!=='packaging'&&delta){const i=PHASES.findIndex(x=>x.k===ph);for(const x of PHASES.slice(i+1))sc[x.k]=shiftPh(sc[x.k],delta);
+      if(sc.packaging&&i<=PHASES.findIndex(x=>x.k==='ecriture'))sc.packaging=shiftPh(sc.packaging,delta);doc.publishDate=addDays(v.publishDate,delta)}
+    doc.sched=sc;msg=`« ${v.title||'Vidéo'} » : ${PHASE_FR[ph]} du ${fmtD(ns)} au ${fmtD(addDays(ne,-1))}${delta&&ph!=='packaging'?` · sortie ${delta>0?'repoussée':'avancée'} au ${fmtD(doc.publishDate)}`:''}`}
+  put('videos',vid,doc);for(const k of same)put('krs',k.id,{...clean(k),due:null,startDate:null,updatedAt:nowIso()});
+  const ids=()=>videoKrs(vid).map(k=>k.id);dropPlanTargets(ids());
+  toast(msg,{label:'Annuler',fn:()=>{put('videos',vid,prev);for(const[id,x] of prevK)put('krs',id,x);dropPlanTargets(ids());if(S.sheet)renderSheet()}});return true}
+/* Champs « Date de lancement » et « Échéance » d'une preuve liée à une phase : ils écrivent le calendrier de la vidéo */
+function krPhaseSet(id,path,val){const k=S.data.krs[id],r=k&&retroOf(k);if(!r||r.pending||!val)return;
+  const s=path==='phaseStart'?val:(k.startDate||r.s),d=path==='phaseEnd'?val:(k.due||r.d);
+  if(d<s){toast('L’échéance doit tomber après la date de lancement : rien n’a changé.');if(S.sheet)renderSheet();return}
+  setPhaseDates(r.v.id,r.ph,path==='phaseStart'?val:(k.startDate||null),path==='phaseEnd'?val:(k.due||null));if(S.sheet)setTimeout(renderSheet,0)}
 function deadline(v,p){p=p||plan(v);if(!p)return null;const m={idee:p.angle.start,angle:p.angle.end,recherche:p.recherche.end,ecriture:p.ecriture.end,packaging:p.ecriture.end,voix:p.voix.end,montage:p.montage.end};const d=m[v.stage];return d?addDays(d,-1):null}
 /* F35 : travail restant estimé par phase, en heures ; le temps qui passe ne le réduit pas tout seul */
 const PH_ALL=()=>[...PHASES,{k:'packaging',label:'Titre & miniature'}];
@@ -2546,11 +2578,24 @@ function sheetObjective(id){const o=S.data.objectives[id];const vids=videos().fi
   <section><h3>Preuves</h3><div class="list">${krsOf(id).map(k=>`<button class="row" data-act="edit-kr" data-id="${k.id}">${av(krIcon(k),idColor(o.identityId),'sm',krTitle(k))}<span class="m"><span class="t">${esc(krTitle(k))}</span><span class="s">${quarterSub(k)}</span></span><span class="r"><b>${pctS(krProgress(k))}</b></span></button>`).join('')}</div>${addBtn('new-kr','Ajouter une preuve',`data-id="${id}"`)}</section>
   <section><div><button class="btn-sec" data-act="save-template" data-id="${id}">Enregistrer comme modèle</button></div></section>
   ${delBtn('del-objective',id,'Supprimer l’objectif et ses preuves')}`}
+/* Date de lancement et échéance d'une quantité. Liée à une phase d'une vidéo datée : les deux champs écrivent le calendrier
+   du Studio (la phase prend ces dates, la suite et la sortie glissent). Sinon : dates propres à la preuve. */
+function krDatesHtml(k,du,rt){const id=k.id,sp=krSpan(k),st=krStartOf(k);
+  const tail='Le rythme attendu et l’objectif par semaine se calculent entre ces deux dates ; l’échéance passée, tout le reste est attendu.';
+  if(rt&&!rt.pending){const v=rt.v,pub=rt.ph==='pub',s0=k.startDate||rt.s,d0=k.due||rt.d,inp=(p,l,val)=>`<label class="field"><span>${l}</span><input id="kr-${p}-${id}" type="date" value="${esc(val||'')}" data-bind="krs:${id}:${p}"></label>`;
+    const legacy=k.due&&k.due!==rt.d?`<p class="hint">Échéance choisie avant le lien avec le Studio, qui prévoit le ${fmtD(rt.d)} : la modifier ici aligne le Studio.</p>`:'';
+    const what=pub?`C’est la date de publication de « ${esc(v.title||'Vidéo')} » : la changer ici la change dans le Studio${v.sched?' (les phases ajustées ne bougent pas)':', et son rétroplanning se recalcule'}.`
+      :`Phase « ${PHASE_FR[rt.ph]} » de « ${esc(v.title||'Vidéo')} » dans le Studio : changer ces dates met à jour son calendrier ; les phases suivantes et la date de sortie glissent d’autant.`;
+    return `<div class="two">${pub?'':inp('phaseStart','Date de lancement',s0)}${inp('phaseEnd',pub?'Échéance · date de publication':'Échéance',d0)}</div><p class="hint" style="margin:-4px 0 10px">${what} ${tail}</p>${legacy}`}
+  const sTxt=k.startDate?'Date choisie.':st==='plan'||(du&&du.src==='pending')?'Sans date choisie : pas encore planifiée.':`Sans date choisie : à partir du ${fmtD(sp.s)}.`;
+  const dTxt=k.due?'Date choisie.':`Sans date choisie : ${esc(dueTxtOf(du))}.`;
+  const bad=k.startDate&&du&&du.d&&k.startDate>du.d?'<p class="hint tone-warn">La date de lancement tombe après l’échéance : rien ne sera attendu avant l’échéance.</p>':'';
+  return `<div class="two">${F('krs',id,'startDate','Date de lancement',{type:'date',hint:sTxt})}${F('krs',id,'due','Échéance',{type:'date',hint:dTxt+(rt&&k.due?` Rétroplanning : ${fmtD(rt.d)} (${PHASE_FR[rt.ph]}).`:'')})}</div><p class="hint" style="margin:-4px 0 10px">${tail}</p>${bad}`}
 function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf(k);const q=krQuarter(k);let extra='';
   if(kind==='qty'){const log=Object.entries(k.log||{}).filter(([,v])=>+v).sort((a,b)=>b[0].localeCompare(a[0]));const mon=monday(today());
     const du=krDue(k),rt=retroOf(k);
     extra=`<div class="two">${F('krs',id,'target','Objectif du trimestre',{type:'number',ph:'4000'})}${F('krs',id,'unit','Unité',{ph:'mots, heures…'})}</div>
-    ${F('krs',id,'due','Échéance',{type:'date',hint:`${k.due?'Date choisie.':`Sans date choisie : ${esc(dueTxtOf(du))}.`}${rt&&k.due?` Rétroplanning : ${fmtD(rt.d)} (${PHASE_FR[rt.ph]}).`:''} Le rythme attendu et l’objectif par semaine visent cette date ; passée, tout le reste est attendu.`})}
+    ${krDatesHtml(k,du,rt)}
     ${(t=>{const v=krWeekValue(k,mon);return t>0&&v>t?`<p class="tone-over" style="margin:4px 0 8px">Au-delà de l’objectif de la semaine : +${fmtN(v-t)} ${esc(unitN(v-t,k.unit||''))}. Ce surplus avance ton trimestre${+k.weekTarget>0?'':' et allège les semaines suivantes'}.</p>`:''})(krWeekTarget(k,mon))}
     <div class="two">${F('krs',id,'weekTarget','Objectif par semaine',{type:'number',ph:`${fmtN(krWeekTarget({...k,weekTarget:null},mon))} (calculé)`,hint:'Laisse vide : le reste à faire est réparti sur les semaines restantes jusqu’à l’échéance.'})}${F('krs',id,'step','Pas des boutons − / +',{type:'number',ph:'1',hint:'Ex. 100 : chaque + ajoute 100 mots.'})}</div>
     <div class="field"><span>Ajouter</span><form class="qty-form" style="margin:0" data-form="qty" data-id="${id}"><input id="qty-s-${id}" type="number" step="any" inputmode="decimal" placeholder="Quantité" required aria-label="Quantité"><input name="date" type="date" value="${today()}" aria-label="Date" class="qdate"><button class="btn sm" type="submit">Ajouter</button></form></div>
@@ -2617,7 +2662,7 @@ function sheetVideo(id){const v=S.data.videos[id];const p=plan(v);const loops=v.
   ${v.scriptUrl?`<p class="sm"><a class="link" href="${esc(v.scriptUrl)}" target="_blank" rel="noopener">Ouvrir le script</a></p>`:''}
   ${F('videos',id,'refs','Références',{area:1,rows:3,ph:'Livres, vidéos, articles…'})}
   ${(()=>{const o=list('objectives').find(x=>x.videoId===id&&x.quarter===qKey(today()));const t=videoTemplate();return o?`<div><button class="btn-sec" data-act="edit-objective" data-id="${o.id}">Voir l’objectif « ${esc(o.title)} »</button></div>`:t?`<div><button class="btn-sec" data-act="video-objective" data-id="${id}">Créer l’objectif hebdo (modèle « ${esc(t.name)} »)</button></div>`:''})()}</section>
-  <section><h3>Rétroplanning <small>${esc(CPLX[v.complexity||'lourde'])} · ${tag(videoStatus(v))}</small></h3>${planHtml}</section>
+  <section><h3>${v.sched?'Calendrier':'Rétroplanning'} <small>${v.sched?'ajusté depuis tes preuves':esc(CPLX[v.complexity||'lourde'])} · ${tag(videoStatus(v))}</small></h3>${planHtml}${v.sched?`<p class="hint" style="margin-top:8px">Dates ajustées depuis une preuve : les phases ne suivent plus la date de publication ni la complexité. <button class="act" data-act="video-unsched" data-id="${id}">Revenir au rétroplanning</button></p>`:''}</section>
   <section><h3>Travail restant estimé <small>${fmtN(remainingHours(v))} h au total</small></h3><p class="hint" style="margin:4px 0 10px">Ajuste les heures restantes de chaque phase quand tu avances : le temps qui passe ne les réduit pas, et une nouvelle estimation ne repousse pas l’échéance.</p>
   <div class="form-grid">${PH_ALL().map(ph=>{const done=phaseDone(v,ph.k),val=(v.remaining||{})[ph.k];return `<label class="field"><span>${esc(ph.label)}${done?' · terminée':''}</span><input id="rem-${id}-${ph.k}" type="number" min="0" step="0.5" inputmode="decimal" data-bind="videos:${id}:remaining.${ph.k}" data-type="number" value="${val??''}" placeholder="heures">${done&&+val>0?'<span class="hint tone-warn">Phase terminée : remets ce reste à 0, ou corrige l’étape.</span>':''}</label>`}).join('')}</div></section>
   <section><h3>Angle d'attaque <small>verrouillé avant d'écrire</small></h3>
@@ -2719,6 +2764,7 @@ let toastT;function toast(m,act){let el=$('.toast');if(!el){el=document.createEl
 /* ---------- Liaison des champs ---------- */
 function setPath(o,path,v){const ks=path.split('.');let c=o;for(let i=0;i<ks.length-1;i++){const k=ks[i],nk=ks[i+1];if(c[k]==null||typeof c[k]!=='object')c[k]=/^\d+$/.test(nk)?[]:{};c=c[k]}c[ks[ks.length-1]]=v}
 function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
+  if(coll==='krs'&&(path==='phaseStart'||path==='phaseEnd')){krPhaseSet(id,path,el.value);return}
   if(el.type==='checkbox')v=el.checked;else if(el.dataset.type==='number')v=el.value===''?null:+el.value;else v=el.value;
   let base=coll==='settings'?settings():S.data[coll][id];
   if(!base&&coll==='reviews')base={week:id,monday:S.reviewWeek,createdAt:nowIso()};
@@ -2727,7 +2773,9 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   let doc=JSON.parse(JSON.stringify(clean(base)));setPath(doc,path,v);doc.updatedAt=nowIso();
   if(coll==='videos'&&path==='stage'&&base.stage!==v){doc.stageLog=[...(base.stageLog||[]),{stage:v,date:today()}];if(v==='publie'&&(!doc.publishDate||doc.publishDate>today()))doc.publishDate=today()}
   if(coll==='krs'&&path==='current')doc=withHistory(doc);
-  if(coll==='krs'&&path==='due')dropPlanTargets([id]);
+  if(coll==='krs'&&(path==='due'||path==='startDate'))dropPlanTargets([id]);
+  if(coll==='videos'&&(path==='publishDate'||path==='complexity'))setTimeout(()=>dropPlanTargets(videoKrs(id).map(k=>k.id)),0);
+  if(coll==='objectives'&&path==='videoId')setTimeout(()=>dropPlanTargets(krsOf(id).map(k=>k.id)),0);
   if(coll==='objectives'&&path==='startWeek')dropPlanTargets(krsOf(id).map(k=>k.id));
   if(coll==='identities'&&path==='launch')dropPlanTargets(list('krs').filter(k=>(krObj(k)||{}).identityId===id).map(k=>k.id));
   if(coll==='habits'&&path==='identityId'&&v!==base.identityId)doc.identitySince=today();
@@ -2736,7 +2784,7 @@ function bindChange(el){const[coll,id,path]=el.dataset.bind.split(':');let v;
   if(coll==='krs'&&path==='week'&&base.week&&v!==base.week&&!base.done)doc.reschedules=[...(base.reschedules||[]),{from:base.week,to:v||null,at:today()}];
   put(coll,id,doc);
   if(coll==='krs'&&path==='title'){const h=S.data.habits[doc.habitId];if(h&&h.fromKr===id)put('habits',h.id,{...h,name:String(v).trim()})}
-  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','metricId','minEnabled','week','objectiveId','min','max','due','launch'].includes(path)||/^remaining\./.test(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
+  if(S.sheet&&(['stage','publishDate','complexity','habitId','target','identityId','weekTarget','unit','done','videoId','metricId','minEnabled','week','objectiveId','min','max','due','startDate','launch'].includes(path)||/^remaining\./.test(path)||(coll==='templates'&&/kind$|video$/.test(path))))setTimeout(()=>{const f=document.activeElement&&document.activeElement.id;renderSheet();if(f){const e2=document.getElementById(f);if(e2)e2.focus()}},0)}
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='import-file'){readImport(el);return}if(el.dataset&&el.dataset.vstage){setStage(el.dataset.vstage,el.value);return}if(el.dataset&&el.dataset.ifilter){S.ideaF={...S.ideaF,[el.dataset.ifilter]:el.value};saveUi();renderMain(true);return}if(el.dataset&&el.dataset.cfg){cfgRename(el.dataset.cfg,el.dataset.old,el.value.trim());return}if(el.dataset&&el.dataset.bind)bindChange(el)});
 document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.fold&&S.fold[el.dataset.fold]!==el.open){S.fold[el.dataset.fold]=el.open;saveUi()}},true);
 /* Téléphone : la barre du haut est transparente sur l'image, puis devient opaque dès que la page défile */
@@ -2953,6 +3001,8 @@ const ACT={
   'edit-habit':a=>openSheet('habit','habits',a.dataset.id),
   'new-video':()=>{const id=create('videos',{title:'',stage:'angle',complexity:'lourde',stageLog:[{stage:'angle',date:today()}],loops:[],titles:['','',''],filters:{},stats:{}});openSheet('video','videos',id,true)},
   'edit-video':a=>openSheet('video','videos',a.dataset.id),
+  'video-unsched':a=>{const v=S.data.videos[a.dataset.id];if(!v||!v.sched)return;const prev=clean(v),doc={...clean(v),updatedAt:nowIso()};delete doc.sched;put('videos',v.id,doc);const ids=()=>videoKrs(v.id).map(k=>k.id);dropPlanTargets(ids());if(S.sheet)renderSheet();
+    toast(`« ${v.title||'Vidéo'} » : rétroplanning recalculé depuis la sortie`,{label:'Annuler',fn:()=>{put('videos',v.id,prev);dropPlanTargets(ids());if(S.sheet)renderSheet()}})},
   'stage':a=>{const v=S.data.videos[a.dataset.id];if(!v)return;const i=clamp(stageIdx(v.stage)+(+a.dataset.d),0,STAGES.length-1);setStage(v.id,STAGES[i].k)},
   'loop-add':a=>{const v=S.data.videos[a.dataset.id];if(!v)return;put('videos',v.id,{...v,loops:[...(v.loops||[]),{ctx:'',rev:''}]});renderSheet()},
   'loop-del':a=>{const v=S.data.videos[a.dataset.id];if(!v)return;const l=[...(v.loops||[])];l.splice(+a.dataset.i,1);put('videos',v.id,{...v,loops:l});renderSheet()},
@@ -3007,7 +3057,7 @@ document.addEventListener('drop',e=>{const col=e.target.closest&&e.target.closes
 /* ---------- Export / import (F41-F44) ---------- */
 const SCHEMA=3;
 const COLL_FR={settings:'Réglages',identities:'Identités',objectives:'Objectifs',krs:'Preuves',habits:'Habitudes',habitlog:'Suivi des habitudes (mois)',todos:'Tâches (jours)',days:'Matins',metrics:'Indicateurs',plans:'Cibles hebdomadaires',justifs:'Justifications',reviews:'Revues',videos:'Vidéos',ideas:'Idées',templates:'Modèles'};
-const DATE_FIELDS={todos:['date'],days:['date'],reviews:['monday'],plans:['monday'],justifs:['date'],videos:['publishDate'],krs:['week','doneAt']};
+const DATE_FIELDS={todos:['date'],days:['date'],reviews:['monday'],plans:['monday'],justifs:['date'],videos:['publishDate'],krs:['week','doneAt','due','startDate']};
 const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
 function snapshotData(){return{app:'deviens-qui-tu-es',schemaVersion:SCHEMA,version:SCHEMA,exportedAt:nowIso(),data:Object.fromEntries(COLLS.map(c=>[c,Object.fromEntries(Object.entries(S.data[c]).map(([k,v])=>[k,clean(v)]))]))}}
 async function saveJson(obj,name){const json=JSON.stringify(obj,null,2);

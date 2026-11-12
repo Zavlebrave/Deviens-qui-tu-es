@@ -295,12 +295,33 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Le rouge reste réservé** à ce qui manque : « À faire », « Non réalisé », « En retard », « Non atteint ».
 - **Inchangé** : les taux d'engagements (semaine, identités, Revue, trimestre) plafonnent toujours chaque preuve à 100 %. Le surplus d'une semaine ne compense donc pas une autre preuve en retard.
 
+## Date de lancement des preuves, synchronisée avec le Studio (12 novembre 2026)
+
+- **Date de lancement** : une quantité a désormais une « Date de lancement » à côté de son « Échéance ».
+  - Rien n'est attendu avant cette date : pas d'objectif de semaine, pas de rythme, pas d'engagement dans la Revue.
+  - La semaine du lancement, l'objectif est ramené aux jours restants.
+  - Identités affiche « À partir du 16 nov. ».
+  - Sans date choisie, la preuve démarre comme avant : début du trimestre, lancement de l'identité, démarrage de l'objectif ou phase de la vidéo.
+- **Preuve liée à une phase d'une vidéo datée** (objectif lié à une vidéo, nom reconnu : écriture, montage, voix, publication…) :
+  - Les deux champs affichent les dates de la phase dans le Studio et les modifient directement.
+  - **Choix d'Ivan : tout ce qui suit glisse.** La phase prend les nouvelles dates, puis les phases suivantes et la date de sortie se décalent d'autant, en gardant leur durée. Les phases d'avant ne bougent pas.
+  - Changer seulement la date de lancement raccourcit ou allonge la phase sans déplacer la suite.
+  - « Titre & miniature » (en parallèle) suit l'écriture, sauf s'il a ses propres dates.
+  - La preuve « Publication » n'a qu'un champ : la date de publication. Sans calendrier ajusté, tout le rétroplanning se recalcule depuis elle, comme dans le Studio. Avec un calendrier ajusté, seule la sortie bouge.
+  - Une échéance après le lancement est exigée ; sinon rien ne change et un message le dit.
+  - Un message résume le changement (« plan et script du 7 nov. au 24 nov. · sortie repoussée au 9 déc. ») avec « Annuler ».
+- **Objectif de la semaine recalculé** : l'objectif figé de la semaine en cours est recalculé pour toutes les preuves de la vidéo. Cela vaut quand une preuve change le calendrier, et aussi quand la date de sortie ou la complexité change dans le Studio, ou qu'un objectif est lié à une vidéo.
+- **Fiche vidéo** : le titre « Rétroplanning » devient « Calendrier · ajusté depuis tes preuves ». Les phases ne suivent alors plus la date de publication ni la complexité. « Revenir au rétroplanning » recalcule tout depuis la sortie, avec « Annuler ».
+- **Échéance choisie avant le lien** sur une preuve liée : elle reste prise en compte et la fiche signale la date du Studio. La modifier aligne le Studio, et la preuve suit ensuite le Studio.
+- **Non couvert** : les étapes (« Semaine prévue ») gardent leur fonctionnement ; changer leur semaine ne déplace pas le calendrier du Studio.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Date de lancement et synchro Studio** : 52 vérifications automatisées (26 sur ordinateur, 26 sur téléphone), toutes réussies. Elles couvrent la date de lancement d'une preuve libre, la preuve liée à l'écriture (la suite et la sortie glissent, les phases d'avant restent, l'objectif de la semaine est recalculé, la preuve « Montage » suit), « Annuler », la date de lancement seule et la date incohérente refusée. Elles couvrent aussi la fiche vidéo, la preuve Publication, « Revenir au rétroplanning », la sortie changée dans le Studio et l'ancienne échéance alignée.
 - **Quantité au-delà en turquoise** : 22 vérifications automatisées (11 sur ordinateur, 11 sur téléphone), toutes réussies. Elles couvrent les seuils de couleur, la vue Semaine (texte, couleur, barre), la fiche avec un objectif fixé ou calculé, la cible pile atteinte en vert et la vue Trimestre.
 - **« X fois par semaine » manquée comptée partout** : 20 vérifications automatisées (10 sur ordinateur, 10 sur téléphone), toutes réussies. Elles couvrent le compte du jour, la courbe et son libellé, le taux de la semaine, le ✕ du tableau, la journée en cours et le quota atteint plus tard.
 - **Courbe des habitudes sans la journée en cours** : 24 vérifications automatisées (12 sur ordinateur, 12 sur téléphone), toutes réussies. Elles couvrent la situation d'Ivan (jeudi en partie, vendredi complet, samedi en cours), la journée complète, la case retirée, le lendemain, la vue 1M, le premier jour et le taux de la semaine.
