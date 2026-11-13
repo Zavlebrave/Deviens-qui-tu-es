@@ -1340,9 +1340,10 @@ function krSpan(kr){const{start,end}=qRange(krQuarter(kr));const c0=(kr.createdA
   // quantité liée à une vidéo : engagement seulement pendant sa phase du rétroplanning ; vidéo sans date : pas encore d'engagement
   // objectif à planifier : rien ne compte ; semaine de début choisie : l'engagement commence ce lundi-là
   // date de lancement choisie dans la fiche : rien n'est attendu avant elle
+  // plusieurs démarrages (phase de la vidéo, objectif, identité, date choisie) : le plus tardif l'emporte
   let e=end;if(kindOf(kr)==='qty'){const du=krDue(kr),st=krStartOf(kr);
     if(st==='plan'||(du&&du.src==='pending'))s=addDays(end,1);
-    else{if(du&&du.src==='retro'&&!objWeek(krObj(kr))){const r=retroOf(kr);if(r&&r.s>s)s=r.s}if(st&&st>s)s=st;if(kr.startDate&&kr.startDate>s)s=kr.startDate;if(du&&du.d<e)e=du.d<s?s:du.d}}
+    else{const r=retroOf(kr);if(r&&!r.pending&&r.s>s)s=r.s;if(st&&st>s)s=st;if(kr.startDate&&kr.startDate>s)s=kr.startDate;if(du&&du.d<e)e=du.d<s?s:du.d}}
   if(e<s)e=s;return{qs:start,s,e,qe:end}}
 /* Échéance d'une preuve : la date saisie dans sa fiche (quantité) ou sa semaine prévue (étape) ; sinon, pour un objectif lié
    à une vidéo, la fin de la phase du rétroplanning qui correspond à son nom ; sinon la fin du trimestre (quantité). */
@@ -1466,13 +1467,13 @@ function milestoneTag(kr,mon){const sun=addDays(mon,6);
   return `<span class="tag mut">Prévue sem. ${isoWeek(w).w}${rt}</span>`}
 function weekSub(kr,mon){const k=kindOf(kr);
   if(k==='habit'){const h=habitOf(kr);if(!h)return 'Habitude pas encore activée';return mon===monday(today())?`${esc(freqLabel(h))} · ${dueTxt(h)}`:esc(freqLabel(h))}
-  if(k==='qty'){const dl=targetDelta(kr,mon),du=krDue(kr),sp=krSpan(kr);if(krStartOf(kr)==='plan')return objPlan(krObj(kr))?'À planifier : objectif pas encore démarré':'À lancer : identité pas encore lancée';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>addDays(mon,6))return `À partir du ${fmtD(sp.s)}${(r=>r&&r.s===sp.s)(retroOf(kr))?' (rétroplanning)':''}`;return `${dl?esc(dl)+' · ':''}${du&&du.src!=='q'?`échéance ${fmtD(du.d)} · `:''}trimestre ${fmtN(krValue(kr))} / ${fmtN(krTarget(kr))} ${esc(kr.unit||'')}`}
+  if(k==='qty'){const dl=targetDelta(kr,mon),du=krDue(kr),sp=krSpan(kr);if(krStartOf(kr)==='plan')return objPlan(krObj(kr))?'À planifier : objectif pas encore démarré':'À lancer : identité pas encore lancée';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>addDays(mon,6))return `À partir du ${fmtD(sp.s)}${(r=>r&&r.s===sp.s?(r.v.sched?' (calendrier du Studio)':' (rétroplanning)'):'')(retroOf(kr))}`;return `${mon===monday(today())&&sp.s>today()?`À partir du ${fmtD(sp.s)} · `:''}${dl?esc(dl)+' · ':''}${du&&du.src!=='q'?`échéance ${fmtD(du.d)} · `:''}trimestre ${fmtN(krValue(kr))} / ${fmtN(krTarget(kr))} ${esc(kr.unit||'')}`}
   if(k==='milestone')return milestoneTag(kr,mon);
   if(k==='videos')return 'Automatique · Studio';
   return `Niveau ${fmtN(kr.current)} ${esc(kr.unit||'')} · objectif ${fmtN(krTarget(kr))}`}
 function quarterSub(kr){const k=kindOf(kr);
   if(k==='habit'){const h=habitOf(kr);return h?esc(freqLabel(h)):'Aucune habitude liée'}
-  if(k==='qty'){const du=krDue(kr),sp=krSpan(kr);if(krStartOf(kr)==='plan')return objPlan(krObj(kr))?'À planifier : objectif pas encore démarré':'À lancer : identité pas encore lancée';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>today())return `À partir du ${fmtD(sp.s)}${(r=>r&&r.s===sp.s)(retroOf(kr))?' (rétroplanning)':''} · échéance ${fmtD(du.d)}`;const v=krValue(kr),tg=krTarget(kr),ech=du&&du.src!=='q'?` · échéance ${fmtD(du.d)}`:'';if(tg>0&&v>=tg)return (v>tg?`+${fmtN(v-tg)} ${esc(unitN(v-tg,kr.unit||''))} en plus de l’objectif`:'Plus rien à faire ce trimestre')+ech;
+  if(k==='qty'){const du=krDue(kr),sp=krSpan(kr);if(krStartOf(kr)==='plan')return objPlan(krObj(kr))?'À planifier : objectif pas encore démarré':'À lancer : identité pas encore lancée';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>today())return `À partir du ${fmtD(sp.s)}${(r=>r&&r.s===sp.s?(r.v.sched?' (calendrier du Studio)':' (rétroplanning)'):'')(retroOf(kr))} · échéance ${fmtD(du.d)}`;const v=krValue(kr),tg=krTarget(kr),ech=du&&du.src!=='q'?` · échéance ${fmtD(du.d)}`:'';if(tg>0&&v>=tg)return (v>tg?`+${fmtN(v-tg)} ${esc(unitN(v-tg,kr.unit||''))} en plus de l’objectif`:'Plus rien à faire ce trimestre')+ech;
     return `${fmtN(krWeekTarget(kr,monday(today())))} ${esc(kr.unit||'')} / semaine pour tenir${ech}`}
   if(k==='milestone'){const w=msWeek(kr);return kr.done?`Faite le ${fmtD(kr.doneAt)}`:w?`Prévue sem. ${isoWeek(w).w}${kr.week?'':' (rétroplanning)'}`:'À planifier'}
   if(k==='videos')return 'Automatique · Studio';
@@ -2065,7 +2066,8 @@ function groupBlock(key,icon,title,ks,i,mode,mon,foot){const sun=addDays(mon,6);
 function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());const isCur=mon===cur;const actDate=mode==='week'&&mon<cur?addDays(mon,6):today();
   let rb,rs,sub,bp,be=null,col;
   if(mode==='week'){const t=krWeekTarget(k,mon),r=t>0?krWeekRate(k,mon):null,past=mon<cur,paused=idPausedWeek(k.identityId,mon);sub=paused?'<span class="muted">Identité en pause</span>':weekSub(k,mon);rb=weekVal(k,mon);
-    rs=paused||(!(t>0)&&(kind==='milestone'||krSpan(k).s>addDays(mon,6)))?'':rateHtml(r,past);col=toneVar(rateTone(r,past).k);
+    const soon=isCur&&kind==='qty'&&!paused&&t>0&&krSpan(k).s>today()&&!(krWeekValue(k,mon)>0);
+    rs=paused||(!(t>0)&&(kind==='milestone'||krSpan(k).s>addDays(mon,6)))?'':soon?`<span class="tone-mut">Démarre le ${fmtD(krSpan(k).s)}</span>`:rateHtml(r,past);col=soon?'var(--faint)':toneVar(rateTone(r,past).k);
     if(kind==='milestone'&&k.abandoned&&!k.done){rb='Abandonnée';rs=t>0?'<span class="muted">0 % · compte cette semaine</span>':'';col='var(--faint)'}
     bp=r==null?0:Math.min(1,r);if(isCur&&kind!=='milestone'&&!paused){const x=krWeekExpected(k,mon,today());be=x>0?x:null}}
   else{const st=krStatus(k);rb=kind==='milestone'?(k.done?'Faite':'À faire'):`${fmtN(krValue(k))} / ${fmtN(krTarget(k))}`;rs=st.k==='over'?`<span class="tone-over">${pctS(krValue(k)/krTarget(k))}</span>`:pctS(krProgress(k));sub=`${tag(st)} · ${quarterSub(k)}`;bp=krProgress(k);be=krExpectedAt(k,today());col=toneVar(st.k)}
@@ -2581,16 +2583,17 @@ function sheetObjective(id){const o=S.data.objectives[id];const vids=videos().fi
 /* Date de lancement et échéance d'une quantité. Liée à une phase d'une vidéo datée : les deux champs écrivent le calendrier
    du Studio (la phase prend ces dates, la suite et la sortie glissent). Sinon : dates propres à la preuve. */
 function krDatesHtml(k,du,rt){const id=k.id,sp=krSpan(k),st=krStartOf(k);
+  const later=s0=>st&&st!=='plan'&&st===sp.s&&(!s0||st>s0)?`<p class="hint">Rien n’est attendu avant le ${fmtD(st)} : démarrage de l’objectif ou lancement de l’identité, plus tardif que cette date.</p>`:'';
   const tail='Le rythme attendu et l’objectif par semaine se calculent entre ces deux dates ; l’échéance passée, tout le reste est attendu.';
   if(rt&&!rt.pending){const v=rt.v,pub=rt.ph==='pub',s0=k.startDate||rt.s,d0=k.due||rt.d,inp=(p,l,val)=>`<label class="field"><span>${l}</span><input id="kr-${p}-${id}" type="date" value="${esc(val||'')}" data-bind="krs:${id}:${p}"></label>`;
     const legacy=k.due&&k.due!==rt.d?`<p class="hint">Échéance choisie avant le lien avec le Studio, qui prévoit le ${fmtD(rt.d)} : la modifier ici aligne le Studio.</p>`:'';
     const what=pub?`C’est la date de publication de « ${esc(v.title||'Vidéo')} » : la changer ici la change dans le Studio${v.sched?' (les phases ajustées ne bougent pas)':', et son rétroplanning se recalcule'}.`
       :`Phase « ${PHASE_FR[rt.ph]} » de « ${esc(v.title||'Vidéo')} » dans le Studio : changer ces dates met à jour son calendrier ; les phases suivantes et la date de sortie glissent d’autant.`;
-    return `<div class="two">${pub?'':inp('phaseStart','Date de lancement',s0)}${inp('phaseEnd',pub?'Échéance · date de publication':'Échéance',d0)}</div><p class="hint" style="margin:-4px 0 10px">${what} ${tail}</p>${legacy}`}
+    return `<div class="two">${pub?'':inp('phaseStart','Date de lancement',s0)}${inp('phaseEnd',pub?'Échéance · date de publication':'Échéance',d0)}</div><p class="hint" style="margin:-4px 0 10px">${what} ${tail}</p>${legacy}${later(s0)}`}
   const sTxt=k.startDate?'Date choisie.':st==='plan'||(du&&du.src==='pending')?'Sans date choisie : pas encore planifiée.':`Sans date choisie : à partir du ${fmtD(sp.s)}.`;
   const dTxt=k.due?'Date choisie.':`Sans date choisie : ${esc(dueTxtOf(du))}.`;
   const bad=k.startDate&&du&&du.d&&k.startDate>du.d?'<p class="hint tone-warn">La date de lancement tombe après l’échéance : rien ne sera attendu avant l’échéance.</p>':'';
-  return `<div class="two">${F('krs',id,'startDate','Date de lancement',{type:'date',hint:sTxt})}${F('krs',id,'due','Échéance',{type:'date',hint:dTxt+(rt&&k.due?` Rétroplanning : ${fmtD(rt.d)} (${PHASE_FR[rt.ph]}).`:'')})}</div><p class="hint" style="margin:-4px 0 10px">${tail}</p>${bad}`}
+  return `<div class="two">${F('krs',id,'startDate','Date de lancement',{type:'date',hint:sTxt})}${F('krs',id,'due','Échéance',{type:'date',hint:dTxt+(rt&&k.due?` Rétroplanning : ${fmtD(rt.d)} (${PHASE_FR[rt.ph]}).`:'')})}</div><p class="hint" style="margin:-4px 0 10px">${tail}</p>${bad}${k.startDate?later(k.startDate):''}`}
 function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf(k);const q=krQuarter(k);let extra='';
   if(kind==='qty'){const log=Object.entries(k.log||{}).filter(([,v])=>+v).sort((a,b)=>b[0].localeCompare(a[0]));const mon=monday(today());
     const du=krDue(k),rt=retroOf(k);

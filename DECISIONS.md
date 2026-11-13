@@ -315,12 +315,26 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Échéance choisie avant le lien** sur une preuve liée : elle reste prise en compte et la fiche signale la date du Studio. La modifier aligne le Studio, et la preuve suit ensuite le Studio.
 - **Non couvert** : les étapes (« Semaine prévue ») gardent leur fonctionnement ; changer leur semaine ne déplace pas le calendrier du Studio.
 
+## Date de lancement ignorée quand l'objectif avait une semaine de démarrage (13 novembre 2026)
+
+- **Constat** : « Finir le montage » affichait « 0 / 7 · 0 % · À faire » en rouge, alors que son lancement était prévu plus tard. Son objectif avait un démarrage « à partir de la semaine 46 ». Dans ce cas, l'app ignorait les dates de la phase de la vidéo, donc la date de lancement affichée dans la fiche de la preuve. La preuve démarrait au lundi de la semaine 46, avec une cible calculée jusqu'à l'échéance.
+- **Règle** : quand plusieurs démarrages s'appliquent, le plus tardif l'emporte. Ce sont la phase de la vidéo (la date de lancement d'une preuve liée), le démarrage de l'objectif, le lancement de l'identité et la date de lancement choisie.
+  - Cela remplace la règle du 29 octobre, où une semaine de démarrage de l'objectif remplaçait le rétroplanning, même plus tôt que la phase.
+  - Pour commencer une phase plus tôt, on change désormais la date de lancement de la preuve, ce qui avance la phase dans le Studio.
+- **Fiche** : si le démarrage de l'objectif ou de l'identité est plus tardif que la date de lancement affichée, elle le dit : « Rien n'est attendu avant le 23 nov. : démarrage de l'objectif ou lancement de l'identité, plus tardif que cette date. »
+- **Lancement plus tard dans la semaine en cours** :
+  - L'objectif de la semaine est ramené aux jours restants, comme avant.
+  - Jusqu'au jour du lancement, la ligne dit « À partir du 15 nov. » et « Démarre le 15 nov. », en gris, au lieu de « 0 % · À faire » en rouge.
+  - Le rouge revient seulement à partir de ce jour, si rien n'est fait.
+- **Libellé** : « À partir du 22 nov. (calendrier du Studio) » quand la date vient d'un calendrier ajusté depuis une preuve, « (rétroplanning) » sinon.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Date de lancement face au démarrage de l'objectif** : 16 vérifications automatisées (8 sur ordinateur, 8 sur téléphone), toutes réussies. Elles couvrent la situation d'Ivan rejouée par la fiche, la cible des semaines suivantes, le libellé dans Identités, l'objectif plus tardif expliqué dans la fiche, et le lancement le dimanche (gris, puis rouge à partir de ce jour).
 - **Date de lancement et synchro Studio** : 52 vérifications automatisées (26 sur ordinateur, 26 sur téléphone), toutes réussies. Elles couvrent la date de lancement d'une preuve libre, la preuve liée à l'écriture (la suite et la sortie glissent, les phases d'avant restent, l'objectif de la semaine est recalculé, la preuve « Montage » suit), « Annuler », la date de lancement seule et la date incohérente refusée. Elles couvrent aussi la fiche vidéo, la preuve Publication, « Revenir au rétroplanning », la sortie changée dans le Studio et l'ancienne échéance alignée.
 - **Quantité au-delà en turquoise** : 22 vérifications automatisées (11 sur ordinateur, 11 sur téléphone), toutes réussies. Elles couvrent les seuils de couleur, la vue Semaine (texte, couleur, barre), la fiche avec un objectif fixé ou calculé, la cible pile atteinte en vert et la vue Trimestre.
 - **« X fois par semaine » manquée comptée partout** : 20 vérifications automatisées (10 sur ordinateur, 10 sur téléphone), toutes réussies. Elles couvrent le compte du jour, la courbe et son libellé, le taux de la semaine, le ✕ du tableau, la journée en cours et le quota atteint plus tard.
