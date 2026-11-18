@@ -57,7 +57,7 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(
 :root{
   --bg:#0D1117; --side:#0F131A; --surface:#151A22; --surface-2:#1C222B; --surface-3:#29303C; --line:#222935; --line-2:#2D3543;
   --fg:#F2F5F9; --muted:#AEB8C6; --faint:#808CA0;
-  --pos:#52E397; --neg:#FD5661; --warn:#F99A45; --over:#2ED3DC;
+  --pos:#52E397; --neg:#FD5661; --warn:#F99A45; --over:#2ED3DC; --ice:#8FB4FF;
   --accent:#4562F2; --accent-h:#3A55E0; --accent-ink:#FFFFFF; --accent-2:#7FA0FF; --accent-bg:#1A213B;
   --ph-angle:#8E9AAF; --ph-recherche:#4C7DFF; --ph-ecriture:#9B6BFF; --ph-packaging:#E8B10E; --ph-voix:#19B9A8; --ph-montage:#FF7A45;
   --f:"Outfit",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
@@ -682,7 +682,20 @@ main{max-width:1240px;padding-block:30px 120px;position:relative}
 .streak{grid-area:sk;display:inline-flex;align-items:center;justify-content:flex-end;gap:4px;min-width:40px;color:var(--warn);font-weight:600;font-size:15px;white-space:nowrap}
 .streak svg{width:18px;height:18px}
 .streak .u{display:none;margin-left:2px}
-.streak.frozen{color:#8FB4FF}
+.streak.frozen{color:var(--ice)}
+/* Gel exceptionnel d'une preuve : bleu glace et flocon */
+.tone-ice{color:var(--ice)}
+.ice{display:inline-flex;align-items:center;gap:4px;color:var(--ice);font-weight:500}
+.ice svg{width:13px;height:13px;flex:none}
+.frz{margin:16px 0 10px;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--ice) 8%,var(--surface-2));border:1px solid color-mix(in srgb,var(--ice) 28%,transparent)}
+.frz h4,.frz-box h4{display:flex;align-items:center;gap:8px;margin:0 0 6px;color:var(--ice);font-size:15px}
+.frz h4 svg,.frz-box h4 svg,.frz-btn svg,.btn-ice svg,.frz-log b svg{width:17px;height:17px;flex:none}
+.frz-btn{display:inline-flex;align-items:center;gap:8px;color:var(--ice)}
+.frz-box{border:1px solid color-mix(in srgb,var(--ice) 32%,transparent);background:color-mix(in srgb,var(--ice) 7%,var(--surface-2));box-shadow:inset 3px 0 0 var(--ice)}
+.howto.frz-box h4{font-size:15px;letter-spacing:0;text-transform:none;color:var(--ice)}
+.btn.btn-ice{display:inline-flex;align-items:center;gap:8px;background:var(--ice);color:#0D1117}
+.btn.btn-ice:hover{background:#A9C6FF}
+.frz-log b{display:inline-flex;align-items:center;gap:6px;color:var(--ice);font-weight:500}
 .hctl{grid-area:ct;display:flex;align-items:center;gap:8px}
 .tlist{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:#12171F;padding:0 14px}
 .tlist .todo li{padding:12px 0;border-bottom:1px solid var(--line)}
@@ -1381,9 +1394,13 @@ const habitOf=kr=>S.data.habits[kr.habitId];
 const krTitle=kr=>kr.title||(habitOf(kr)||{}).name||'Preuve sans titre';
 const krIcon=kr=>kr.icon||(habitOf(kr)||{}).icon||'';
 const sumLog=(log,a,b)=>Object.entries(log||{}).reduce((s,[d,v])=>d>=a&&d<=b?s+(+v||0):s,0);
+/* Gel exceptionnel d'une quantité : ce qui ne peut exceptionnellement pas être fait sort de l'objectif, sans perte ni bonus
+   (12 séances prévues sur le trimestre, une absence figée : 11 ; la semaine concernée perd aussi cette séance) */
+const frozenSum=(kr,a,b)=>(kr.freezes||[]).reduce((s,f)=>f&&f.d>=a&&f.d<=b?s+(+f.n||0):s,0);
+const ICE=()=>picSvg('snow');
 const signed=(v,u)=>`${v>0?'+':v<0?'−':''}${fmtN(Math.abs(v))}${u?' '+esc(u):''}`;
 function autoTarget(kr){const h=habitOf(kr);if(!h)return 0;const{s,e}=krSpan(kr);return occurrences(h,maxD(s,hStart(h)),e)}
-function krTarget(kr){const k=kindOf(kr);if(k==='milestone')return 1;if(k==='habit')return autoTarget(kr);return +kr.target||0}
+function krTarget(kr){const k=kindOf(kr);if(k==='milestone')return 1;if(k==='habit')return autoTarget(kr);if(k==='qty'){const{start,end}=qRange(krQuarter(kr));return Math.max(0,(+kr.target||0)-frozenSum(kr,start,end))}return +kr.target||0}
 const qtyStep=kr=>+kr.step>0?+kr.step:1;
 const krStart=kr=>kindOf(kr)==='level'?(+kr.start||0):0;
 function levelAt(kr,d){const h=kr.history||{};const ks=Object.keys(h).filter(x=>x<=d).sort();if(ks.length)return +h[ks[ks.length-1]]||0;return Object.keys(h).length?krStart(kr):(+kr.current||0)}
@@ -1425,7 +1442,7 @@ function krWeekValue(kr,mon,until){const sun=until||addDays(mon,6);const k=kindO
 function krWeekTarget(kr,mon){const k=kindOf(kr);const sun=addDays(mon,6);const{qs,s,e,qe}=krSpan(kr);
   if(k==='habit'){const h=habitOf(kr);if(!h)return 0;if(kr.maint){const from=maxD(maxD(mon,hStart(h)),kr.createdAt);if(from>sun)return 0;return freqOf(h)==='weekly'?(h.perWeek||3):occurrences(h,from,sun)}return weekExpected(h,mon)}
   if(sun<s||mon>(k==='qty'?qe:e))return 0;
-  if(k==='qty'){if(+kr.weekTarget>0)return +kr.weekTarget;const pl=S.data.plans[isoWeek(mon).key];if(pl&&pl.targets&&pl.targets[kr.id]!=null)return +pl.targets[kr.id];return qtyAutoTarget(kr,mon)}
+  if(k==='qty'){const fz=frozenSum(kr,mon,sun),net=x=>Math.max(0,x-fz);if(+kr.weekTarget>0)return net(+kr.weekTarget);const pl=S.data.plans[isoWeek(mon).key];if(pl&&pl.targets&&pl.targets[kr.id]!=null)return net(+pl.targets[kr.id]);return net(qtyAutoTarget(kr,mon))}
   if(k==='milestone'){if(kr.done&&kr.doneAt<mon)return 0;if(kr.done&&kr.doneAt<=sun)return 1;if(kr.abandoned&&kr.abandoned.at<mon)return 0;return msPlannedIn(kr,mon)?1:0}
   return 0}
 /* Cible hebdomadaire figée (F13) : calculée au début de la semaine pour chaque quantité, puis conservée dans « plans ».
@@ -1467,14 +1484,15 @@ function milestoneTag(kr,mon){const sun=addDays(mon,6);
   return `<span class="tag mut">Prévue sem. ${isoWeek(w).w}${rt}</span>`}
 function weekSub(kr,mon){const k=kindOf(kr);
   if(k==='habit'){const h=habitOf(kr);if(!h)return 'Habitude pas encore activée';return mon===monday(today())?`${esc(freqLabel(h))} · ${dueTxt(h)}`:esc(freqLabel(h))}
-  if(k==='qty'){const dl=targetDelta(kr,mon),du=krDue(kr),sp=krSpan(kr);if(krStartOf(kr)==='plan')return objPlan(krObj(kr))?'À planifier : objectif pas encore démarré':'À lancer : identité pas encore lancée';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>addDays(mon,6))return `À partir du ${fmtD(sp.s)}${(r=>r&&r.s===sp.s?(r.v.sched?' (calendrier du Studio)':' (rétroplanning)'):'')(retroOf(kr))}`;return `${mon===monday(today())&&sp.s>today()?`À partir du ${fmtD(sp.s)} · `:''}${dl?esc(dl)+' · ':''}${du&&du.src!=='q'?`échéance ${fmtD(du.d)} · `:''}trimestre ${fmtN(krValue(kr))} / ${fmtN(krTarget(kr))} ${esc(kr.unit||'')}`}
+  if(k==='qty'){const dl=targetDelta(kr,mon),du=krDue(kr),sp=krSpan(kr);if(krStartOf(kr)==='plan')return objPlan(krObj(kr))?'À planifier : objectif pas encore démarré':'À lancer : identité pas encore lancée';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>addDays(mon,6))return `À partir du ${fmtD(sp.s)}${(r=>r&&r.s===sp.s?(r.v.sched?' (calendrier du Studio)':' (rétroplanning)'):'')(retroOf(kr))}`;const fz=frozenSum(kr,mon,addDays(mon,6));return `${fz>0?`<span class="ice" title="Figé exceptionnellement cette semaine, sans perte ni bonus">${ICE()}Figé : ${fmtN(fz)} ${esc(unitN(fz,kr.unit||''))}</span> · `:''}${mon===monday(today())&&sp.s>today()?`À partir du ${fmtD(sp.s)} · `:''}${dl?esc(dl)+' · ':''}${du&&du.src!=='q'?`échéance ${fmtD(du.d)} · `:''}trimestre ${fmtN(krValue(kr))} / ${fmtN(krTarget(kr))} ${esc(kr.unit||'')}`}
   if(k==='milestone')return milestoneTag(kr,mon);
   if(k==='videos')return 'Automatique · Studio';
   return `Niveau ${fmtN(kr.current)} ${esc(kr.unit||'')} · objectif ${fmtN(krTarget(kr))}`}
 function quarterSub(kr){const k=kindOf(kr);
   if(k==='habit'){const h=habitOf(kr);return h?esc(freqLabel(h)):'Aucune habitude liée'}
   if(k==='qty'){const du=krDue(kr),sp=krSpan(kr);if(krStartOf(kr)==='plan')return objPlan(krObj(kr))?'À planifier : objectif pas encore démarré':'À lancer : identité pas encore lancée';if(du&&du.src==='pending')return 'Pas encore planifiée : vidéo sans date';if(sp.s>today())return `À partir du ${fmtD(sp.s)}${(r=>r&&r.s===sp.s?(r.v.sched?' (calendrier du Studio)':' (rétroplanning)'):'')(retroOf(kr))} · échéance ${fmtD(du.d)}`;const v=krValue(kr),tg=krTarget(kr),ech=du&&du.src!=='q'?` · échéance ${fmtD(du.d)}`:'';if(tg>0&&v>=tg)return (v>tg?`+${fmtN(v-tg)} ${esc(unitN(v-tg,kr.unit||''))} en plus de l’objectif`:'Plus rien à faire ce trimestre')+ech;
-    return `${fmtN(krWeekTarget(kr,monday(today())))} ${esc(kr.unit||'')} / semaine pour tenir${ech}`}
+    const qz=(({start,end})=>frozenSum(kr,start,end))(qRange(krQuarter(kr)));
+    return `${fmtN(krWeekTarget(kr,monday(today())))} ${esc(kr.unit||'')} / semaine pour tenir${ech}${qz>0?` · <span class="ice">${ICE()}Figé : ${fmtN(qz)} ${esc(unitN(qz,kr.unit||''))}</span>`:''}`}
   if(k==='milestone'){const w=msWeek(kr);return kr.done?`Faite le ${fmtD(kr.doneAt)}`:w?`Prévue sem. ${isoWeek(w).w}${kr.week?'':' (rétroplanning)'}`:'À planifier'}
   if(k==='videos')return 'Automatique · Studio';
   return `${esc(kr.unit||'Niveau')} · départ ${fmtN(krStart(kr))}`}
@@ -2068,6 +2086,7 @@ function krRow(k,color,mode,mon){const kind=kindOf(k);const cur=monday(today());
   if(mode==='week'){const t=krWeekTarget(k,mon),r=t>0?krWeekRate(k,mon):null,past=mon<cur,paused=idPausedWeek(k.identityId,mon);sub=paused?'<span class="muted">Identité en pause</span>':weekSub(k,mon);rb=weekVal(k,mon);
     const soon=isCur&&kind==='qty'&&!paused&&t>0&&krSpan(k).s>today()&&!(krWeekValue(k,mon)>0);
     rs=paused||(!(t>0)&&(kind==='milestone'||krSpan(k).s>addDays(mon,6)))?'':soon?`<span class="tone-mut">Démarre le ${fmtD(krSpan(k).s)}</span>`:rateHtml(r,past);col=soon?'var(--faint)':toneVar(rateTone(r,past).k);
+    if(kind==='qty'&&!(t>0)&&frozenSum(k,mon,addDays(mon,6))>0){rb=`<span class="ice">${ICE()}Figée</span>`;rs='<span class="tone-ice">Semaine figée</span>';col='var(--ice)'}
     if(kind==='milestone'&&k.abandoned&&!k.done){rb='Abandonnée';rs=t>0?'<span class="muted">0 % · compte cette semaine</span>':'';col='var(--faint)'}
     bp=r==null?0:Math.min(1,r);if(isCur&&kind!=='milestone'&&!paused){const x=krWeekExpected(k,mon,today());be=x>0?x:null}}
   else{const st=krStatus(k);rb=kind==='milestone'?(k.done?'Faite':'À faire'):`${fmtN(krValue(k))} / ${fmtN(krTarget(k))}`;rs=st.k==='over'?`<span class="tone-over">${pctS(krValue(k)/krTarget(k))}</span>`:pctS(krProgress(k));sub=`${tag(st)} · ${quarterSub(k)}`;bp=krProgress(k);be=krExpectedAt(k,today());col=toneVar(st.k)}
@@ -2275,6 +2294,8 @@ function weekInsights(mon){const t=today(),isCur=mon===monday(t),sun=addDays(mon
       if(top.length)tips.unshift({cat:'q',focus:top,ic:'i:chart',col:'#F99A45',t:`Trimestre : mets l’accent sur ${top.join(' et ')}`,w:9})}}}
   for(const k of allProofs(weekQuarter(mon))){if(kindOf(k)!=='qty'||engagedBy(k,sun))continue;const v=Math.max(0,krWeekValue(k,mon));if(!(v>0))continue;const o=krObj(k)||{},i=idOf(o.identityId)||{},u=k.unit||'';
     good.push({ic:krIcon(k),col:idColor(o.identityId),t:krTitle(k),n:krTitle(k),o:o.title||'',idn:i.name||'',cat:'bonus',amt:per(v,u),s:`${per(v,u)} en bonus, avant le lancement`})}
+  for(const k of allProofs(weekQuarter(mon))){if(kindOf(k)!=='qty')continue;const fz=frozenSum(k,mon,sun);if(!(fz>0))continue;const o=krObj(k)||{},u=k.unit||'';
+    good.push({ic:krIcon(k),col:idColor(o.identityId),t:krTitle(k),n:krTitle(k),o:o.title||'',cat:'frz',amt:per(fz,u),s:`Figé exceptionnellement : ${per(fz,u)}, sans perte ni bonus`})}
   const st=weekStats(mon);if(st.focusMin)good.push({cat:'fz',ic:'i:clock',col:'#7FA0FF',t:`${fmtMin(st.focusMin)} de travail concentré`,s:`${st.priosDone} priorité${st.priosDone>1?'s':''} du jour accomplie${st.priosDone>1?'s':''} sur ${st.priosTotal}`});
   return{good,bad:bad.sort((a,b)=>b.w-a.w),tips:tips.sort((a,b)=>b.w-a.w)}}
 /* Tableau des habitudes de la semaine, en lecture seule */
@@ -2292,6 +2313,7 @@ function rvSentences(kind,ins,mon,ws,sm){const t=today(),isCur=mon===monday(t),o
     const bs=ins.good.filter(x=>x.cat==='hab'&&x.sk>=3).sort((a,b)=>b.sk-a.sk)[0];if(bs)out.push(`Meilleure série : ${esc(bs.n)}, ${bs.sk} ${bs.skU} d’affilée.`);
     const ln=isCur?identities().filter(i=>i.status!=='pause'&&idNotLaunched(i,addDays(mon,6))):[];if(ln.length)out.unshift(`Semaine de lancement pour ${etList(ln.map(i=>qt(i.name||'Identité')))} : rien n’est attendu, tout compte en bonus.`);
     const bn=ins.good.filter(x=>x.cat==='bonus');if(bn.length)out.push(`En bonus : ${etList(bn.slice(0,2).map(x=>`${esc(x.amt)} pour ${qt(x.n)}`))}${bn.length>2?` et ${bn.length-2} autre${bn.length>3?'s':''}`:''}.`);
+    const fr=ins.good.filter(x=>x.cat==='frz');if(fr.length)out.push(`Figé exceptionnellement : ${etList(fr.slice(0,2).map(x=>`${esc(x.amt)} pour ${qt(x.n)}`))}${fr.length>2?` et ${fr.length-2} autre${fr.length>3?'s':''}`:''}, sans perte ni bonus.`);
     const fz=ins.good.find(x=>x.cat==='fz');if(fz)out.push(`${esc(fz.t.charAt(0).toUpperCase()+fz.t.slice(1))}.`);
     const sc=er??hr;if(out.length&&sc!=null&&sc>=.8)out.push('Bravo !');else if(out.length&&sc!=null&&sc>=.5)out.push('Continue comme ça.');
     if(!out.length)out.push(isCur?'Rien de terminé pour l’instant : la semaine continue.':'Rien de marquant cette semaine.')}
@@ -2310,7 +2332,7 @@ function rvSentences(kind,ins,mon,ws,sm){const t=today(),isCur=mon===monday(t),o
 /* Détail d'un bloc : replié, par catégorie (trimestre, preuves, étapes, habitudes, temps concentré) */
 function rvDetail(kind,items,key,nextW){if(!items.length)return '';const tips=kind==='tips',f='rv-det-'+kind;
   const plus=x=>tips&&x.p?`<button class="pill-mini" data-act="rv-tip" data-key="${key}" data-text="${esc(x.p)}" aria-label="Ajouter « ${esc(x.p)} » à tes priorités de la semaine ${nextW}">+ Priorité</button>`:'';
-  const G=[['q','Trimestre'],['qty','Preuves'],['ms','Étapes'],['bonus','Bonus avant lancement'],['hab','Habitudes'],['fz','Concentration']];
+  const G=[['q','Trimestre'],['qty','Preuves'],['ms','Étapes'],['bonus','Bonus avant lancement'],['frz','Figées exceptionnellement'],['hab','Habitudes'],['fz','Concentration']];
   const unplan=x=>kind==='bad'&&x.oid&&(x.cat==='qty'||x.cat==='ms')?`<button class="pill-mini" data-act="obj-unplan" data-id="${x.oid}" title="Passe l’objectif « ${esc(x.o||'')} » à planifier : ses preuves ne comptent plus tant qu’il n’a pas démarré">Pas encore prévu</button>`:'';
   const row=x=>{const nm=x.cat==='q'||x.cat==='fz'?x.t:(x.n||x.t),d=x.cat==='q'||x.cat==='fz'?x.s:(tips?x.d:x.s);return `<li>${av(x.ic,x.col,'xs',nm)}<span class="m"><b>${esc(nm)}</b>${d?`<span>${esc(d)}</span>`:''}</span>${plus(x)}${unplan(x)}</li>`};
   const body=G.map(([c,l])=>{const xs=items.filter(x=>(x.cat||'')===c);return xs.length?`<li class="rv-sub">${l}</li>${xs.map(row).join('')}`:''}).join('');
@@ -2531,7 +2553,7 @@ function freqEditor(h){const f=freqOf(h);const days=Array.isArray(h.days)?h.days
 function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
   $('#sheet-panel').classList.toggle('is-focus',s.kind==='focus');
   const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry,focus:sheetFocus,morning:sheetMorning,'prio-link':sheetPrioLink,'idea-cfg':sheetIdeaCfg,'habits-cfg':sheetHabitsCfg,reset:sheetReset,wx:sheetWx}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;if(s.kind==='focus'&&!fzTimer)fzTimer=setInterval(fzTick,1000);return}
-  const fn={abandon:sheetAbandon,hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
+  const fn={abandon:sheetAbandon,frz:sheetFrz,hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
 function trigSel(el){if(!el||!el.dataset||!el.dataset.act)return null;return `[data-act="${el.dataset.act}"]${el.dataset.id?`[data-id="${el.dataset.id}"]`:''}`}
@@ -2594,13 +2616,34 @@ function krDatesHtml(k,du,rt){const id=k.id,sp=krSpan(k),st=krStartOf(k);
   const dTxt=k.due?'Date choisie.':`Sans date choisie : ${esc(dueTxtOf(du))}.`;
   const bad=k.startDate&&du&&du.d&&k.startDate>du.d?'<p class="hint tone-warn">La date de lancement tombe après l’échéance : rien ne sera attendu avant l’échéance.</p>':'';
   return `<div class="two">${F('krs',id,'startDate','Date de lancement',{type:'date',hint:sTxt})}${F('krs',id,'due','Échéance',{type:'date',hint:dTxt+(rt&&k.due?` Rétroplanning : ${fmtD(rt.d)} (${PHASE_FR[rt.ph]}).`:'')})}</div><p class="hint" style="margin:-4px 0 10px">${tail}</p>${bad}${k.startDate?later(k.startDate):''}`}
+/* « Figer exceptionnellement » (fiche d'une quantité) : la semaine en cours, au plus ce qui reste à faire ; liste des gels du trimestre */
+function frzBlock(k){const id=k.id,mon=monday(today()),u=k.unit||'',{start,end}=qRange(krQuarter(k)),tw=krWeekTarget(k,mon),room=Math.max(0,tw-Math.max(0,krWeekValue(k,mon)));
+  const ls=(k.freezes||[]).filter(f=>f&&f.d>=start&&f.d<=end).sort((a,b)=>b.d.localeCompare(a.d)||String(b.at).localeCompare(String(a.at)));
+  return `<div class="frz"><h4>${ICE()}Figer exceptionnellement</h4><p class="hint" style="margin:0">Tu ne peux exceptionnellement pas faire ce qui était prévu cette semaine ? Fige-le : ça sort de l’objectif, sans perte ni bonus. Par exemple, 12 séances prévues sur le trimestre et une absence : 11.</p>
+  ${room>0?`<div style="margin-top:12px"><button class="btn-sec frz-btn" data-act="frz-open" data-id="${id}">${ICE()}Figer…</button></div>`:`<p class="hint" style="margin-top:10px">Rien à figer cette semaine : ${tw>0?'l’objectif de la semaine est déjà atteint':'aucun objectif prévu'}.</p>`}
+  ${ls.length?`<ul class="log frz-log" style="margin-top:12px">${ls.map(f=>`<li><span>${fmtD(f.d)} · sem. ${isoWeek(f.d).w}</span><b>${ICE()}${fmtN(f.n)} ${esc(unitN(f.n,u))}${f.reason?` · ${esc(f.reason)}`:''}</b><button class="x" data-act="frz-del" data-id="${id}" data-at="${esc(f.at||'')}" aria-label="Retirer le gel du ${fmtD(f.d)}">${ICON.x}</button></li>`).join('')}</ul>`:''}</div>`}
+/* Gel en deux validations : 1. quoi et pourquoi, avec ce qui change ; 2. récapitulatif et confirmation */
+function frzRoom(k){const mon=monday(today());return Math.max(0,krWeekTarget(k,mon)-Math.max(0,krWeekValue(k,mon)))}
+function sheetFrz(id){const k=S.data.krs[id];if(!k)return '';const mon=monday(today()),u=k.unit||'',z=S.frz&&S.frz.id===id?S.frz:(S.frz={id,step:1,n:0,reason:''});
+  const tw=krWeekTarget(k,mon),room=frzRoom(k),stp=qtyStep(k),lo=Math.min(stp,room);if(!(z.n>0))z.n=lo;z.n=clamp(z.n,lo,room);
+  const n=z.n,tq=krTarget(k),un=x=>esc(unitN(x,u)),amt=`${fmtN(n)} ${un(n)}`;
+  const eff=`<dl><dt>Cette semaine</dt><dd>${fmtN(tw)} → <b>${fmtN(tw-n)}</b> ${un(tw-n)}</dd><dt>Trimestre</dt><dd>${fmtN(tq)} → <b>${fmtN(tq-n)}</b> ${un(tq-n)}</dd><dt>Déjà fait</dt><dd>${fmtN(krValue(k))} ${un(krValue(k))}, inchangé</dd></dl>`;
+  if(z.step===2)return sheetTop('Confirmer le gel','Preuve · 2 / 2')+`<section><div class="howto frz-box"><h4>${ICE()}Figer exceptionnellement ${amt}</h4><dl><dt>Preuve</dt><dd>${esc(krTitle(k))}</dd><dt>Semaine</dt><dd>semaine ${isoWeek(mon).w}</dd><dt>Motif</dt><dd>${z.reason?esc(z.reason):'<span class="faint">Non précisé</span>'}</dd></dl>${eff}<p style="margin:10px 0 0">Ni perte ni bonus : ta progression est simplement figée. Tu pourras retirer ce gel depuis la fiche de la preuve.</p></div>
+    <div class="prio-a"><button class="btn-sec" data-act="frz-back">Revenir</button><button class="btn btn-ice" data-act="frz-go" data-id="${id}">${ICE()}Oui, figer exceptionnellement</button></div></section>`;
+  return sheetTop('Figer exceptionnellement ?','Preuve · 1 / 2')+`<section><p class="note"><b style="color:var(--fg)">${esc(krTitle(k))}</b> · semaine ${isoWeek(mon).w}</p>
+  <div class="field" style="margin-top:14px"><span>Ce que tu ne peux exceptionnellement pas faire cette semaine</span><div class="stepper"><button class="step" data-act="frz-n" data-d="-1" ${n<=lo?'disabled':''} aria-label="Moins">−</button><b id="frz-amt">${amt}</b><button class="step" data-act="frz-n" data-d="1" ${n+stp>room+1e-9?'disabled':''} aria-label="Plus">+</button></div><span class="hint">Au plus ce qui reste à faire cette semaine : ${fmtN(room)} ${un(room)}.</span></div>
+  <label class="field" style="margin-top:14px"><span>Pourquoi ? (facultatif)</span><textarea id="frz-reason" rows="2" placeholder="Malade, déplacement, salle fermée…">${esc(z.reason||'')}</textarea></label>
+  <div class="howto frz-box" style="margin-top:14px"><h4>${ICE()}Ce qui change</h4>${eff}</div>
+  <div class="prio-a" style="margin-top:22px"><button class="btn-sec" data-act="frz-cancel" data-id="${id}">Annuler</button><button class="btn" data-act="frz-next">Continuer</button></div></section>`}
 function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf(k);const q=krQuarter(k);let extra='';
   if(kind==='qty'){const log=Object.entries(k.log||{}).filter(([,v])=>+v).sort((a,b)=>b[0].localeCompare(a[0]));const mon=monday(today());
     const du=krDue(k),rt=retroOf(k);
-    extra=`<div class="two">${F('krs',id,'target','Objectif du trimestre',{type:'number',ph:'4000'})}${F('krs',id,'unit','Unité',{ph:'mots, heures…'})}</div>
+    const qzT=(({start,end})=>frozenSum(k,start,end))(qRange(q));
+    extra=`<div class="two">${F('krs',id,'target','Objectif du trimestre',{type:'number',ph:'4000',hint:qzT>0?`<span class="ice">${ICE()}Figé : ${fmtN(qzT)}</span> · objectif ramené à ${fmtN(krTarget(k))}`:''})}${F('krs',id,'unit','Unité',{ph:'mots, heures…'})}</div>
     ${krDatesHtml(k,du,rt)}
     ${(t=>{const v=krWeekValue(k,mon);return t>0&&v>t?`<p class="tone-over" style="margin:4px 0 8px">Au-delà de l’objectif de la semaine : +${fmtN(v-t)} ${esc(unitN(v-t,k.unit||''))}. Ce surplus avance ton trimestre${+k.weekTarget>0?'':' et allège les semaines suivantes'}.</p>`:''})(krWeekTarget(k,mon))}
     <div class="two">${F('krs',id,'weekTarget','Objectif par semaine',{type:'number',ph:`${fmtN(krWeekTarget({...k,weekTarget:null},mon))} (calculé)`,hint:'Laisse vide : le reste à faire est réparti sur les semaines restantes jusqu’à l’échéance.'})}${F('krs',id,'step','Pas des boutons − / +',{type:'number',ph:'1',hint:'Ex. 100 : chaque + ajoute 100 mots.'})}</div>
+    ${frzBlock(k)}
     <div class="field"><span>Ajouter</span><form class="qty-form" style="margin:0" data-form="qty" data-id="${id}"><input id="qty-s-${id}" type="number" step="any" inputmode="decimal" placeholder="Quantité" required aria-label="Quantité"><input name="date" type="date" value="${today()}" aria-label="Date" class="qdate"><button class="btn sm" type="submit">Ajouter</button></form></div>
     <div class="field"><span>Journal · ${fmtN(krValue(k))} / ${fmtN(krTarget(k))} ${esc(k.unit||'')} ce trimestre</span>${log.length?`<ul class="log">${log.map(([d,v])=>`<li><span>${fmtD(d,true)} · sem. ${isoWeek(d).w}</span><b>${signed(+v,k.unit||'')}</b><button class="x" data-act="log-del" data-id="${id}" data-d="${d}" aria-label="Supprimer la saisie du ${fmtD(d)}">${ICON.x}</button></li>`).join('')}</ul>`:'<p class="hint">Rien de saisi pour l’instant.</p>'}</div>`}
   else if(kind==='milestone')extra=`<div class="checks"><label><input type="checkbox" id="kr-done-${id}" data-bind="krs:${id}:done" ${k.done?'checked':''}><span><b>Faite</b>${k.done&&k.doneAt?`Le ${fmtD(k.doneAt,true)}`:'Coche quand l’étape est franchie.'}</span></label></div>
@@ -2898,6 +2941,16 @@ const ACT={
   'todo-del':a=>{const t=S.day||today();saveTodos(t,todoItems(t).filter(i=>i.id!==a.dataset.id))},
   'kr-scope':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;const el=document.getElementById('scope-'+k.id);const v=(el&&el.value||'').trim();if(!v||v===krTitle(k)){toast('Écris la nouvelle formulation de l’étape');return}
     put('krs',k.id,{...k,title:v,scopes:[...(k.scopes||[]),{from:krTitle(k),to:v,at:today()}]});toast('Périmètre réduit : l’étape reste à faire');renderSheet()},
+  'frz-open':a=>{S.frz={id:a.dataset.id,step:1,n:0,reason:''};openSheet('frz','krs',a.dataset.id)},
+  'frz-cancel':()=>{S.frz=null;dismissSheet()},
+  'frz-n':a=>{const z=S.frz,k=z&&S.data.krs[z.id];if(!k)return;const el=document.getElementById('frz-reason');if(el)z.reason=el.value;const room=frzRoom(k),stp=qtyStep(k);z.n=clamp(Math.round((z.n+(+a.dataset.d)*stp)*1000)/1000,Math.min(stp,room),room);renderSheet()},
+  'frz-next':()=>{const el=document.getElementById('frz-reason');if(S.frz){S.frz.reason=(el&&el.value||'').trim();S.frz.step=2}renderSheet();const b=$('#sheet-panel [data-act="frz-back"]');if(b)b.focus()},
+  'frz-back':()=>{if(S.frz)S.frz.step=1;renderSheet()},
+  'frz-go':a=>{if(a.disabled)return;a.disabled=true;const z=S.frz;S.frz=null;const k=z&&S.data.krs[z.id];if(!k||z.step!==2||!(z.n>0)||z.n>frzRoom(k)+1e-9){dismissSheet();return}
+    const f={d:today(),n:z.n,reason:z.reason||'',at:nowIso()};put('krs',k.id,{...clean(k),freezes:[...(k.freezes||[]),f],updatedAt:nowIso()});dismissSheet();
+    toast(`Figé exceptionnellement : ${fmtN(f.n)} ${unitN(f.n,k.unit||'')} · ${krTitle(k)}`,{label:'Annuler',fn:()=>{const c=S.data.krs[k.id];if(c)put('krs',k.id,{...clean(c),freezes:(c.freezes||[]).filter(x=>x.at!==f.at)});if(S.sheet)renderSheet()}})},
+  'frz-del':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;const f=(k.freezes||[]).find(x=>x.at===a.dataset.at);if(!f)return;put('krs',k.id,{...clean(k),freezes:(k.freezes||[]).filter(x=>x.at!==f.at),updatedAt:nowIso()});if(S.sheet)renderSheet();
+    toast('Gel retiré : la quantité revient dans l’objectif',{label:'Annuler',fn:()=>{const c=S.data.krs[k.id];if(c)put('krs',k.id,{...clean(c),freezes:[...(c.freezes||[]),f]});if(S.sheet)renderSheet()}})},
   'kr-abandon':a=>{S.ab={id:a.dataset.id,step:1,reason:''};openSheet('abandon','krs',a.dataset.id)},
   'ab-next':()=>{const el=document.getElementById('ab-reason');if(S.ab){S.ab.reason=(el&&el.value||'').trim();S.ab.step=2}renderSheet();const b=$('#sheet-panel [data-act="ab-back"]');if(b)b.focus()},
   'ab-back':()=>{if(S.ab)S.ab.step=1;renderSheet();const el=document.getElementById('ab-reason');if(el)el.focus()},
@@ -3121,7 +3174,7 @@ async function resetTracking(){const c=today();const backup={...snapshotData(),r
   for(const x of list('days'))if(String(x.date||x.id)<c)W('days',x.id,null);
   for(const r of list('reviews'))if(String(r.updatedAt||r.closedAt||r.createdAt||'').slice(0,10)<c)W('reviews',r.id,null);
   for(const p of list('plans'))W('plans',p.id,null);
-  for(const k of list('krs'))W('krs',k.id,{...clean(k),log:{},history:{},done:false,doneAt:null,abandoned:null,reactivations:[],reschedules:[],scopes:[],current:k.start??0,updatedAt:nowIso()});
+  for(const k of list('krs'))W('krs',k.id,{...clean(k),log:{},history:{},freezes:[],done:false,doneAt:null,abandoned:null,reactivations:[],reschedules:[],scopes:[],current:k.start??0,updatedAt:nowIso()});
   for(const m of list('metrics')){const es=mEntries(m);W('metrics',m.id,{...clean(m),history:es.length?{[c]:es[es.length-1][1]}:{},updatedAt:nowIso()})}
   W('settings','main',{...clean(settings()),startDate:c,resetAt:nowIso()});
   fzSet(null);S.day=null;S.reviewWeek=monday(c);S.habitWeek=monday(c);applyOpsLocal(ops);schedule();

@@ -328,12 +328,35 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
   - Le rouge revient seulement à partir de ce jour, si rien n'est fait.
 - **Libellé** : « À partir du 22 nov. (calendrier du Studio) » quand la date vient d'un calendrier ajusté depuis une preuve, « (rétroplanning) » sinon.
 
+## Figer exceptionnellement une preuve (18 novembre 2026)
+
+- **Besoin** : quand Ivan ne peut exceptionnellement pas faire ce qui était prévu (absence, maladie), il fige la preuve. Ça ne crée ni perte ni bonus : ça sort simplement de l'objectif. Par exemple, 12 séances prévues sur le trimestre et une absence : 11.
+- **Où** : dans la fiche d'une preuve Quantité, bloc « Figer exceptionnellement », en bleu glace avec un flocon. C'est le même bleu que les séries gelées des habitudes.
+- **Deux validations**, sur le modèle de l'abandon d'une étape :
+  1. « Figer exceptionnellement ? · 1 / 2 » : la quantité, réglable avec − et + au pas de la preuve, au plus ce qui reste à faire cette semaine. Un motif facultatif. « Ce qui change » montre la semaine (3 → 2), le trimestre (12 → 11) et le déjà fait (inchangé).
+  2. « Confirmer le gel · 2 / 2 » : le récapitulatif, puis « Oui, figer exceptionnellement ».
+  - « Annuler » ou « Revenir » ne figent rien. Après la confirmation, retour à la fiche, avec un message et « Annuler ».
+- **Calcul** :
+  - Le gel est daté du jour, dans la semaine en cours. Il retire la quantité de l'objectif du trimestre et de l'objectif de cette semaine, que celui-ci soit fixé à la main, figé le lundi ou calculé.
+  - L'objectif calculé des semaines suivantes part de l'objectif du trimestre réduit : la séance figée n'est pas à rattraper.
+  - Une semaine entièrement figée n'a plus d'engagement : « Figée · Semaine figée », sans rouge, hors du taux de la semaine.
+- **Où on le voit** :
+  - Identités : « ❄ Figé : 1 séance » sur la ligne en vue Semaine, et le total du trimestre en vue Trimestre (« 0 / 11 »).
+  - Fiche : le gel est listé avec son motif, et l'objectif du trimestre indique « objectif ramené à 11 ».
+  - Revue : « Figé exceptionnellement : 1 séance pour « Séances au club », sans perte ni bonus », avec une catégorie « Figées exceptionnellement » dans le détail. Jamais dans « Ce qui a coincé ».
+- **Retirer un gel** : le ✕ de sa ligne dans la fiche, avec « Annuler ». La quantité revient dans l'objectif.
+- **Repartir de zéro** remet les gels à zéro. Les modèles d'objectif ne les copient pas.
+- **Non couvert** :
+  - Figer une semaine passée ou à venir : le gel vaut pour la semaine en cours.
+  - Figer une étape : pour elle, il y a la replanification.
+
 ## Recette
 
 - **Joués et réussis** dans un navigateur Chromium automatisé : T01–T06, T08–T14, T17–T21, T23–T36, T38–T40, T43–T46, T49 et T52. Le parcours en ligne (T38–T40, T43–T46) a été joué contre un Firebase simulé : hors connexion, erreur puis Réessayer, ajouts concurrents, import, sauvegarde et restauration.
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Figer exceptionnellement** : 44 vérifications automatisées (22 sur ordinateur, 22 sur téléphone), toutes réussies. Elles couvrent les deux validations (Annuler, Revenir, motif gardé), la quantité bornée, les effets (semaine 3 → 2, trimestre 12 → 11, rien de perdu, pas de rattrapage, objectif calculé), la fiche, Identités en semaine et en trimestre, retirer puis annuler, la semaine entièrement figée et la Revue.
 - **Date de lancement face au démarrage de l'objectif** : 16 vérifications automatisées (8 sur ordinateur, 8 sur téléphone), toutes réussies. Elles couvrent la situation d'Ivan rejouée par la fiche, la cible des semaines suivantes, le libellé dans Identités, l'objectif plus tardif expliqué dans la fiche, et le lancement le dimanche (gris, puis rouge à partir de ce jour).
 - **Date de lancement et synchro Studio** : 52 vérifications automatisées (26 sur ordinateur, 26 sur téléphone), toutes réussies. Elles couvrent la date de lancement d'une preuve libre, la preuve liée à l'écriture (la suite et la sortie glissent, les phases d'avant restent, l'objectif de la semaine est recalculé, la preuve « Montage » suit), « Annuler », la date de lancement seule et la date incohérente refusée. Elles couvrent aussi la fiche vidéo, la preuve Publication, « Revenir au rétroplanning », la sortie changée dans le Studio et l'ancienne échéance alignée.
 - **Quantité au-delà en turquoise** : 22 vérifications automatisées (11 sur ordinateur, 11 sur téléphone), toutes réussies. Elles couvrent les seuils de couleur, la vue Semaine (texte, couleur, barre), la fiche avec un objectif fixé ou calculé, la cible pile atteinte en vert et la vue Trimestre.
