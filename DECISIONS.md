@@ -343,12 +343,26 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Où on le voit** :
   - Identités : « ❄ Figé : 1 séance » sur la ligne en vue Semaine, et le total du trimestre en vue Trimestre (« 0 / 11 »).
   - Fiche : le gel est listé avec son motif, et l'objectif du trimestre indique « objectif ramené à 11 ».
-  - Revue : « Figé exceptionnellement : 1 séance pour « Séances au club », sans perte ni bonus », avec une catégorie « Figées exceptionnellement » dans le détail. Jamais dans « Ce qui a coincé ».
+  - Revue : « Figé exceptionnellement : 1 séance pour « Séances au club », sans bonus ni malus » (formulation commune aux preuves et aux habitudes depuis le 18 novembre), avec une catégorie « Figées exceptionnellement » dans le détail. Jamais dans « Ce qui a coincé ».
 - **Retirer un gel** : le ✕ de sa ligne dans la fiche, avec « Annuler ». La quantité revient dans l'objectif.
 - **Repartir de zéro** remet les gels à zéro. Les modèles d'objectif ne les copient pas.
 - **Non couvert** :
   - Figer une semaine passée ou à venir : le gel vaut pour la semaine en cours.
   - Figer une étape : pour elle, il y a la replanification.
+
+## Figer une habitude ; explications repliées partout (18 novembre 2026)
+
+- **Figer une habitude**, pour tous les types : fait / pas fait, minimum et cible, quantité ; tous les jours, jours précis, « X fois par semaine ».
+  - Dans la fiche de l'habitude, bloc « Figer exceptionnellement » : « Figer un jour… », puis deux validations, comme pour les preuves.
+  - « Figer exceptionnellement ? · 1 / 2 » : choix des jours de la semaine en cours pas encore faits (prévus, ou n'importe lequel pour « X fois par semaine », au plus ce qui reste du quota) et motif facultatif. « Ce qui change » affiche « 7 jours prévus → 6 jours », ni prévu ni manqué, et la série qui continue.
+  - « Confirmer le gel · 2 / 2 » : récapitulatif, puis « Oui, figer exceptionnellement ». Message avec « Annuler » ; un gel se retire avec ✕ dans la fiche.
+  - **Calcul** : un jour figé n'est ni prévu ni manqué. Il disparaît du compte du jour, de la courbe, du taux de la semaine et de la Revue, et ne compte pas dans la réussite sur 30 jours. Pour « X fois par semaine », chaque jour figé retire une fois du quota de la semaine (3 → 2).
+  - **Série** : elle passe par-dessus un jour figé, sans s'allonger ; pour « X fois par semaine », une semaine entièrement figée ne la casse pas.
+  - **Affichage** : flocon bleu glace dans le tableau (case non cliquable, « Figé » dans la légende) et dans le réglage de la semaine de la fiche. Aujourd'hui affiche « Figée », sans case à cocher, hors du compteur. La Revue dit « Figé exceptionnellement : 2 jours pour « Gainage », … sans bonus ni malus », et liste l'habitude dans la catégorie « Figées exceptionnellement ».
+  - Repartir de zéro efface les gels d'avant la date de départ.
+- **Explications repliées** : toutes les explications passent dans un déroulant fermé, « ⓘ Comment ça marche » (ou « Comment lire la courbe », « Comment lire le tableau »), et « ⓘ Aide » sous un champ. Les fonctions restent visibles.
+  - Concernés : « Comment ça marche » des preuves, gel des preuves et des habitudes, aides des champs, notes de Réglages, de la Revue, du Studio, de la banque d'idées et des indicateurs, mode d'emploi et légende du tableau des habitudes, légende de la courbe, écrans vides d'Identités, Habitudes, Progrès et du calendrier, fiches (météo, état du matin, minuteur, report des tâches, lien d'une priorité, calendrier ajusté, heures restantes, modèles, repartir de zéro).
+  - **Restent visibles** : les informations et avertissements (date retenue, « Rien à figer cette semaine », « Au plus … », dernières mesures, éléments supprimés à l'import, statut du minuteur), les messages des listes vides et les récapitulatifs des confirmations.
 
 ## Recette
 
@@ -356,6 +370,12 @@ Les maquettes ordinateur et téléphone fournies par Ivan remplacent les jetons 
 - **Pas joués comme scénarios dédiés** : T07, T15, T16, T22, T37, T41, T42, T47, T48, T50, T51 et T53–T56.
   - T47 et T48 reposent sur le calcul de la date dans le fuseau du compte.
   - T41 attend l'écran de conflit, qui n'est pas livré (voir F38 et F39).
+- **Figer une habitude, explications repliées** : 58 vérifications automatisées (29 sur ordinateur, 29 sur téléphone), toutes réussies. Elles couvrent :
+  - les deux validations, les jours proposés et ce qui change ;
+  - la série préservée (quotidienne et « X fois par semaine ») ;
+  - le tableau, les jours précis, le quota hebdo réduit et Aujourd'hui ;
+  - la Revue, retirer puis annuler ;
+  - les déroulants des Réglages, d'Habitudes et de la fiche preuve.
 - **Figer exceptionnellement** : 44 vérifications automatisées (22 sur ordinateur, 22 sur téléphone), toutes réussies. Elles couvrent les deux validations (Annuler, Revenir, motif gardé), la quantité bornée, les effets (semaine 3 → 2, trimestre 12 → 11, rien de perdu, pas de rattrapage, objectif calculé), la fiche, Identités en semaine et en trimestre, retirer puis annuler, la semaine entièrement figée et la Revue.
 - **Date de lancement face au démarrage de l'objectif** : 16 vérifications automatisées (8 sur ordinateur, 8 sur téléphone), toutes réussies. Elles couvrent la situation d'Ivan rejouée par la fiche, la cible des semaines suivantes, le libellé dans Identités, l'objectif plus tardif expliqué dans la fiche, et le lancement le dimanche (gris, puis rouge à partir de ce jour).
 - **Date de lancement et synchro Studio** : 52 vérifications automatisées (26 sur ordinateur, 26 sur téléphone), toutes réussies. Elles couvrent la date de lancement d'une preuve libre, la preuve liée à l'écriture (la suite et la sortie glissent, les phases d'avant restent, l'objectif de la semaine est recalculé, la preuve « Montage » suit), « Annuler », la date de lancement seule et la date incohérente refusée. Elles couvrent aussi la fiche vidéo, la preuve Publication, « Revenir au rétroplanning », la sortie changée dans le Studio et l'ancienne échéance alignée.

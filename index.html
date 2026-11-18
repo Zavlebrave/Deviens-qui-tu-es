@@ -433,6 +433,19 @@ table.data th:nth-child(-n+2),table.data td:nth-child(-n+2){text-align:left}
 .sheet section > h3{font-size:17px;font-weight:700;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .sheet section > h3 small{font-weight:500;color:var(--muted);font-size:13px}
 .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+/* Déroulant d'explication : discret, fermé par défaut */
+.xp{margin-top:8px}
+.xp>summary{display:inline-flex;align-items:center;gap:7px;list-style:none;cursor:pointer;font-size:13px;color:var(--faint);padding:4px 2px;border-radius:8px;user-select:none;-webkit-user-select:none}
+.xp>summary::-webkit-details-marker{display:none}
+.xp>summary:hover{color:var(--muted)}
+.xp-i{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;font-size:10px;font-weight:700;font-style:normal;line-height:1;flex:none}
+.xp .chev{display:inline-flex}.xp .chev svg{width:14px;height:14px;transition:transform .15s}
+.xp[open] .chev svg{transform:rotate(180deg)}
+.xp-b{margin:4px 0 2px;font-size:13.5px;line-height:1.5;color:var(--muted)}
+.xp-b p{margin:0}.xp-b p+p,.xp-b p+.hw-lg,.xp-b .hw-lg+p{margin-top:8px}
+.xp-b dl{margin:0}
+.fld{display:flex;flex-direction:column;min-width:0}
+.xp-f{margin-top:4px}
 @media (max-width:480px){.two{grid-template-columns:minmax(0,1fr)}}
 .icons{display:flex;flex-wrap:wrap;gap:6px}
 .icons button{width:42px;height:42px;border-radius:50%;background:var(--surface-2);font-size:20px;line-height:1}
@@ -666,6 +679,7 @@ main{max-width:1240px;padding-block:30px 120px;position:relative}
 .hlist .swipe{margin:0;border-radius:0;border-top:1px solid var(--line)}
 .hlist .swipe:first-child{border-top:0}
 .hlist .swipe-fg{padding:14px 2px;cursor:default}
+.hlist .frz-fg{padding:14px 2px}
 .hrow{display:grid;grid-template-columns:auto minmax(0,1.15fr) minmax(0,1fr) auto auto;grid-template-areas:"av m st sk ct";gap:6px 14px;align-items:center}
 .hrow>.av{grid-area:av;width:46px;height:46px}
 .hrow .m{grid-area:m;display:flex;flex-direction:column;min-width:0}
@@ -687,15 +701,30 @@ main{max-width:1240px;padding-block:30px 120px;position:relative}
 .tone-ice{color:var(--ice)}
 .ice{display:inline-flex;align-items:center;gap:4px;color:var(--ice);font-weight:500}
 .ice svg{width:13px;height:13px;flex:none}
-.frz{margin:16px 0 10px;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--ice) 8%,var(--surface-2));border:1px solid color-mix(in srgb,var(--ice) 28%,transparent)}
-.frz h4,.frz-box h4{display:flex;align-items:center;gap:8px;margin:0 0 6px;color:var(--ice);font-size:15px}
-.frz h4 svg,.frz-box h4 svg,.frz-btn svg,.btn-ice svg,.frz-log b svg{width:17px;height:17px;flex:none}
+.frz-blk{margin:16px 0 10px;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--ice) 8%,var(--surface-2));border:1px solid color-mix(in srgb,var(--ice) 28%,transparent)}
+.frz-blk h4,.frz-box h4{display:flex;align-items:center;gap:8px;margin:0 0 6px;color:var(--ice);font-size:15px}
+.frz-blk h4 svg,.frz-box h4 svg,.frz-btn svg,.btn-ice svg,.frz-log b svg{width:17px;height:17px;flex:none}
 .frz-btn{display:inline-flex;align-items:center;gap:8px;color:var(--ice)}
 .frz-box{border:1px solid color-mix(in srgb,var(--ice) 32%,transparent);background:color-mix(in srgb,var(--ice) 7%,var(--surface-2));box-shadow:inset 3px 0 0 var(--ice)}
 .howto.frz-box h4{font-size:15px;letter-spacing:0;text-transform:none;color:var(--ice)}
 .btn.btn-ice{display:inline-flex;align-items:center;gap:8px;background:var(--ice);color:#0D1117}
 .btn.btn-ice:hover{background:#A9C6FF}
 .frz-log b{display:inline-flex;align-items:center;gap:6px;color:var(--ice);font-weight:500}
+.cell.frz{color:var(--ice);background:color-mix(in srgb,var(--ice) 12%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ice) 55%,transparent)}
+.cell.frz svg,.hw .cell.frz svg{width:16px;height:16px}
+.hw-lg .cell.frz svg{width:12px;height:12px}
+.chip.ice{display:inline-flex;align-items:center;gap:5px;background:color-mix(in srgb,var(--ice) 14%,transparent);color:var(--ice)}
+.chip.ice svg{width:14px;height:14px}
+.frz-fg{position:relative;background:var(--surface);padding:0 4px}
+.frz-fg .t{opacity:.85}
+.days.wk button.frz{color:var(--ice);background:color-mix(in srgb,var(--ice) 12%,transparent);opacity:1}
+.days.wk button.frz svg{width:16px;height:16px}
+.hfz-days{display:flex;flex-wrap:wrap;gap:8px}
+.hfz-days button{display:grid;justify-items:center;gap:1px;min-width:52px;padding:8px 10px;border-radius:12px;background:var(--surface-2);color:var(--muted);font-weight:600}
+.hfz-days button small{font-size:12px;font-weight:500;color:var(--faint)}
+.hfz-days button[aria-pressed="true"]{background:color-mix(in srgb,var(--ice) 22%,var(--surface-2));color:var(--ice);box-shadow:inset 0 0 0 1.5px var(--ice)}
+.hfz-days button[aria-pressed="true"] small{color:var(--ice)}
+.hfz-days button:disabled{opacity:.4}
 .hctl{grid-area:ct;display:flex;align-items:center;gap:8px}
 .tlist{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:#12171F;padding:0 14px}
 .tlist .todo li{padding:12px 0;border-bottom:1px solid var(--line)}
@@ -780,7 +809,7 @@ a.btn-sec{text-decoration:none}
   .td-habits .sec-h h2{font-size:24px}
   .hlist{margin:0}
   .hlist .swipe,.hlist .swipe:first-child{border:1px solid var(--line);border-radius:16px;margin-bottom:8px}
-  .hlist .swipe-fg{padding:12px 14px}
+  .hlist .swipe-fg,.hlist .frz-fg{padding:12px 14px}
   .hrow{grid-template-columns:auto minmax(0,1fr) auto auto;grid-template-areas:"av m m ct" "av st sk ct";gap:6px 12px}
   .hst,.hst.due{flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px 8px}
   .hbar{width:96px}
@@ -1528,9 +1557,13 @@ const freqOf=h=>h.freq||(Array.isArray(h.days)&&h.days.length?'days':'daily');
 const DAYS=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 function freqLabel(h){const f=freqOf(h);if(f==='weekly')return `${h.perWeek||3} fois / semaine`;if(f==='days')return (h.days||[]).map(d=>DAYS[d].toLowerCase()).join(', ')||'aucun jour';return 'tous les jours'}
 const wd=s=>(parse(s).getDay()+6)%7;
-function fixedOn(h,s){const f=freqOf(h);if(f==='weekly')return false;if(f==='days')return (h.days||[]).includes(wd(s));return true}
+/* Gel exceptionnel d'une habitude (tous types) : un jour figé n'est ni prévu ni manqué, sans bonus ni malus, et la série continue.
+   « X fois par semaine » : chaque jour figé retire une fois du quota de la semaine. */
+const hFrozen=(h,d)=>!!(h&&h.freezes&&h.freezes.some(f=>f&&f.d===d));
+const hFrozenIn=(h,a,b)=>((h&&h.freezes)||[]).filter(f=>f&&f.d>=a&&f.d<=b).length;
+function fixedOn(h,s){const f=freqOf(h);if(f==='weekly')return false;if(hFrozen(h,s))return false;if(f==='days')return (h.days||[]).includes(wd(s));return true}
 /* Aujourd'hui n'affiche une habitude que les jours où elle est prévue ; « X fois / semaine » : chaque jour tant que le quota n'est pas atteint */
-const visibleOn=(h,s)=>freqOf(h)==='weekly'?(weekCount(h,monday(s))<wkQuota(h,monday(s))||habitDone(h.id,s)):fixedOn(h,s);
+const visibleOn=(h,s)=>hFrozen(h,s)||(freqOf(h)==='weekly'?(weekCount(h,monday(s))<wkQuota(h,monday(s))||habitDone(h.id,s)):fixedOn(h,s));
 function nextDue(h,from){if(freqOf(h)==='weekly'){const m=monday(from);return maxD(weekCount(h,m)<wkQuota(h,m)?from:addDays(m,7),hStart(h))}
   for(let i=0;i<8;i++){const d=addDays(maxD(from,hStart(h)),i);if(fixedOn(h,d))return d}return null}
 const fmtDay=(s,long)=>parse(s).toLocaleDateString('fr-FR',long?{weekday:'long',day:'numeric',month:'long'}:{weekday:'short',day:'numeric',month:'short'});
@@ -1538,7 +1571,7 @@ const DAYS_LONG=['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanch
 function daysLong(h){const ds=[...(h.days||[])].sort().map(d=>DAYS_LONG[d]+((h.days||[]).length>1?'s':''));return ds.length>1?`${ds.slice(0,-1).join(', ')} et ${ds[ds.length-1]}`:(ds[0]||'')}
 function dueTxt(h){const t=today();if(habitDone(h.id,t))return "validée aujourd'hui";const d=nextDue(h,t);if(!d)return 'aucun jour choisi';
   if(d===t)return "à valider aujourd'hui";if(d===addDays(t,1))return 'prochaine fois demain';return `prochaine fois ${fmtDay(d)}`}
-function occurrences(h,a,b){if(b<a)return 0;const f=freqOf(h);const n=diffDays(a,b)+1;if(f==='weekly')return Math.round((h.perWeek||3)*n/7);if(f==='daily')return n;let c=0;for(let d=a;d<=b;d=addDays(d,1))if(fixedOn(h,d))c++;return c}
+function occurrences(h,a,b){if(b<a)return 0;const f=freqOf(h);const n=diffDays(a,b)+1;if(f==='weekly')return Math.max(0,Math.round((h.perWeek||3)*n/7)-hFrozenIn(h,a,b));if(f==='daily')return n-hFrozenIn(h,a,b);let c=0;for(let d=a;d<=b;d=addDays(d,1))if(fixedOn(h,d))c++;return c}
 let memo={ver:-1,dates:{}};
 function hDates(hid){if(memo.ver!==S.ver)memo={ver:S.ver,dates:{}};if(!memo.dates[hid]){const arr=[];for(const m of Object.values(S.data.habitlog))for(const[d,ids] of Object.entries(m.days||{}))if((ids||[]).includes(hid))arr.push(d);memo.dates[hid]=arr.sort()}return memo.dates[hid]}
 const habitCount=(hid,a,b)=>hDates(hid).filter(d=>d>=a&&d<=b).length;
@@ -1593,15 +1626,15 @@ const weekCount=(h,mon)=>habitCount(h.id,mon,addDays(mon,6));
 /* « X fois par semaine » : un jour passé non fait est manqué tant que le quota de la semaine n'est pas atteint.
    Le tableau (✕), la courbe et le taux de la semaine utilisent cette même règle. */
 const wkReached=(h,d)=>(w=>w.c>=w.e)(hWeek(h,monday(d)));
-const wkMissOn=(h,d)=>d<today()&&d>=hStart(h)&&!habitDone(h.id,d)&&!wkReached(h,d);
+const wkMissOn=(h,d)=>d<today()&&d>=hStart(h)&&!hFrozen(h,d)&&!habitDone(h.id,d)&&!wkReached(h,d);
 /* Quota « X fois par semaine » ramené aux jours suivis quand le suivi commence en cours de semaine (création, date de départ) */
-function wkQuota(h,mon){const pw=h.perWeek||3,sun=addDays(mon,6),a=maxD(mon,hStart(h));if(a>sun)return 0;const n=diffDays(a,sun)+1;return n>=7?pw:Math.min(n,Math.max(1,Math.round(pw*n/7)))}
+function wkQuota(h,mon){const pw=h.perWeek||3,sun=addDays(mon,6),a=maxD(mon,hStart(h));if(a>sun)return 0;const n=diffDays(a,sun)+1;return Math.max(0,(n>=7?pw:Math.min(n,Math.max(1,Math.round(pw*n/7))))-hFrozenIn(h,a,sun))}
 function weekExpected(h,mon){const sun=addDays(mon,6);if(hStart(h)>sun)return 0;return freqOf(h)==='weekly'?wkQuota(h,mon):occurrences(h,maxD(mon,hStart(h)),sun)}
 /* Série recalculée à partir des faits (F23) : cible ou minimum = continuité et +1 (D07) ; un jour prévu manqué l'interrompt.
    Les jours non prévus ne comptent pas. Unité : jours, fois (jours précis) ou semaines. Plus de justification depuis le 29 octobre. */
 function streakOf(h){const t=today(),st=hStart(h),pw=h.perWeek||3;let n=0,frozen=false;
-  if(freqOf(h)==='weekly'){const ok=m=>{const sun=addDays(m,6);return habitCount(h.id,m,sun)+minCount(h.id,m,sun)>=Math.max(1,wkQuota(h,m))};let mon=monday(t);if(ok(mon)){n++;first=false}mon=addDays(mon,-7);
-    for(let i=0;i<260&&addDays(mon,6)>=st;i++,mon=addDays(mon,-7)){if(ok(mon)){n++;continue}break}
+  if(freqOf(h)==='weekly'){const ok=m=>{const sun=addDays(m,6);return habitCount(h.id,m,sun)+minCount(h.id,m,sun)>=Math.max(1,wkQuota(h,m))};const sk=m=>wkQuota(h,m)===0&&hFrozenIn(h,m,addDays(m,6))>0;let mon=monday(t);if(!sk(mon)&&ok(mon))n++;mon=addDays(mon,-7);
+    for(let i=0;i<260&&addDays(mon,6)>=st;i++,mon=addDays(mon,-7)){if(sk(mon))continue;if(ok(mon)){n++;continue}break}
     return{n,frozen,unit:n>1?'semaines':'semaine'}}
   let d=t;if(fixedOn(h,d)&&habitState(h.id,d)==='none')d=addDays(d,-1);
   for(let i=0;i<900&&d>=st;i++,d=addDays(d,-1)){if(!fixedOn(h,d))continue;if(habitState(h.id,d)!=='none'){n++;continue}break}
@@ -1726,7 +1759,8 @@ const hero=(id,label,v,d)=>`<div class="hero"><p class="eyebrow" id="${id}-l">${
 function planTxt(h){const f=freqOf(h);if(f==='weekly')return `${h.perWeek||3} fois par semaine`;if(f==='daily')return 'Tous les jours';
   const ds=[...(h.days||[])].sort().join('');if(ds==='0123456')return 'Tous les jours';if(ds==='01234')return 'Du lundi au vendredi';if(ds==='56')return 'Le week-end';if(!ds)return 'Aucun jour choisi';
   return (h.days||[]).length===1?`Le ${DAYS_LONG[h.days[0]]}`:`Les ${daysLong(h)}`}
-function hRow(h,d){const st=habitState(h.id,d),on=st==='target',past=d<today(),nm=esc(h.name||'Habitude sans nom'),mode=hMode(h),v=mode==='qty'?habitVal(h.id,d):null,ov=habitOver(h,d);
+function hRow(h,d){if(hFrozen(h,d)&&habitState(h.id,d)==='none')return `<div class="swipe frz-row"><div class="hrow frz-fg">${av(h.icon,habitColor(h),'',h.name)}<div class="m"><span class="t">${esc(h.name||'Habitude sans nom')}</span><span class="s">${esc(planTxt(h))}</span></div><div class="hst"><span class="chip ice">${ICE()}Figée</span></div><span class="streak"></span><div class="hctl"></div></div></div>`;
+  const st=habitState(h.id,d),on=st==='target',past=d<today(),nm=esc(h.name||'Habitude sans nom'),mode=hMode(h),v=mode==='qty'?habitVal(h.id,d):null,ov=habitOver(h,d);
   const sub=[mode==='qty'&&qTgt(h)?`Cible : ${qFmt(h,qTgt(h))}`:h.targetLabel||planTxt(h),freqOf(h)==='weekly'?`${weekCount(h,monday(d))}/${wkQuota(h,monday(d))} cette semaine`:''].filter(Boolean).join(' · ');
   const two=mode!=='simple',seg=on?(ov?'ov':'ok'):'min';
   const lab=on?(ov?`Au-delà · ${qFmt(h,v)}`:v!=null?`Cible atteinte · ${qFmt(h,v)}`:'Validée'):v!=null?`Minimum · ${qFmt(h,v)}`:'Minimum réalisé';
@@ -1746,10 +1780,10 @@ function viewToday(){greetK=today()+'|'+isEvening();
   const items=todoItems(t),done=items.filter(i=>i.done).length;
   const hs=habits().filter(h=>visibleOn(h,t)&&t>=hStart(h)),hd=hs.filter(h=>habitDone(h.id,t)).length;
   const rv=S.data.reviews[isoWeek(real).key]||{};
-  const remind=!past&&wd(real)===6&&!(rv.closedAt&&rv.auto===false)?`<section class="sec remind"><div class="sec-h"><h2>C’est dimanche : ta revue</h2></div><p class="note">Fais le bilan de ta semaine (ce qui a marché, ce qui a bloqué, tes 3 priorités), puis clôture-la.</p><div style="margin-top:14px"><button class="btn" data-act="open-review">Faire ma revue</button></div></section>`:'';
+  const remind=!past&&wd(real)===6&&!(rv.closedAt&&rv.auto===false)?`<section class="sec remind"><div class="sec-h"><h2>C’est dimanche : ta revue</h2></div><div style="margin-top:14px"><button class="btn" data-act="open-review">Faire ma revue</button></div>${xp('Fais le bilan de ta semaine (ce qui a marché, ce qui a bloqué, tes 3 priorités), puis clôture-la.')}</section>`:'';
   const head=`<header class="today-head"><div class="eyebrow"><button class="dnav" data-act="day-nav" data-d="-1" aria-label="Jour précédent">${ICON.left}</button><span class="cap">${esc(dateTxt)}</span>${past?`<button class="dnav" data-act="day-nav" data-d="1" aria-label="Jour suivant">${ICON.right}</button>`:''}</div>
   <h1 class="h1">${past?(ago===1?'Hier':`Il y a ${ago} jours`):esc(greeting())}</h1>${past?'':wxLine()}${morningStrip(t)}${past?`<p class="past-note">Tu revois un jour passé : tout reste modifiable. <button class="act" data-act="day-today">Revenir à aujourd’hui</button></p>`:''}</header>`;
-  const habitsSec=`<section class="sec td-habits"><div class="sec-h"><h2>Mes habitudes</h2><span class="sec-r">${hs.length?`<span class="cnt">${hd} / ${hs.length}</span>`:''}<button class="chev-btn" data-act="tab" data-tab="habits" aria-label="Ouvrir Habitudes">${ICON.chevR}</button></span></div>
+  const habitsSec=`<section class="sec td-habits"><div class="sec-h"><h2>Mes habitudes</h2><span class="sec-r">${hs.length?`<span class="cnt">${hd} / ${hs.filter(h=>!hFrozen(h,t)).length}</span>`:''}<button class="chev-btn" data-act="tab" data-tab="habits" aria-label="Ouvrir Habitudes">${ICON.chevR}</button></span></div>
       ${hs.length?`<div class="hlist">${hs.map(h=>hRow(h,t)).join('')}</div>`:`<p class="empty">${past?'Aucune habitude prévue ce jour-là.':'Aucune habitude prévue aujourd’hui. Ajoute-en une dans l’onglet Habitudes.'}</p>`}</section>`;
   const carry=past?[]:carryCandidates(t),yest=addDays(t,-1);
   const todoSec=`<section class="sec td-tasks"><div class="sec-h"><h2>Mes tâches</h2>${items.length?`<span class="cnt">${done} / ${items.length}</span>`:''}</div>
@@ -1819,7 +1853,7 @@ function sheetPrioLink(t){const x=prioInfo(t);if(!x||x.missing)return sheetTop('
   const kindTxt=k=>{const kd=kindOf(k);return kd==='qty'?`Quantité${k.unit?` · ${k.unit}`:''}`:kd==='milestone'?'Étape':'Habitude'};
   const proof=k=>k.virtual?row('habit',k.habitId,krIcon(k)||'🔁',krTitle(k),'Habitude d’entretien',idColor(k.identityId)):row('kr',k.id,krIcon(k)||'🎯',krTitle(k),[kindTxt(k),(S.data.objectives[k.objectiveId]||{}).title].filter(Boolean).join(' · '),idColor(k.identityId));
   const ps=weekProofs(mon),vid=x.p.kind==='video'?x.p.id:null,sugg=vid?ps.filter(k=>!k.virtual&&(S.data.objectives[k.objectiveId]||{}).videoId===vid):[];
-  return sheetTop('Lier à une preuve',esc(x.label))+`<section><p class="note">À la fin de la séance, tu complètes directement ce que tu lies ici : des mots ou des heures, une étape, une habitude, ton Elo ou ton rang.</p></section>
+  return sheetTop('Lier à une preuve',esc(x.label))+`<section>${xp('À la fin de la séance, tu complètes directement ce que tu lies ici : des mots ou des heures, une étape, une habitude, ton Elo ou ton rang.')}</section>
   ${grp('Proposées pour cette vidéo',sugg.map(proof))}
   ${identities().map(i=>grp(`${i.icon?picInline(i.icon,i.color)+' ':''}${esc(i.name||'Identité')}`,ps.filter(k=>k.identityId===i.id&&!sugg.includes(k)).map(proof))).join('')}
   ${grp('Indicateurs',metrics().map(m=>{const es=mEntries(m),last=es.length?es[es.length-1][1]:null;return row('metric',m.id,m.icon||'📈',m.name||'Indicateur',last==null?'Aucune mesure':`Dernière mesure : ${mFmt(m,last)}`,'#8C96FF')}))}
@@ -1872,7 +1906,7 @@ function focusEnd(x,t){const p=x.p,tg=prioTarget(p),el=fzElapsed(fzOf(t,p)),auto
     if(m.type==='rank')body=last==null?`<p class="hint">${nm} : aucune mesure. Note ton rang actuel dans Bilan → Progrès pour le faire évoluer ici.</p>`:`<div class="field"><span>${nm} pendant la séance</span><div class="rpills" role="radiogroup" aria-label="Évolution du rang">${[[-1,'−1 division'],[0,'Aucun changement'],[1,'+1 division']].map(([v,l])=>`<label><input type="radio" name="div" value="${v}" ${v===0?'checked':''}><span>${l}</span></label>`).join('')}</div><span class="hint">Rang actuel : ${esc(rankLabel(last))}.</span></div>`;
     else body=last==null?`<label class="field"><span>${nm} : valeur actuelle${m.unit?` (${esc(m.unit)})`:''}</span><input name="val" id="fz-val" type="number" step="any" inputmode="decimal" placeholder="0"></label>`
       :`<div class="field"><span>${nm} pendant la séance${m.unit?` (${esc(m.unit)})`:''}</span><div class="rpills" role="radiogroup" aria-label="Sens">${[['1','Gagné'],['-1','Perdu']].map(([v,l])=>`<label><input type="radio" name="sign" value="${v}" ${v==='1'?'checked':''}><span>${l}</span></label>`).join('')}</div><input name="delta" id="fz-delta" type="number" min="0" step="any" inputmode="decimal" placeholder="0" aria-label="Variation"><span class="hint">Dernière mesure : ${esc(mFmt(m,last))}. Laisse vide si rien n’a changé.</span></div>`}
-  const nolink=!tg&&LINKABLE.includes(p.kind)?`<p class="hint">Lie la priorité à une preuve ou à un indicateur pour le compléter ici. <button class="linkish" type="button" data-act="prio-link-open" data-date="${t}">Lier à une preuve</button></p>`:'';
+  const nolink=!tg&&LINKABLE.includes(p.kind)?`<p><button class="linkish" type="button" data-act="prio-link-open" data-date="${t}">Lier à une preuve</button></p>${xp('Lie la priorité à une preuve ou à un indicateur pour le compléter ici.')}`:'';
   return `<form class="fz-form" data-form="fz-end" data-date="${t}">${spent}${body}${nolink}<div class="fz-end"><button class="btn" type="submit">Valider la priorité</button><button class="btn-sec" type="button" data-act="fz-later" data-date="${t}">Pas encore</button></div></form>`}
 function sheetFocus(t){const x=prioInfo(t);
   if(!x||x.missing)return sheetTop('Mode concentration','')+'<section><p class="empty">Aucune priorité à lancer pour ce jour.</p></section>';
@@ -1884,7 +1918,7 @@ function sheetFocus(t){const x=prioInfo(t);
   ${pills('fz-dur',String(f.dur||0),[['0','Libre'],['25','25 min'],['45','45 min'],['60','60 min']],`data-date="${t}"`)}
   <div class="fz-ctl"><button class="btn" data-act="fz-run" data-date="${t}">${f.start?`${ICON.pause}<span>Pause</span>`:`${ICON.play}<span>${f.acc?'Reprendre':'Démarrer'}</span>`}</button>${f.acc||f.start?`<button class="btn-sec" data-act="fz-reset" data-date="${t}">Remettre à zéro</button>`:''}</div></section>
   ${ln?`<section><div class="fz-links">${ln}</div></section>`:''}
-  <section><button class="btn btn-go" data-act="fz-end">Terminer</button><p class="hint">Le minuteur ne valide rien tout seul : à la fin, tu notes le temps passé et ce que tu as fait.</p></section>`}`}
+  <section><button class="btn btn-go" data-act="fz-end">Terminer</button>${xp('Le minuteur ne valide rien tout seul : à la fin, tu notes le temps passé et ce que tu as fait.')}</section>`}`}
 function sheetPrio(t){const mon=monday(t);const items=todoItems(t).filter(i=>!i.done);const hs=habits().filter(h=>visibleOn(h,t)&&t>=hStart(h)&&habitState(h.id,t)!=='target');
   const krs=weekProofs(mon).filter(k=>!k.virtual&&(s=>s!=null&&s<1)(krWeekScore(k,mon)));const wp=weekPriosFor(t).filter(x=>!x.done);
   const vids=videos().filter(v=>v.stage!=='publie'&&v.stage!=='idee').sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999')).slice(0,3);
@@ -1907,7 +1941,7 @@ function weeklyPrios(t){const ps=weekPriosFor(t),past=t<today(),cur=dayOf(t).pri
 function carryCandidates(t){const out=[];for(let i=1;i<=7;i++){const d=addDays(t,-i);for(const it of todoItems(d))if(!it.done)out.push({d,it})}return out}
 function sheetCarry(t){const cs=carryCandidates(t);let last='';
   return sheetTop('Reprendre des tâches','Tâches non terminées des 7 derniers jours')+(cs.length?`<section><form data-form="carry">${cs.map(({d,it})=>{const head=d!==last?`<p class="carry-d">${esc(fmtDay(d,true))}</p>`:'';last=d;return `${head}<div class="checks"><label><input type="checkbox" name="carry" value="${d}|${it.id}"><span><b>${esc(it.text)}</b></span></label></div>`}).join('')}
-  <div style="margin-top:16px"><button class="btn" type="submit">Reprendre les tâches sélectionnées</button></div></form><p class="hint" style="margin-top:10px">Les tâches choisies sont déplacées à aujourd’hui ; leur date d’origine reste indiquée.</p></section>`:'<section><p class="empty">Aucune tâche en attente.</p></section>')}
+  <div style="margin-top:16px"><button class="btn" type="submit">Reprendre les tâches sélectionnées</button></div></form>${xp('Les tâches choisies sont déplacées à aujourd’hui ; leur date d’origine reste indiquée.')}</section>`:'<section><p class="empty">Aucune tâche en attente.</p></section>')}
 function carryTasks(sel){const t=today();const add=[];for(const[d,id] of sel){const src=todoItems(d);const it=src.find(i=>i.id===id);if(!it)continue;saveTodos(d,src.filter(i=>i.id!==id));if(!todoItems(t).some(i=>i.id===id))add.push({...it,from:it.from||d})}
   if(add.length)saveTodos(t,[...todoItems(t),...add]);toast(`${plural(add.length,'tâche')} reprise${add.length>1?'s':''}`)}
 /* F05 : trois évaluations facultatives et indépendantes. Ordinateur : trois tuiles ; téléphone : une ligne qui ouvre la fiche */
@@ -1963,12 +1997,12 @@ function greetTick(){if(document.hidden||S.tab!=='today'||!ready())return;const 
 setInterval(greetTick,60e3);document.addEventListener('visibilitychange',greetTick);
 function setWx(w){put('settings','main',{...clean(S.data.settings.main||{}),weather:w});S.wxRes=null;S.wxMsg='';S.wxQ=''}
 function sheetWx(){const w=settings().weather||{},on=w.lat!=null&&!w.off,r=S.wxRes;
-  return sheetTop('Météo','Accueil')+`<section><p class="note">${on?`Ville : <b style="color:var(--fg)">${esc(w.name||'Ma position')}</b>${w.region?` · ${esc(w.region)}`:''}`:w.off?'La météo est masquée sur l’accueil.':'Choisis ta ville : le matin, la température et son pic de la journée ; à partir de 17 h, l’heure du coucher du soleil.'}</p>
+  return sheetTop('Météo','Accueil')+`<section><p class="note">${on?`Ville : <b style="color:var(--fg)">${esc(w.name||'Ma position')}</b>${w.region?` · ${esc(w.region)}`:''}`:w.off?'La météo est masquée sur l’accueil.':''}</p>
   <div class="wx-search"><input id="wx-q" type="search" enterkeyhint="search" autocomplete="off" placeholder="Nom de ta ville" aria-label="Chercher une ville" value="${esc(S.wxQ||'')}"><button class="btn sm" data-act="wx-search">Chercher</button></div>
   ${S.wxMsg?`<p class="hint" role="status" style="margin-top:8px">${esc(S.wxMsg)}</p>`:''}
   ${r&&r.length?`<div class="wx-res">${r.map((x,i)=>`<button data-act="wx-pick" data-i="${i}"><b>${esc(x.name)}</b><span>${esc(x.region)}</span></button>`).join('')}</div>`:''}
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">${navigator.geolocation?'<button class="btn-sec" data-act="wx-geo">Utiliser ma position</button>':''}${w.off?'':'<button class="btn-sec" data-act="wx-off">Ne pas afficher la météo</button>'}</div>
-  <p class="hint" style="margin-top:16px">Données Open-Meteo, gratuites et sans compte : seules les coordonnées de la ville sont envoyées (arrondies à 1 km environ pour ta position). Hors connexion, la ligne météo n’apparaît pas.</p></section>`}
+  <div style="margin-top:12px">${xp('Choisis ta ville : le matin, la température et son pic de la journée ; à partir de 17 h, l’heure du coucher du soleil. Données Open-Meteo, gratuites et sans compte : seules les coordonnées de la ville sont envoyées (arrondies à 1 km environ pour ta position). Hors connexion, la ligne météo n’apparaît pas.')}</div></section>`}
 /* F05 : l'état du matin tient dans une bande sous le titre ; la toucher ouvre la fiche pour le noter */
 function morningStrip(t){const d=dayOf(t),e=energyOf(d.energy),sl=sleepOf(d.sleep),mn=d.mood?MOODS.indexOf(d.mood):-1,lvl=n=>n>=4?'pos':n===3?'mid':'low',ml=mn>=0?MOOD_L[d.mood]:'';
   const chip=(ic,cls,v,l)=>`<span class="ms-c ${v?'':'empty'}"><span class="mi ${cls}">${ic}</span><b>${v?esc(v):'—'}</b><span class="sr"> ${l}</span></span>`;
@@ -1987,7 +2021,7 @@ function sheetMorning(t){const d=dayOf(t);
   <div class="field"><span>Qualité du sommeil</span><div class="seg" role="group" aria-label="Qualité du sommeil">${SLEEP.map(([n,ic,l])=>`<button data-act="day-sleep" data-date="${t}" data-n="${n}" aria-pressed="${d.sleep===n}" aria-label="Sommeil ${esc(l.toLowerCase())}"><i aria-hidden="true">${ic}</i><span>${l}</span></button>`).join('')}</div></div>
   <div class="field"><span>Énergie</span><div class="seg" role="group" aria-label="Énergie">${ENERGY.map(([n,ic,sh,l])=>`<button data-act="day-energy" data-date="${t}" data-n="${n}" aria-pressed="${d.energy===n}" aria-label="${esc(l)}" title="${esc(l)}"><i aria-hidden="true">${ic}</i><span>${sh}</span></button>`).join('')}</div></div>
   <div class="field"><span>Humeur</span><div class="seg" role="group" aria-label="Humeur">${MOODS.map(m=>`<button data-act="day-mood" data-date="${t}" data-v="${m}" aria-pressed="${d.mood===m}" aria-label="Humeur : ${MOOD_L[m].toLowerCase()}"><i aria-hidden="true">${m}</i><span>${MOOD_L[m]}</span></button>`).join('')}</div></div>
-  <p class="hint">Facultatif. Chaque réponse s’enregistre dès que tu la touches ; touche-la de nouveau pour l’effacer.</p></section>`}
+  ${xp('Facultatif. Chaque réponse s’enregistre dès que tu la touches ; touche-la de nouveau pour l’effacer.')}</section>`}
 /* F04 : la vidéo la plus urgente, avec sa prochaine action concrète, sa sortie prévue, son retard et un blocage éventuel */
 function studioCard(){const v=videos().filter(v=>v.stage!=='publie'&&v.stage!=='idee').sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999'))[0];
   const head=`<div class="shead"><span class="ico" aria-hidden="true">${ICON.studio}</span><button class="st-t" data-act="tab" data-tab="studio">Studio</button><button class="chev-btn" data-act="tab" data-tab="studio" aria-label="Ouvrir le Studio">${ICON.chevR}</button></div>`;
@@ -2023,7 +2057,7 @@ function viewOKR(){
   const mon=S.week,q=mode==='week'?weekQuarter(mon):S.quarter;
   const nav=mode==='week'?qnav('week',`Sem. ${isoWeek(mon).w}`):qnav('quarter',qLabel(q));
   const head=`<header class="page-head"><h1 class="h1">Qui je deviens</h1><div class="head-r">${pills('okr-mode',mode,[['week','Semaine'],['quarter','Trimestre']])}${nav}</div></header>`;
-  if(!ids.length)return head+`<div class="empty-state"><h2>Qui veux-tu être ?</h2><p class="note">Commence par l'identité que tu veux incarner (« Je suis un champion »). Les objectifs du trimestre et leurs preuves en découlent.</p><button class="btn" data-act="new-identity">Créer ma première identité</button></div>`;
+  if(!ids.length)return head+`<div class="empty-state"><h2>Qui veux-tu être ?</h2><button class="btn" data-act="new-identity">Créer ma première identité</button>${xp("Commence par l'identité que tu veux incarner (« Je suis un champion »). Les objectifs du trimestre et leurs preuves en découlent.")}</div>`;
   let top='',scoreOf;
   if(mode==='week'){const ws=weekSummary(mon),pw=weekSummary(addDays(mon,-7));const rev=S.data.reviews[isoWeek(mon).key];
     const label=`Engagements tenus · semaine ${isoWeek(mon).w} · ${mon===cur?'en cours':mon>cur?'à venir':'archivée'}`;
@@ -2033,7 +2067,7 @@ function viewOKR(){
     const strip=`<div class="weeks" role="group" aria-label="Semaines de ${qLabel(q)}">${weeksOfQuarter(q).map(m=>{const sc=m>cur?null:weekSummary(m).score;return `<button class="wk ${m===mon?'on':''}" data-act="goto-week" data-mon="${m}" ${m>cur?'disabled':''} aria-label="Semaine ${isoWeek(m).w}"><span>S${isoWeek(m).w}</span><b>${sc==null?'—':pctS(sc)}</b></button>`}).join('')}</div>`;
     top=hero('okr',label,ws.score==null?'—':pctS(ws.score),ws.score==null?'<span class="muted">Aucun engagement prévu</span>':[d1,d2].filter(Boolean).join('<span class="muted">·</span>'))
       +lineChart('okr',{xs:days,act:days.map(d=>d>t?null:weekScoreAt(mon,d)),exp:days.map(d=>weekExpectedAt(mon,d)),fmtX:d=>parse(d).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'short'}),live:mon===cur})
-      +`<p class="hint">Pointillés : le rythme attendu selon tes jours prévus (une habitude « X fois par semaine » se juge en fin de semaine). Chaque lundi, la semaine repart à zéro ; les semaines passées restent ici :</p>`+strip;
+      +`${xp('Pointillés : le rythme attendu selon tes jours prévus (une habitude « X fois par semaine » se juge en fin de semaine). Chaque lundi, la semaine repart à zéro ; les semaines passées restent dans la frise ci-dessous.')}`+strip;
     scoreOf=i=>{const s=ws.per[i.id];return s==null?null:{v:s,d:pw.per[i.id]!=null?s-pw.per[i.id]:null}};
   }else{const sum=qSummary(q),range=S.range.okr;
     if(sum.krs.length){const s=okrSeries(q,range);let y0=0,y1=1;
@@ -2115,6 +2149,7 @@ function stepQty(k,d,dir,from){const r3=x=>Math.round(x*1000)/1000;const n=qtySt
    Jour passé non fait : manqué, y compris pour « X fois par semaine » tant que le quota de la semaine n'est pas atteint. */
 const fmtS=v=>v>=10000?`${Math.round(v/1000)}k`:v>=1000?`${nf.format(Math.round(v/100)/10)}k`:fmtN(v);
 function hCell(h,d,t,edit){if(d<hStart(h))return '<span class="cell nil" aria-hidden="true"></span>';
+  if(hFrozen(h,d)&&habitState(h.id,d)==='none'&&habitVal(h.id,d)==null){const fl=esc(`${h.name||'Habitude'}, ${fmtDay(d)} : figé exceptionnellement`);return `<span class="cell frz" role="img" aria-label="${fl}" title="${fl}">${ICE()}</span>`}
   const mode=hMode(h),st=habitState(h.id,d),wk=freqOf(h)==='weekly',sch=wk||fixedOn(h,d),fut=d>t,v=mode==='qty'?habitVal(h.id,d):null;let cls,ic='',lab;
   if(st==='target'){const ov=habitOver(h,d);cls=ov?'over':'on';ic=v!=null?`<b>${fmtS(v)}</b>`:ICON.check;lab=(ov?'au-delà de la cible':mode==='simple'?'fait':'cible atteinte')+(v!=null?` : ${qFmt(h,v)}`:'')}
   else if(st==='min'){cls='min';ic=v!=null?`<b>${fmtS(v)}</b>`:'<b>½</b>';lab='minimum'+(v!=null?` : ${qFmt(h,v)}`:'')}
@@ -2134,7 +2169,7 @@ function habitTable(mon,edit){const t=today(),sun=addDays(mon,6),days=[...Array(
     return `<div class="hw-r">${edit?`<button class="hw-n" data-act="edit-habit" data-id="${h.id}" title="Réglages de l’habitude">${nm}</button>`:`<span class="hw-n">${nm}</span>`}${days.map(d=>hCell(h,d,t,edit)).join('')}<span class="hw-c ${w.c>w.e?'over':w.e&&w.c>=w.e?'ok':''}" title="${w.c} sur ${w.e} cette semaine">${w.c}/${w.e}</span></div>`};
   const sleep=edit&&days.some(d=>d<=t&&sleepOf(dayOf(d).sleep))?`<div class="hw-r hw-x"><span class="hw-n">${av('i:moon','#8C96FF','xs','Sommeil')}<span class="hw-t">Sommeil</span></span>${days.map(d=>{const sl=d>t?null:sleepOf(dayOf(d).sleep);return `<span class="hw-v" ${sl?`title="Sommeil ${esc(sl[2].toLowerCase())}"`:''}>${sl?sl[1]:'<span class="faint">·</span>'}</span>`}).join('')}<span class="hw-c"></span></div>`:'';
   return `<div class="hw ${edit?'edit':''}"><div class="hw-r hw-hd"><span class="hw-n">Habitude</span>${days.map(dh).join('')}<span class="hw-c">Sem.</span></div>${hs.map(row).join('')}${sleep}</div>`}
-const hwLegend=()=>`<div class="hw-lg" aria-hidden="true"><span><i class="cell on">${ICON.check}</i>Fait</span><span><i class="cell over">${ICON.check}</i>Au-delà de la cible</span><span><i class="cell min"><b>½</b></i>Minimum</span><span><i class="cell miss">${ICON.x}</i>Manqué</span><span><i class="cell off"></i>Non prévu</span></div>`;
+const hwLegend=()=>`<div class="hw-lg" aria-hidden="true"><span><i class="cell frz">${ICE()}</i>Figé</span><span><i class="cell on">${ICON.check}</i>Fait</span><span><i class="cell over">${ICON.check}</i>Au-delà de la cible</span><span><i class="cell min"><b>½</b></i>Minimum</span><span><i class="cell miss">${ICON.x}</i>Manqué</span><span><i class="cell off"></i>Non prévu</span></div>`;
 /* Saisie d'un jour : la quantité pour une habitude chiffrée, le palier pour minimum et cible */
 function hqStatus(h,v){const tg=qTgt(h),mn=qMinOf(h);
   if(!(v>0))return tg?`Cible ${esc(qFmt(h,tg))}${mn?` · minimum ${fmtN(mn)}`:''}`:'Règle une cible dans la fiche de l’habitude pour suivre ton avance.';
@@ -2150,14 +2185,14 @@ function sheetHday(hid){const h=S.data.habits[hid];const d=S.hday||today(),t=tod
   else{const opt=(v,l,sub)=>`<button class="opt ${st===v?'on':''}" data-act="hday-set" data-id="${hid}" data-v="${v}" aria-pressed="${st===v}"><b>${l}</b>${sub?`<span>${esc(sub)}</span>`:''}</button>`;
     main=`<div class="hday">${opt('target',mode==='tiers'?'✓ Cible atteinte':'✓ Fait',h.targetLabel)}${mode==='tiers'?opt('min','½ Minimum réalisé',h.minLabel):''}${opt('none','Pas fait')}</div>`}
   return sheetTop(esc(h.name||'Habitude'),esc(fmtDay(d,true)))+`<section>${main}
-  ${!weekly&&!fixedOn(h,d)?'<p class="hint" style="margin-top:10px">Jour non prévu : le cocher compte quand même pour la semaine.</p>':''}</section>
+  ${!weekly&&!fixedOn(h,d)?xp('Jour non prévu : le cocher compte quand même pour la semaine.'):''}</section>
 `}
 /* Habitudes : le taux de la semaine, sa courbe et le tableau à cocher (un manqué reste marqué ✕).
    La liste et les réglages des habitudes sont à part, dans « Gérer ». */
 function viewHabits(){
   const mon=S.habitWeek,t=today(),hs=trackerHabits(),range=S.range.habits;
   const head=`<header class="page-head"><h1 class="h1">Habitudes</h1><button class="btn-sec hd-cfg" data-act="habits-cfg" aria-label="Gérer mes habitudes">${ICON.settings}<span>Gérer</span></button></header>`;
-  if(!hs.length)return head+`<div class="empty-state"><h2>Ton traqueur d’habitudes</h2><p class="note">Les petits gestes de tous les jours : exercices du matin, douche froide, lecture… Ils se cochent ici et dans Aujourd’hui, à part du score de tes identités.</p><button class="btn" data-act="new-habit">Créer une habitude</button></div>`;
+  if(!hs.length)return head+`<div class="empty-state"><h2>Ton traqueur d’habitudes</h2><button class="btn" data-act="new-habit">Créer une habitude</button>${xp('Les petits gestes de tous les jours : exercices du matin, douche froide, lecture… Ils se cochent ici et dans Aujourd’hui, à part du score de tes identités.')}</div>`;
   const ws=weekStats(monday(t)),pw=weekStats(addDays(monday(t),-7));
   /* Une journée entre dans la courbe une fois terminée ; aujourd'hui y entre plus tôt si tout ce qui était prévu est fait.
      La courbe commence au premier jour suivi (création des habitudes, Repartir de zéro) pour occuper toute la largeur. */
@@ -2167,9 +2202,9 @@ function viewHabits(){
   const cnt=`${ws.done} faite${ws.done>1?'s':''} sur ${ws.sched} prévue${ws.sched>1?'s':''} jusqu’ici`;
   return head+hero('hab','Habitudes tenues cette semaine',ws.rate==null?'—':pctS(ws.rate),ws.rate!=null&&pw.rate!=null&&pw.sched?`${dPts(ws.rate-pw.rate,'vs semaine dernière')}<span class="muted"> · ${cnt}</span>`:`<span class="muted">${cnt}</span>`)
   +lineChart('hab',{xs,act,exp:null,live:last===t,lab:'Habitudes tenues ce jour-là',empty:'La courbe commence demain : une journée y entre une fois terminée.',det:d=>{const c=dayCounts(d);return `${fmtDay(d,true)} : ${c.done} faite${c.done>1?'s':''} sur ${c.sched} prévue${c.sched>1?'s':''}`}})+pills('hab-range',range,[['w','1S'],['m','1M'],['t','3M']])+
-  `<p class="hint hab-cap">La courbe montre, jour par jour, la part des habitudes prévues que tu as faites. La journée en cours y entre à minuit, ou dès que tout est fait. Glisse le doigt dessus pour lire un jour.</p>`+
-  `<section class="sec"><div class="sec-h"><h2>Semaine ${isoWeek(mon).w}</h2>${qnav('hweek',fmtD(mon))}</div>${habitTable(mon,true)||'<p class="empty">Aucune habitude cette semaine-là.</p>'}${hwLegend()}
-  <p class="hint" style="margin-top:8px">Touche une case : une habitude simple se coche, un second appui l’enlève. Minimum et cible, ou quantité : la case ouvre la saisie. 🌙 : ta qualité de sommeil, à part du calcul.</p></section>`}
+  xp('La courbe montre, jour par jour, la part des habitudes prévues que tu as faites. La journée en cours y entre à minuit, ou dès que tout est fait. Glisse le doigt dessus pour lire un jour.','Comment lire la courbe','hab-cap')+
+  `<section class="sec"><div class="sec-h"><h2>Semaine ${isoWeek(mon).w}</h2>${qnav('hweek',fmtD(mon))}</div>${habitTable(mon,true)||'<p class="empty">Aucune habitude cette semaine-là.</p>'}
+  ${xp(hwLegend()+'<p>Touche une case : une habitude simple se coche, un second appui l’enlève. Minimum et cible, ou quantité : la case ouvre la saisie. 🌙 : ta qualité de sommeil, à part du calcul.</p>','Comment lire le tableau')}</section>`}
 
 /* ---------- Progrès : ce qui évolue dans le temps (poids, Elo, rang LoL) ---------- */
 const TIERS=['Fer','Bronze','Argent','Or','Platine','Émeraude','Diamant','Maître','Grand Maître','Challenger'];
@@ -2228,7 +2263,7 @@ function viewProgress(){const ms=metrics(),range=S.range.progress||'t';
   const head=bilanSw()+`<header class="page-head"><h1 class="h1">Progrès</h1><button class="btn sm" data-act="new-metric">Nouvel indicateur</button></header>`;
   const left=PRESETS.filter(p=>!ms.some(m=>m.preset===p.key));
   const presets=left.length?`<div class="presets">${left.map(p=>`<button class="preset" data-act="metric-preset" data-v="${p.key}">${av(p.icon,'#7FA0FF','sm')}${esc(p.name)} <small>${esc(p.hint)}</small></button>`).join('')}</div>`:'';
-  if(!ms.length)return head+`<div class="empty-state"><h2>Suis ce qui évolue dans le temps</h2><p class="note">Ton poids, ton Elo aux échecs, ton rang sur League of Legends : une valeur que tu mets à jour quand elle change, et sa courbe vers ta cible. Un indicateur observe un résultat ; il ne valide pas d’habitude à ta place.</p>${presets}${addBtn('new-metric','Autre indicateur')}</div>`;
+  if(!ms.length)return head+`<div class="empty-state"><h2>Suis ce qui évolue dans le temps</h2>${presets}${addBtn('new-metric','Autre indicateur')}${xp('Ton poids, ton Elo aux échecs, ton rang sur League of Legends : une valeur que tu mets à jour quand elle change, et sa courbe vers ta cible. Un indicateur observe un résultat ; il ne valide pas d’habitude à ta place.')}</div>`;
   const sel=S.metricSel&&ms.some(m=>m.id===S.metricSel)?S.metricSel:'all';const shown=sel==='all'?ms:ms.filter(m=>m.id===sel);
   return head+`<p class="eyebrow">Mets à jour une valeur quand elle change : la courbe et l’écart à ta cible suivent.</p>`
   +(ms.length>1?pills('metric-sel',sel,[['all','Tous'],...ms.map(m=>[m.id,m.name||'Indicateur'])]):'')
@@ -2241,7 +2276,7 @@ function sheetMetric(id){const m=S.data.metrics[id];const es=mEntries(m).reverse
   return sheetTop(esc(m.name||'Nouvel indicateur'),'Indicateur de progrès')+`<section>${iconPicker('metrics',id,m.icon)}
   ${F('metrics',id,'name','Nom',{ph:'Poids'})}
   <div class="two">${F('metrics',id,'identityId','Identité (facultatif)',{options:idOptions()})}${F('metrics',id,'objectiveId','Objectif lié (facultatif)',{options:[['','— Aucun —'],...objs.map(o=>[o.id,`${o.title||'Sans titre'} · ${qLabel(o.quarter)}`])]})}</div>
-  <p class="hint">Rattaché ou indépendant, chaque mesure n’est saisie qu’une fois : elle apparaît ici, dans Progrès et dans l’identité ou l’objectif lié.</p>
+  ${xp('Rattaché ou indépendant, chaque mesure n’est saisie qu’une fois : elle apparaît ici, dans Progrès et dans l’identité ou l’objectif lié.')}
   <div class="field"><span>Type de valeur</span>${pills('metric-type',m.type||'number',[['number','Nombre (kg, Elo…)'],['rank','Rang League of Legends']],`data-id="${id}"`)}</div>
   ${rank?'':F('metrics',id,'unit','Unité',{ph:'kg, Elo…'})}
   <div class="field"><span>Sens de la cible</span>${pills('metric-dir',dir,[['up','Augmenter'],['down','Diminuer'],['range','Rester dans une plage']],`data-id="${id}"`)}</div>
@@ -2294,6 +2329,7 @@ function weekInsights(mon){const t=today(),isCur=mon===monday(t),sun=addDays(mon
       if(top.length)tips.unshift({cat:'q',focus:top,ic:'i:chart',col:'#F99A45',t:`Trimestre : mets l’accent sur ${top.join(' et ')}`,w:9})}}}
   for(const k of allProofs(weekQuarter(mon))){if(kindOf(k)!=='qty'||engagedBy(k,sun))continue;const v=Math.max(0,krWeekValue(k,mon));if(!(v>0))continue;const o=krObj(k)||{},i=idOf(o.identityId)||{},u=k.unit||'';
     good.push({ic:krIcon(k),col:idColor(o.identityId),t:krTitle(k),n:krTitle(k),o:o.title||'',idn:i.name||'',cat:'bonus',amt:per(v,u),s:`${per(v,u)} en bonus, avant le lancement`})}
+  for(const h of trackerHabits()){const nz=hFrozenIn(h,mon,sun);if(!nz)continue;good.push({ic:h.icon,col:habitColor(h),t:h.name||'Habitude',n:h.name||'Habitude',cat:'frz',amt:nz>1?`${nz} jours`:'1 jour',s:`Figé exceptionnellement : ${nz>1?`${nz} jours`:'1 jour'}, sans bonus ni malus`})}
   for(const k of allProofs(weekQuarter(mon))){if(kindOf(k)!=='qty')continue;const fz=frozenSum(k,mon,sun);if(!(fz>0))continue;const o=krObj(k)||{},u=k.unit||'';
     good.push({ic:krIcon(k),col:idColor(o.identityId),t:krTitle(k),n:krTitle(k),o:o.title||'',cat:'frz',amt:per(fz,u),s:`Figé exceptionnellement : ${per(fz,u)}, sans perte ni bonus`})}
   const st=weekStats(mon);if(st.focusMin)good.push({cat:'fz',ic:'i:clock',col:'#7FA0FF',t:`${fmtMin(st.focusMin)} de travail concentré`,s:`${st.priosDone} priorité${st.priosDone>1?'s':''} du jour accomplie${st.priosDone>1?'s':''} sur ${st.priosTotal}`});
@@ -2313,7 +2349,7 @@ function rvSentences(kind,ins,mon,ws,sm){const t=today(),isCur=mon===monday(t),o
     const bs=ins.good.filter(x=>x.cat==='hab'&&x.sk>=3).sort((a,b)=>b.sk-a.sk)[0];if(bs)out.push(`Meilleure série : ${esc(bs.n)}, ${bs.sk} ${bs.skU} d’affilée.`);
     const ln=isCur?identities().filter(i=>i.status!=='pause'&&idNotLaunched(i,addDays(mon,6))):[];if(ln.length)out.unshift(`Semaine de lancement pour ${etList(ln.map(i=>qt(i.name||'Identité')))} : rien n’est attendu, tout compte en bonus.`);
     const bn=ins.good.filter(x=>x.cat==='bonus');if(bn.length)out.push(`En bonus : ${etList(bn.slice(0,2).map(x=>`${esc(x.amt)} pour ${qt(x.n)}`))}${bn.length>2?` et ${bn.length-2} autre${bn.length>3?'s':''}`:''}.`);
-    const fr=ins.good.filter(x=>x.cat==='frz');if(fr.length)out.push(`Figé exceptionnellement : ${etList(fr.slice(0,2).map(x=>`${esc(x.amt)} pour ${qt(x.n)}`))}${fr.length>2?` et ${fr.length-2} autre${fr.length>3?'s':''}`:''}, sans perte ni bonus.`);
+    const fr=ins.good.filter(x=>x.cat==='frz'),frT=x=>`${esc(x.amt)} pour ${qt(x.n)}`;if(fr.length)out.push(`Figé exceptionnellement : ${fr.length>2?`${fr.slice(0,2).map(frT).join(', ')} et ${fr.length-2} autre${fr.length>3?'s':''}`:etList(fr.map(frT))}, sans bonus ni malus.`);
     const fz=ins.good.find(x=>x.cat==='fz');if(fz)out.push(`${esc(fz.t.charAt(0).toUpperCase()+fz.t.slice(1))}.`);
     const sc=er??hr;if(out.length&&sc!=null&&sc>=.8)out.push('Bravo !');else if(out.length&&sc!=null&&sc>=.5)out.push('Continue comme ça.');
     if(!out.length)out.push(isCur?'Rien de terminé pour l’instant : la semaine continue.':'Rien de marquant cette semaine.')}
@@ -2378,9 +2414,9 @@ function viewReview(){
     <section class="sec"><div class="sec-h"><h2>Sommeil, énergie et humeur</h2></div>${mood}</section></div>
   </div>
   <section class="sec"><div class="sec-h"><h2>Ton bilan</h2><span class="store-state rv-sync" data-sync><i></i><span class="lg"></span><span class="sh"></span><button data-act="sync-retry" hidden>Réessayer</button></span></div>
-    <div class="field rv-prios"><span>Mes 3 priorités pour la semaine ${nextW}</span>${['p1','p2','p3'].map((pid,i)=>`<input id="rv-${pid}" data-bind="reviews:${key}:prios.${pid}.text" value="${esc(((rev.prios||{})[pid]||{}).text||'')}" placeholder="Priorité ${i+1}" aria-label="Priorité ${i+1}">`).join('')}<span class="hint">Elles s’affichent dans Aujourd’hui toute la semaine ${nextW}. « + Priorité » dans « À améliorer » en remplit une.</span></div>
-    <details class="rv-notes" data-fold="rv-notes" ${S.fold['rv-notes']?'open':''}><summary>Mes notes (facultatif)<span class="chev" aria-hidden="true">${ICON.chevD}</span></summary><div class="rv-grid">${fld('wins','Ce qui a marché','Les victoires, même petites')}${fld('blocks','Ce qui a bloqué','Sans te juger')}${fld('lesson','La leçon de la semaine','Une phrase')}</div><p class="hint" style="margin-top:8px">Tes textes s’enregistrent pendant que tu écris.</p></details>
-    <div class="close-wk">${closed?`<span class="tag pos">Semaine clôturée le ${fmtD(rev.closedAt.slice(0,10))}</span>`:''}<button class="btn" data-act="close-review" data-key="${key}" data-mon="${mon}">${closed?'Mettre à jour la clôture':'Clôturer la semaine'}</button><p class="hint">Enregistre le résumé de la semaine dans tes semaines sauvegardées. Si tu oublies, la semaine est sauvegardée automatiquement lundi.</p></div>
+    <div class="field rv-prios"><span>Mes 3 priorités pour la semaine ${nextW}</span>${['p1','p2','p3'].map((pid,i)=>`<input id="rv-${pid}" data-bind="reviews:${key}:prios.${pid}.text" value="${esc(((rev.prios||{})[pid]||{}).text||'')}" placeholder="Priorité ${i+1}" aria-label="Priorité ${i+1}">`).join('')}${xp(`Elles s’affichent dans Aujourd’hui toute la semaine ${nextW}. « + Priorité » dans « À améliorer » en remplit une.`)}</div>
+    <details class="rv-notes" data-fold="rv-notes" ${S.fold['rv-notes']?'open':''}><summary>Mes notes (facultatif)<span class="chev" aria-hidden="true">${ICON.chevD}</span></summary><div class="rv-grid">${fld('wins','Ce qui a marché','Les victoires, même petites')}${fld('blocks','Ce qui a bloqué','Sans te juger')}${fld('lesson','La leçon de la semaine','Une phrase')}</div>${xp('Tes textes s’enregistrent pendant que tu écris.')}</details>
+    <div class="close-wk">${closed?`<span class="tag pos">Semaine clôturée le ${fmtD(rev.closedAt.slice(0,10))}</span>`:''}<button class="btn" data-act="close-review" data-key="${key}" data-mon="${mon}">${closed?'Mettre à jour la clôture':'Clôturer la semaine'}</button>${xp('Enregistre le résumé de la semaine dans tes semaines sauvegardées. Si tu oublies, la semaine est sauvegardée automatiquement lundi.')}</div>
   </section>
   ${nSaved?`<section class="sec"><button class="row" data-act="saved-open"><span class="ico" aria-hidden="true">${ICON.history}</span><span class="m"><span class="t">Semaines sauvegardées</span><span class="s">${plural(nSaved,'semaine')} · dans les Réglages</span></span><span class="r">${ICON.chevR}</span></button></section>`:''}`}
 /* Semaines clôturées dans la Revue ou sauvegardées automatiquement le lundi, de la plus récente à la plus ancienne */
@@ -2416,11 +2452,11 @@ function viewPipeline(){
     col.sort(x.k==='publie'?(a,b)=>(b.publishDate||'').localeCompare(a.publishDate||''):(a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999')||byCreated(a,b));return{x,col}});
   return `<div class="kanban">${cols.map(({x,col})=>`<section class="kcol" data-drop="${x.k}"><div class="kcol-h"><b>${x.label}${x.k==='publie'?` ${y}`:''}</b><span>${col.length}</span></div>${col.map(vCard).join('')}${x.k==='angle'?addBtn('new-video','Ajouter'):''}</section>`).join('')}</div>
   <div class="plist">${cols.filter(({col})=>col.length).map(({x,col})=>`<section class="sec"><div class="sec-h"><h2>${x.label}${x.k==='publie'?` ${y}`:''}</h2><span class="muted">${col.length}</span></div><div class="pcards">${col.map(vCard).join('')}</div></section>`).join('')||'<p class="empty">Aucune vidéo en production.</p>'}${addBtn('new-video','Nouvelle vidéo')}</div>
-  <p class="hint">Change l’étape d’une vidéo avec la liste de sa carte, ‹ › ou, sur ordinateur, en la glissant d’une colonne à l’autre. Revenir en arrière ne supprime rien. Les sujets pas encore lancés sont dans l’onglet Idées.</p>`}
+  ${xp('Change l’étape d’une vidéo avec la liste de sa carte, ‹ › ou, sur ordinateur, en la glissant d’une colonne à l’autre. Revenir en arrière ne supprime rien. Les sujets pas encore lancés sont dans l’onglet Idées.')}`}
 function viewGantt(){
   const t=today(),y=new Date().getFullYear(),Y0=`${y}-01-01`,Y1=`${y}-12-31`;
   const rows=videos().filter(v=>v.publishDate&&v.publishDate>=Y0&&v.publishDate<=Y1&&(v.stage!=='publie'||v.publishDate>=addDays(t,-45))).map(v=>({v,p:plan(v)})).sort((a,b)=>a.v.publishDate.localeCompare(b.v.publishDate));
-  if(!rows.length)return `<div class="empty-state"><h2>Rien à planifier en ${y}</h2><p class="note">Donne une date de sortie ${y} à une vidéo : le rétroplanning se calcule tout seul à partir de tes réglages et de la complexité.</p></div>`;
+  if(!rows.length)return `<div class="empty-state"><h2>Rien à planifier en ${y}</h2>${xp(`Donne une date de sortie ${y} à une vidéo : le rétroplanning se calcule tout seul à partir de tes réglages et de la complexité.`)}</div>`;
   let start=rows.reduce((m,x)=>x.p.start<m?x.p.start:m,t);start=maxD(addDays(start,-7),Y0);start=minD(start,t).slice(0,8)+'01';
   const end=Y1;const DW=7,W=(diffDays(start,end)+1)*DW,x=s=>clamp(diffDays(start,s),0,diffDays(start,end)+1)*DW;
   let months='',lines='';for(let d=parse(start);ymd(d)<=end;d=new Date(d.getFullYear(),d.getMonth()+1,1)){const s=ymd(d);months+=`<div class="g-month" style="left:${x(s)}px"><span>${d.toLocaleDateString('fr-FR',{month:'long'})}</span></div>`;lines+=`<div class="g-month" style="left:${x(s)}px"></div>`}
@@ -2462,7 +2498,7 @@ function viewIdeas(){
   <div class="ideas-tools"><input id="idea-q" type="search" placeholder="Chercher une idée" value="${esc(S.ideaQuery)}" aria-label="Chercher une idée"><button class="btn sm" data-act="new-idea">Nouvelle idée</button></div>
   ${pills('idea-cat',S.ideaCat,catList.map(c=>[c,c||'Sans catégorie']))}
   <div class="ifilters">${sel('status','Statut',[['','Tous les statuts'],...ideaStatuses().map(x=>[x,x]),['-','Sans statut']])}${sel('tier','Tier',[['','Tous les tiers'],['S','Tier S'],['A','Tier A'],['B','Tier B'],['C','Tier C'],['-','Sans tier']])}${sel('subj','Sujet',[['','Retenues ou non'],['no','Pas encore retenues'],['yes','Déjà retenues']])}${sel('sort','Tri',[['score','Tri : score'],['tier','Tri : tier'],['az','Tri : A → Z'],['recent','Tri : plus récentes']])}${active?'<button class="linkish" data-act="idea-reset">Réinitialiser</button>':''}</div>
-  <p class="hint" style="margin:10px 0">Score = potentiel × envie ÷ effort (notes de 1 à 5). « Retenir » ajoute l’idée aux sujets retenus.</p>
+  ${xp('Score = potentiel × envie ÷ effort (notes de 1 à 5). « Retenir » ajoute l’idée aux sujets retenus.')}
   ${rows.length?`<div class="list" id="idea-list">${rows.map(row).join('')}</div>`:`<p class="empty">${all.length?'Aucune idée ne correspond à ces filtres.':'La banque est vide.'}</p>`}</section>`}
 /* Retenir une idée : elle devient un sujet du Studio (étape « Idée »), relié à l'idée d'origine, qui reste dans la banque */
 function retainIdea(id,open){const i=S.data.ideas[id];if(!i)return null;const ex=ideaSubject(i);if(ex){if(open)openSheet('video','videos',ex.id);return ex.id}
@@ -2471,7 +2507,7 @@ function retainIdea(id,open){const i=S.data.ideas[id];if(!i)return null;const ex
 function sheetIdeaCfg(){const all=ideas();
   const block=(kind,title,items,ph)=>`<section><h3>${title}</h3>${items.length?`<div class="cfg-list">${items.map((v,ix)=>{const n=all.filter(i=>(kind==='cat'?i.category:i.status)===v).length;return `<div class="cfg-row"><input id="cfg-${kind}-${ix}" value="${esc(v)}" data-cfg="${kind}" data-old="${esc(v)}" aria-label="Renommer « ${esc(v)} »"><span class="hint">${plural(n,'idée')}</span><button class="pill-mini" data-act="arm" data-next="cfg-del" data-kind="${kind}" data-v="${esc(v)}">Supprimer</button></div>`}).join('')}</div>`:'<p class="empty">Aucun pour l’instant.</p>'}
     <form class="todo-add" data-form="cfg-add" data-kind="${kind}"><input id="cfg-new-${kind}" placeholder="${ph}" autocomplete="off" aria-label="${ph}"><button class="btn sm" type="submit">Ajouter</button></form></section>`;
-  return sheetTop('Catégories et statuts','Banque d’idées')+`<section><p class="note">Renomme en modifiant le texte : le changement s’applique à toutes les idées concernées. Supprimer laisse ces idées sans catégorie ou sans statut ; elles ne sont pas effacées.</p></section>
+  return sheetTop('Catégories et statuts','Banque d’idées')+`<section>${xp('Renomme en modifiant le texte : le changement s’applique à toutes les idées concernées. Supprimer laisse ces idées sans catégorie ou sans statut ; elles ne sont pas effacées.')}</section>
   ${block('cat','Catégories',ideaCats(),'Nouvelle catégorie')}${block('st','Statuts',ideaStatuses(),'Nouveau statut (ex. À revoir)')}`}
 function cfgRename(kind,old,nv){const cats=[...ideaCats()],sts=[...ideaStatuses()],list=kind==='cat'?cats:sts,f=kind==='cat'?'category':'status';
   if(!nv||nv===old){renderSheet();return}const merge=list.includes(nv);const ix=list.indexOf(old);if(ix<0){renderSheet();return}
@@ -2485,7 +2521,7 @@ function viewStats(){
   const subs=pub.reduce((a,v)=>a+(+(v.stats&&v.stats.subs)||0),0);
   const val=(v,f,suf='')=>v.stats&&v.stats[f]!=null&&v.stats[f]!==''?fmtN(v.stats[f])+suf:'—';
   return `<section class="stats">${stat('Vues cumulées',fmtN(tot),plural(pub.length,'vidéo'))}${stat('Moyenne par vidéo',fmtN(avgV),'référence de la chaîne')}${stat('Abonnés gagnés',subs?fmtN(subs):'—',subs?'vidéos renseignées':'à saisir dans les fiches')}</section>
-  <section class="sec"><div class="sec-h"><h2>Vues par vidéo</h2><span class="hint">×N = vues ÷ moyenne de la chaîne</span></div>
+  <section class="sec"><div class="sec-h"><h2>Vues par vidéo</h2></div>${xp('×N = vues ÷ moyenne de la chaîne','Aide')}
   ${pub.map(v=>{const nv=+(v.stats&&v.stats.views)||0,k=avgV?nv/avgV:0;return `<div class="vbar"><button data-act="edit-video" data-id="${v.id}" title="${esc(v.title)}">${esc(v.title||'Sans titre')}</button>${bar(nv/mx,null,k>=1.5?'var(--pos)':null)}<span class="n">${fmtN(nv)}</span><span class="k ${k>=1.5?'up':'muted'}">×${String(Math.round(k*10)/10).replace('.',',')}</span></div>`}).join('')}</section>
   <section class="sec"><div class="sec-h"><h2>Détail</h2></div><div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Vidéo</th><th>Durée</th><th>Vues</th><th>Rétention</th><th>CTR</th><th>Abonnés</th></tr></thead><tbody>${pub.map(v=>`<tr><td>${fmtD(v.publishDate,true)}</td><td><button class="link" data-act="edit-video" data-id="${v.id}">${esc(v.title||'Sans titre')}</button></td><td>${esc(v.length||'—')}</td><td>${val(v,'views')}</td><td>${val(v,'retention',' %')}</td><td>${val(v,'ctr',' %')}</td><td>${val(v,'subs')}</td></tr>`).join('')}</tbody></table></div></section>`}
 
@@ -2499,9 +2535,9 @@ function viewSettings(){
     <section class="sec" id="accueil"><div class="sec-h"><h2>Accueil</h2></div>
       <div class="form-grid"><label class="field"><span>Ton prénom</span><input id="st-first" value="${esc(st.firstName||'')}" autocomplete="given-name" data-bind="settings:main:firstName"></label></div>
       <div class="wx-set"><p class="note">Météo : ${(w=>w.off?'masquée':w.lat!=null?`<b style="color:var(--fg)">${esc(w.name||'Ma position')}</b>`:'aucune ville')(st.weather||{})}</p><button class="act" data-act="wx-open">${(st.weather||{}).lat!=null?'Changer':'Choisir'}</button></div>
-      <p class="hint" style="margin-top:8px">« Bonjour » jusqu’à 17 h, « Bonsoir » ensuite. Météo Open-Meteo : la température et son pic le matin, le coucher du soleil à partir de 17 h.</p>
+      ${xp('« Bonjour » jusqu’à 17 h, « Bonsoir » ensuite. Météo Open-Meteo : la température et son pic le matin, le coucher du soleil à partir de 17 h.')}
     </section>
-    <section class="sec"><div class="sec-h"><h2>Rétroplanning des vidéos</h2></div><p class="note">Durée de chaque phase en jours pour une vidéo « Lourde ». Le planning se calcule à rebours depuis la date de sortie.</p>
+    <section class="sec"><div class="sec-h"><h2>Rétroplanning des vidéos</h2></div>${xp('Durée de chaque phase en jours pour une vidéo « Lourde ». Le planning se calcule à rebours depuis la date de sortie.')}
       <div class="form-grid">${PHASES.map(p=>`<label class="field"><span>${p.label}</span><input id="ph-${p.k}" type="number" min="0" value="${st.phases[p.k]}" ${b('phases.'+p.k)}></label>`).join('')}<label class="field"><span>Marge avant sortie</span><input id="ph-marge" type="number" min="0" value="${st.phases.marge}" ${b('phases.marge')}></label></div>
       <div class="form-grid">${Object.entries(CPLX).map(([k,l])=>`<label class="field"><span>Coefficient ${l.toLowerCase()}</span><input id="cx-${k}" type="number" step="0.05" min="0.1" value="${st.complexity[k]}" ${b('complexity.'+k)}></label>`).join('')}</div>
     </section>
@@ -2511,34 +2547,36 @@ function viewSettings(){
     </section>
     <section class="sec"><div class="sec-h"><h2>Calendrier</h2></div>
       ${F('settings','main','tz','Fuseau horaire',{options:tzOptions(st.tz)})}
-      <p class="hint" style="margin-top:8px">Le jour, le lundi et les échéances se calculent dans ce fuseau, sur tous tes appareils. Un changement vaut pour la suite : le passé ne bouge pas.</p>
+      ${xp('Le jour, le lundi et les échéances se calculent dans ce fuseau, sur tous tes appareils. Un changement vaut pour la suite : le passé ne bouge pas.')}
     </section>
     <section class="sec"><div class="sec-h"><h2>Modèles d’objectif</h2><button class="act" data-act="new-template">Nouveau</button></div>
       ${templates().length?`<div class="list">${templates().map(t=>`<button class="row" data-act="edit-template" data-id="${t.id}">${av(t.icon,idColor(t.identityId),'sm',t.name)}<span class="m"><span class="t">${esc(t.name||'Modèle sans nom')}</span><span class="s">${plural((t.items||[]).length,'preuve')}${t.video?' · modèle vidéo':''}</span></span><span></span></button>`).join('')}</div>`:'<p class="empty">Aucun modèle. Ouvre un objectif et touche « Enregistrer comme modèle ».</p>'}
-      <p class="hint" style="margin-top:8px">Utilise un modèle avec « + Objectif » sous une identité, ou depuis la fiche d’une vidéo du Studio.</p>
+      ${xp('Utilise un modèle avec « + Objectif » sous une identité, ou depuis la fiche d’une vidéo du Studio.')}
     </section>
     <section class="sec"><div class="sec-h"><h2>Banque d’idées</h2><button class="act" data-act="idea-cfg">Modifier</button></div>
       <p class="note">Catégories : ${esc(ideaCats().join(', ')||'aucune')}.</p><p class="note">Statuts : ${esc(ideaStatuses().join(', ')||'aucun')}.</p>
     </section>
     <section class="sec" id="saved-weeks"><div class="sec-h"><h2>Semaines sauvegardées <small class="muted">${savedWeeks().length}</small></h2></div>
-      <p class="hint">Chaque semaine clôturée dans la Revue, ou sauvegardée automatiquement le lundi. Touche une semaine pour rouvrir sa revue.</p>
+      ${xp('Chaque semaine clôturée dans la Revue, ou sauvegardée automatiquement le lundi. Touche une semaine pour rouvrir sa revue.')}
       ${(sw=>sw.length?`<div class="list">${(S.histAll?sw:sw.slice(0,12)).map(savedRow).join('')}</div>${!S.histAll&&sw.length>12?`<div style="margin-top:10px"><button class="btn-sec" data-act="hist-all">Afficher les ${sw.length-12} semaines précédentes</button></div>`:''}`:'<p class="empty">Aucune semaine sauvegardée pour l’instant. Clôture ta semaine en bas de la Revue.</p>')(savedWeeks())}
     </section>
     <section class="sec"><div class="sec-h"><h2>Tes données</h2><span class="store-state" data-sync><i></i><span class="lg"></span><span class="sh"></span><button data-act="sync-retry" hidden>Réessayer</button></span></div>
-      <p class="note">Exporte tout en un fichier JSON : une sauvegarde, ou le moyen d'emporter ton espace ailleurs.</p>
+      ${xp("Exporte tout en un fichier JSON : une sauvegarde, ou le moyen d'emporter ton espace ailleurs.")}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn sm" data-act="export">Exporter</button><label class="btn-sec" for="import-file" style="cursor:pointer">Importer un fichier</label><input id="import-file" type="file" accept=".json,application/json" hidden></div>
       ${importPanel()}${backupInfo()}
     </section>
-    <section class="sec" id="reset"><div class="sec-h"><h2>Repartir de zéro</h2></div><p class="note">Remet le suivi à zéro à partir d’aujourd’hui en gardant ta configuration. Une sauvegarde complète est faite avant.</p>${startDay()?`<p class="hint">Suivi commencé le ${fmtD(startDay(),true)}.</p>`:''}<div style="margin-top:12px"><button class="btn-sec" data-act="reset-open">Repartir de zéro…</button></div></section>
+    <section class="sec" id="reset"><div class="sec-h"><h2>Repartir de zéro</h2></div>${startDay()?`<p class="hint">Suivi commencé le ${fmtD(startDay(),true)}.</p>`:''}<div style="margin-top:12px"><button class="btn-sec" data-act="reset-open">Repartir de zéro…</button></div>${xp('Remet le suivi à zéro à partir d’aujourd’hui en gardant ta configuration. Une sauvegarde complète est faite avant.')}</section>
     <section class="sec"><div class="sec-h"><h2>Compte</h2></div><p class="note">Connecté avec ${esc((window.DQ_BACKEND&&window.DQ_BACKEND.user)||'ton compte')}. Tes données sont synchronisées entre ton téléphone et ton ordinateur, et restent disponibles hors connexion.</p><div style="margin-top:12px"><button class="btn-sec" data-act="sign-out">Se déconnecter</button></div></section>
   </div>`}
 
 /* ---------- Fiches (panneau) ---------- */
+/* Explications repliées (« déroulant ») : les fonctions restent visibles, l'explication s'ouvre à la demande */
+const xp=(body,label='Comment ça marche',cls='')=>body?`<details class="xp ${cls}"><summary><i class="xp-i" aria-hidden="true">i</i><span>${label}</span><span class="chev" aria-hidden="true">${ICON.chevD}</span></summary><div class="xp-b">${body}</div></details>`:'';
 const F=(coll,id,path,label,o={})=>{const doc=S.data[coll][id]||{};const v=path.split('.').reduce((a,k)=>a==null?a:a[k],doc);const fid=`f-${coll}-${id}-${path.replace(/\./g,'-')}`;const common=`id="${esc(fid)}" data-bind="${coll}:${id}:${path}"${o.type==='number'?' data-type="number"':''}${o.ph?` placeholder="${esc(o.ph)}"`:''}`;
   let input;if(o.area)input=`<textarea ${common} rows="${o.rows||3}">${esc(v??'')}</textarea>`;
   else if(o.options)input=`<select ${common}>${o.options.map(([k,l])=>`<option value="${esc(k)}" ${String(v??'')===String(k)?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
   else input=`<input ${common} type="${o.type||'text'}" ${o.type==='number'?'step="any" inputmode="decimal"':''} value="${esc(v??'')}">`;
-  return `<label class="field"><span>${label}</span>${input}${o.hint?`<span class="hint">${o.hint}</span>`:''}</label>`};
+  const fld=`<label class="field"><span>${label}</span>${input}${o.info?`<span class="hint">${o.info}</span>`:''}</label>`;return o.hint?`<div class="fld">${fld}${xp(o.hint,'Aide','xp-f')}</div>`:fld};
 const sheetTop=(t,sub)=>`<div class="sheet-top"><div><p class="eyebrow">${sub||''}</p><h2>${t}</h2></div><button class="btn sm" data-act="close-sheet">Terminé</button></div>`;
 const delBtn=(act,id,label)=>`<section><div><button class="btn-sec btn-danger" data-act="arm" data-next="${act}" data-id="${id}">${label}</button></div></section>`;
 const idOptions=()=>[['','— Aucune —'],...identities().map(i=>[i.id,i.name||'Sans nom'])];
@@ -2553,7 +2591,7 @@ function freqEditor(h){const f=freqOf(h);const days=Array.isArray(h.days)?h.days
 function renderSheet(){const s=S.sheet;if(!s){$('#sheet').hidden=true;return}
   $('#sheet-panel').classList.toggle('is-focus',s.kind==='focus');
   const FREE={pick:sheetPick,prio:sheetPrio,carry:sheetCarry,focus:sheetFocus,morning:sheetMorning,'prio-link':sheetPrioLink,'idea-cfg':sheetIdeaCfg,'habits-cfg':sheetHabitsCfg,reset:sheetReset,wx:sheetWx}[s.kind];if(FREE){const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=FREE(s.id);$('#sheet').hidden=false;panel.scrollTop=top;if(s.kind==='focus'&&!fzTimer)fzTimer=setInterval(fzTick,1000);return}
-  const fn={abandon:sheetAbandon,frz:sheetFrz,hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
+  const fn={abandon:sheetAbandon,frz:sheetFrz,hfrz:sheetHfrz,hday:sheetHday,identity:sheetIdentity,objective:sheetObjective,kr:sheetKR,habit:sheetHabit,metric:sheetMetric,video:sheetVideo,idea:sheetIdea,template:sheetTemplate}[s.kind];
   if(!fn||!S.data[s.coll][s.id]){S.sheet=null;$('#sheet').hidden=true;return}
   const panel=$('#sheet-panel');const top=panel.scrollTop;panel.innerHTML=fn(s.id);$('#sheet').hidden=false;panel.scrollTop=top}
 function trigSel(el){if(!el||!el.dataset||!el.dataset.act)return null;return `[data-act="${el.dataset.act}"]${el.dataset.id?`[data-id="${el.dataset.id}"]`:''}`}
@@ -2586,7 +2624,7 @@ function launchField(i){const t=today(),l=idLaunch(i),q=qKey(t),nq=qKey(addDays(
   ${idNotLaunched(i)?`<div style="margin:-4px 0 14px"><button class="btn sm" data-act="id-launch" data-id="${i.id}">Lancer maintenant</button></div>`:''}`}
 function sheetIdentity(id){const i=S.data.identities[id];return sheetTop(esc(i.name||'Nouvelle identité'),'Identité')+`
   <section>${iconPicker('identities',id,i.icon)}${F('identities',id,'name','Nom',{ph:'Champion'})}
-  <div class="field"><span>Statut</span>${pills('id-status',i.status||'',[['prioritaire','Prioritaire'],['entretenue','Entretenue'],['pause','En pause']],`data-id="${id}"`)}<span class="hint">Prioritaire et entretenue organisent ton attention, sans changer le calcul. En pause : plus aucune attente pour cette identité ; ses objectifs et son historique sont conservés.</span></div>
+  <div class="field"><span>Statut</span>${pills('id-status',i.status||'',[['prioritaire','Prioritaire'],['entretenue','Entretenue'],['pause','En pause']],`data-id="${id}"`)}${xp('Prioritaire et entretenue organisent ton attention, sans changer le calcul. En pause : plus aucune attente pour cette identité ; ses objectifs et son historique sont conservés.','Aide')}</div>
   ${launchField(i)}
   ${F('identities',id,'statement','Phrase d’identité',{ph:'Je suis un créateur qui approfondit ses idées et termine ses vidéos.',hint:'Au présent, à la première personne, avec un comportement concret.'})}
   ${F('identities',id,'beliefs','Croyances',{area:1,rows:4,ph:'Une par ligne'})}
@@ -2611,17 +2649,17 @@ function krDatesHtml(k,du,rt){const id=k.id,sp=krSpan(k),st=krStartOf(k);
     const legacy=k.due&&k.due!==rt.d?`<p class="hint">Échéance choisie avant le lien avec le Studio, qui prévoit le ${fmtD(rt.d)} : la modifier ici aligne le Studio.</p>`:'';
     const what=pub?`C’est la date de publication de « ${esc(v.title||'Vidéo')} » : la changer ici la change dans le Studio${v.sched?' (les phases ajustées ne bougent pas)':', et son rétroplanning se recalcule'}.`
       :`Phase « ${PHASE_FR[rt.ph]} » de « ${esc(v.title||'Vidéo')} » dans le Studio : changer ces dates met à jour son calendrier ; les phases suivantes et la date de sortie glissent d’autant.`;
-    return `<div class="two">${pub?'':inp('phaseStart','Date de lancement',s0)}${inp('phaseEnd',pub?'Échéance · date de publication':'Échéance',d0)}</div><p class="hint" style="margin:-4px 0 10px">${what} ${tail}</p>${legacy}${later(s0)}`}
+    return `<div class="two">${pub?'':inp('phaseStart','Date de lancement',s0)}${inp('phaseEnd',pub?'Échéance · date de publication':'Échéance',d0)}</div>${xp(`${what} ${tail}`)}${legacy}${later(s0)}`}
   const sTxt=k.startDate?'Date choisie.':st==='plan'||(du&&du.src==='pending')?'Sans date choisie : pas encore planifiée.':`Sans date choisie : à partir du ${fmtD(sp.s)}.`;
   const dTxt=k.due?'Date choisie.':`Sans date choisie : ${esc(dueTxtOf(du))}.`;
   const bad=k.startDate&&du&&du.d&&k.startDate>du.d?'<p class="hint tone-warn">La date de lancement tombe après l’échéance : rien ne sera attendu avant l’échéance.</p>':'';
-  return `<div class="two">${F('krs',id,'startDate','Date de lancement',{type:'date',hint:sTxt})}${F('krs',id,'due','Échéance',{type:'date',hint:dTxt+(rt&&k.due?` Rétroplanning : ${fmtD(rt.d)} (${PHASE_FR[rt.ph]}).`:'')})}</div><p class="hint" style="margin:-4px 0 10px">${tail}</p>${bad}${k.startDate?later(k.startDate):''}`}
+  return `<div class="two">${F('krs',id,'startDate','Date de lancement',{type:'date',info:sTxt})}${F('krs',id,'due','Échéance',{type:'date',info:dTxt+(rt&&k.due?` Rétroplanning : ${fmtD(rt.d)} (${PHASE_FR[rt.ph]}).`:'')})}</div>${xp(tail)}${bad}${k.startDate?later(k.startDate):''}`}
 /* « Figer exceptionnellement » (fiche d'une quantité) : la semaine en cours, au plus ce qui reste à faire ; liste des gels du trimestre */
 function frzBlock(k){const id=k.id,mon=monday(today()),u=k.unit||'',{start,end}=qRange(krQuarter(k)),tw=krWeekTarget(k,mon),room=Math.max(0,tw-Math.max(0,krWeekValue(k,mon)));
   const ls=(k.freezes||[]).filter(f=>f&&f.d>=start&&f.d<=end).sort((a,b)=>b.d.localeCompare(a.d)||String(b.at).localeCompare(String(a.at)));
-  return `<div class="frz"><h4>${ICE()}Figer exceptionnellement</h4><p class="hint" style="margin:0">Tu ne peux exceptionnellement pas faire ce qui était prévu cette semaine ? Fige-le : ça sort de l’objectif, sans perte ni bonus. Par exemple, 12 séances prévues sur le trimestre et une absence : 11.</p>
+  return `<div class="frz-blk"><h4>${ICE()}Figer exceptionnellement</h4>
   ${room>0?`<div style="margin-top:12px"><button class="btn-sec frz-btn" data-act="frz-open" data-id="${id}">${ICE()}Figer…</button></div>`:`<p class="hint" style="margin-top:10px">Rien à figer cette semaine : ${tw>0?'l’objectif de la semaine est déjà atteint':'aucun objectif prévu'}.</p>`}
-  ${ls.length?`<ul class="log frz-log" style="margin-top:12px">${ls.map(f=>`<li><span>${fmtD(f.d)} · sem. ${isoWeek(f.d).w}</span><b>${ICE()}${fmtN(f.n)} ${esc(unitN(f.n,u))}${f.reason?` · ${esc(f.reason)}`:''}</b><button class="x" data-act="frz-del" data-id="${id}" data-at="${esc(f.at||'')}" aria-label="Retirer le gel du ${fmtD(f.d)}">${ICON.x}</button></li>`).join('')}</ul>`:''}</div>`}
+  ${ls.length?`<ul class="log frz-log" style="margin-top:12px">${ls.map(f=>`<li><span>${fmtD(f.d)} · sem. ${isoWeek(f.d).w}</span><b>${ICE()}${fmtN(f.n)} ${esc(unitN(f.n,u))}${f.reason?` · ${esc(f.reason)}`:''}</b><button class="x" data-act="frz-del" data-id="${id}" data-at="${esc(f.at||'')}" aria-label="Retirer le gel du ${fmtD(f.d)}">${ICON.x}</button></li>`).join('')}</ul>`:''}${xp('Tu ne peux exceptionnellement pas faire ce qui était prévu cette semaine ? Fige-le : ça sort de l’objectif, sans perte ni bonus. Par exemple, 12 séances prévues sur le trimestre et une absence : 11. Deux validations sont demandées ; un gel se retire avec ✕.')}</div>`}
 /* Gel en deux validations : 1. quoi et pourquoi, avec ce qui change ; 2. récapitulatif et confirmation */
 function frzRoom(k){const mon=monday(today());return Math.max(0,krWeekTarget(k,mon)-Math.max(0,krWeekValue(k,mon)))}
 function sheetFrz(id){const k=S.data.krs[id];if(!k)return '';const mon=monday(today()),u=k.unit||'',z=S.frz&&S.frz.id===id?S.frz:(S.frz={id,step:1,n:0,reason:''});
@@ -2639,7 +2677,7 @@ function sheetKR(id){const k=S.data.krs[id];const kind=kindOf(k);const h=habitOf
   if(kind==='qty'){const log=Object.entries(k.log||{}).filter(([,v])=>+v).sort((a,b)=>b[0].localeCompare(a[0]));const mon=monday(today());
     const du=krDue(k),rt=retroOf(k);
     const qzT=(({start,end})=>frozenSum(k,start,end))(qRange(q));
-    extra=`<div class="two">${F('krs',id,'target','Objectif du trimestre',{type:'number',ph:'4000',hint:qzT>0?`<span class="ice">${ICE()}Figé : ${fmtN(qzT)}</span> · objectif ramené à ${fmtN(krTarget(k))}`:''})}${F('krs',id,'unit','Unité',{ph:'mots, heures…'})}</div>
+    extra=`<div class="two">${F('krs',id,'target','Objectif du trimestre',{type:'number',ph:'4000',info:qzT>0?`<span class="ice">${ICE()}Figé : ${fmtN(qzT)}</span> · objectif ramené à ${fmtN(krTarget(k))}`:''})}${F('krs',id,'unit','Unité',{ph:'mots, heures…'})}</div>
     ${krDatesHtml(k,du,rt)}
     ${(t=>{const v=krWeekValue(k,mon);return t>0&&v>t?`<p class="tone-over" style="margin:4px 0 8px">Au-delà de l’objectif de la semaine : +${fmtN(v-t)} ${esc(unitN(v-t,k.unit||''))}. Ce surplus avance ton trimestre${+k.weekTarget>0?'':' et allège les semaines suivantes'}.</p>`:''})(krWeekTarget(k,mon))}
     <div class="two">${F('krs',id,'weekTarget','Objectif par semaine',{type:'number',ph:`${fmtN(krWeekTarget({...k,weekTarget:null},mon))} (calculé)`,hint:'Laisse vide : le reste à faire est réparti sur les semaines restantes jusqu’à l’échéance.'})}${F('krs',id,'step','Pas des boutons − / +',{type:'number',ph:'1',hint:'Ex. 100 : chaque + ajoute 100 mots.'})}</div>
@@ -2661,12 +2699,12 @@ function howTo(k){const kind=kindOf(k);const step=(ok,n,html)=>`<li class="${ok?
     level:['Sur sa ligne dans Identités, avec <b>−</b> et <b>+</b>, ou dans « Valeur actuelle » ci-dessous. Elle n’apparaît pas dans Aujourd’hui.','Elle avance du point de départ vers l’objectif. Chaque changement est daté.'],
     videos:['Rien à faire&nbsp;: le Studio compte les vidéos publiées.','Ancien type de preuve.']}[kind];
   if(!T)return '';
-  return `<div class="howto"><h4>Comment ça marche</h4><dl><dt>Où la remplir</dt><dd>${T[0]}</dd><dt>Comment elle avance</dt><dd>${T[1]}</dd></dl></div>`}
+  return xp(`<dl><dt>Où la remplir</dt><dd>${T[0]}</dd><dt>Comment elle avance</dt><dd>${T[1]}</dd></dl>`)}
 /* Rattraper un oubli : un bouton par jour de la semaine en cours */
-function weekToggles(h){const t=today(),mon=monday(t),simple=hMode(h)==='simple';return `<div class="field"><span>Cette semaine · touche un jour pour le saisir</span><div class="days wk">${[...Array(7)].map((_,i)=>{const d=addDays(mon,i),st=habitState(h.id,d);return `<button class="${st==='min'?'min':''}${habitOver(h,d)?' ov':''}" data-act="${simple?'habit-toggle':'hday-open'}" data-id="${h.id}" data-date="${d}" aria-pressed="${st==='target'}" ${d>t||d<hStart(h)?'disabled':''} aria-label="${esc(h.name||'Habitude')} le ${fmtD(d)}">${DAYS[i]}</button>`}).join('')}</div></div>`}
+function weekToggles(h){const t=today(),mon=monday(t),simple=hMode(h)==='simple';return `<div class="field"><span>Cette semaine · touche un jour pour le saisir</span><div class="days wk">${[...Array(7)].map((_,i)=>{const d=addDays(mon,i),st=habitState(h.id,d);if(hFrozen(h,d)&&st==='none')return `<button class="frz" disabled aria-label="${esc(h.name||'Habitude')} le ${fmtD(d)} : figé exceptionnellement" title="Figé exceptionnellement">${ICE()}</button>`;return `<button class="${st==='min'?'min':''}${habitOver(h,d)?' ov':''}" data-act="${simple?'habit-toggle':'hday-open'}" data-id="${h.id}" data-date="${d}" aria-pressed="${st==='target'}" ${d>t||d<hStart(h)?'disabled':''} aria-label="${esc(h.name||'Habitude')} le ${fmtD(d)}">${DAYS[i]}</button>`}).join('')}</div></div>`}
 function hModeTxt(h){const m=hMode(h);if(m==='qty')return qTgt(h)?`quantité : ${qFmt(h,qTgt(h))}${qMinOf(h)?`, minimum ${fmtN(qMinOf(h))}`:''}`:'quantité à régler';return m==='tiers'?'minimum et cible':'fait / pas fait'}
 function modeEditor(h){const m=hMode(h);
-  return `<div class="field"><span>Type de suivi</span>${pills('habit-mode',m,[['simple','Fait / pas fait'],['tiers','Minimum et cible'],['qty','Quantité']],`data-id="${h.id}"`)}<span class="hint">${m==='simple'?'Un appui sur la case la coche, un second l’enlève.':m==='tiers'?'Pour les jours difficiles : le minimum garde ta série, sans compter comme cible atteinte. La case ouvre le choix.':'La case ouvre la saisie de ce que tu as fait. Sous la cible : minimum, en orange, il garde ta série. Au-delà : turquoise.'}</span></div>
+  return `<div class="field"><span>Type de suivi</span>${pills('habit-mode',m,[['simple','Fait / pas fait'],['tiers','Minimum et cible'],['qty','Quantité']],`data-id="${h.id}"`)}${xp(m==='simple'?'Un appui sur la case la coche, un second l’enlève.':m==='tiers'?'Pour les jours difficiles : le minimum garde ta série, sans compter comme cible atteinte. La case ouvre le choix.':'La case ouvre la saisie de ce que tu as fait. Sous la cible : minimum, en orange, il garde ta série. Au-delà : turquoise.','Aide')}</div>
   ${m==='tiers'?`<div class="two">${F('habits',h.id,'minLabel','Version minimale',{ph:'2 minutes de lecture'})}${F('habits',h.id,'targetLabel','Cible',{ph:'20 minutes de lecture'})}</div>`:''}
   ${m==='qty'?`<div class="two">${F('habits',h.id,'qTarget','Cible par jour',{type:'number',ph:'20'})}${F('habits',h.id,'qUnit','Unité',{ph:'pages'})}</div>${F('habits',h.id,'qMin','Minimum (facultatif)',{type:'number',ph:'5',hint:'Sans minimum, toute quantité sous la cible compte comme minimum. Avec un minimum, une quantité plus petite est notée mais ne compte pas.'})}`:''}`}
 /* F17 / F18 : une étape en retard se replanifie, se réduit ou s'abandonne ; l'abandon demande deux validations */
@@ -2674,9 +2712,9 @@ function msBlock(k){const id=k.id;const hist=[...(k.reschedules||[]).map(x=>({at
   let out='';
   if(k.abandoned&&!k.done)out+=`<div class="howto"><h4>Abandonnée le ${fmtD(k.abandoned.at,true)}</h4><p style="margin-top:0">${k.abandoned.reason?`Motif : ${esc(k.abandoned.reason)}. `:''}Elle reste dans l’historique ; les semaines où elle était prévue gardent leur constat.</p><div style="margin-top:12px"><button class="btn-sec" data-act="kr-reactivate" data-id="${id}">Réactiver l’étape</button></div></div>`;
   else if(!k.done){const late=msLate(k);
-    out+=`<div class="ms-act" id="ms-${id}"><h4>${late?`En retard depuis la semaine ${isoWeek(addDays(msWeek(k),7)).w}`:'Si l’étape ne passe pas'}</h4>${late?'<p class="hint">Elle reste visible tant qu’elle n’est pas faite. Trois options :</p>':''}
-    <div class="field"><span>Réduire le périmètre</span><div class="qty-form" style="margin:0"><input id="scope-${id}" placeholder="Nouvelle formulation, plus petite" aria-label="Nouvelle formulation de l’étape"><button class="btn-sec" type="button" data-act="kr-scope" data-id="${id}">Réduire</button></div><span class="hint">L’étape reste à faire, avec sa nouvelle formulation.</span></div>
-    <p class="hint">Replanifier : choisis une autre semaine ci-dessus.</p>
+    out+=`<div class="ms-act" id="ms-${id}"><h4>${late?`En retard depuis la semaine ${isoWeek(addDays(msWeek(k),7)).w}`:'Si l’étape ne passe pas'}</h4>
+    <div class="field"><span>Réduire le périmètre</span><div class="qty-form" style="margin:0"><input id="scope-${id}" placeholder="Nouvelle formulation, plus petite" aria-label="Nouvelle formulation de l’étape"><button class="btn-sec" type="button" data-act="kr-scope" data-id="${id}">Réduire</button></div></div>
+    ${xp(`${late?'Elle reste visible tant qu’elle n’est pas faite. ':''}Trois options : réduire son périmètre (elle reste à faire, avec sa nouvelle formulation), la replanifier en choisissant une autre semaine ci-dessus, ou l’abandonner.`)}
     <div><button class="btn-sec btn-danger" data-act="kr-abandon" data-id="${id}">Abandonner l’étape…</button></div></div>`}
   if(hist.length)out+=`<div class="field" style="margin-top:14px"><span>Historique</span><ul class="log">${hist.map(x=>`<li><span>${fmtD(x.at,true)}</span><b style="font-weight:500">${esc(x.t)}</b></li>`).join('')}</ul></div>`;
   return out}
@@ -2689,13 +2727,38 @@ function sheetAbandon(id){const k=S.data.krs[id];const o=S.data.objectives[k.obj
   <div class="prio-a" style="margin-top:22px"><button class="btn-sec" data-act="close-sheet">Annuler</button><button class="btn" data-act="ab-next">Continuer vers l’abandon</button></div></section>`}
 /* « Gérer mes habitudes » : la liste et les réglages, à part du tableau de la semaine */
 function sheetHabitsCfg(){const row=h=>`<div class="dg-row" data-dgid="${h.id}"><span class="drag" data-drag="${h.id}" tabindex="0" role="button" aria-label="Déplacer « ${esc(h.name||'Habitude')} » : glisse, ou flèches haut et bas">${ICON.grip}</span><button class="row" data-act="edit-habit" data-id="${h.id}">${av(h.icon,habitColor(h),'sm',h.name)}<span class="m"><span class="t">${esc(h.name||'Sans nom')}</span><span class="s">${esc(`${freqLabel(h)} · ${hModeTxt(h)}`)}</span></span><span class="r chev">${ICON.right}</span></button></div>`;
-  return sheetTop('Mes habitudes','Réglages')+`<section><p class="hint">Glisse une habitude par sa poignée ⋮⋮ pour changer sa place : le tableau et Aujourd’hui suivent cet ordre. Touche-la pour régler son nom, son pictogramme et sa couleur, ses jours et son type de suivi.</p>
+  return sheetTop('Mes habitudes','Réglages')+`<section>${xp('Glisse une habitude par sa poignée ⋮⋮ pour changer sa place : le tableau et Aujourd’hui suivent cet ordre. Touche-la pour régler son nom, son pictogramme et sa couleur, ses jours et son type de suivi.')}
   <div class="list dg-list" style="margin-top:12px">${habits().map(row).join('')||'<p class="empty">Aucune habitude pour l’instant.</p>'}</div>${addBtn('new-habit','Nouvelle habitude')}</section>`}
+/* Jours de la semaine en cours qu'on peut figer : pas encore faits, prévus (ou n'importe lequel pour « X fois par semaine »,
+   dans la limite de ce qui reste du quota) */
+function hfrzEligible(h){const t=today(),mon=monday(t),sun=addDays(mon,6),wk=freqOf(h)==='weekly',days=[];
+  const left=wk?Math.max(0,wkQuota(h,mon)-(habitCount(h.id,mon,sun)+minCount(h.id,mon,sun))):Infinity;
+  for(let i=0;i<7;i++){const d=addDays(mon,i);if(d<hStart(h)||hFrozen(h,d)||habitState(h.id,d)!=='none'||habitVal(h.id,d)!=null)continue;if(!wk&&!fixedOn(h,d))continue;days.push(d)}
+  return{days,left}}
+function hfrzBlock(h){const id=h.id,el=hfrzEligible(h),can=el.days.length>0&&el.left>0,{start,end}=qRange(qKey(today()));
+  const ls=(h.freezes||[]).filter(f=>f&&f.d>=start&&f.d<=end).sort((a,b)=>b.d.localeCompare(a.d));
+  return `<div class="frz-blk"><h4>${ICE()}Figer exceptionnellement</h4>
+  ${can?`<div style="margin-top:8px"><button class="btn-sec frz-btn" data-act="hfrz-open" data-id="${id}">${ICE()}Figer un jour…</button></div>`:`<p class="hint" style="margin-top:6px">Rien à figer cette semaine : ${freqOf(h)==='weekly'&&!(el.left>0)?'le quota de la semaine est déjà atteint':'aucun jour prévu restant à figer'}.</p>`}
+  ${ls.length?`<ul class="log frz-log" style="margin-top:12px">${ls.map(f=>`<li><span>${esc(fmtDay(f.d))}</span><b>${ICE()}Figé${f.reason?` · ${esc(f.reason)}`:''}</b><button class="x" data-act="hfrz-del" data-id="${id}" data-at="${esc(f.at||'')}" aria-label="Retirer le gel du ${fmtD(f.d)}">${ICON.x}</button></li>`).join('')}</ul>`:''}
+  ${xp('Tu ne peux exceptionnellement pas faire cette habitude un jour de la semaine ? Fige ce jour : il n’est ni prévu ni manqué, sans bonus ni malus, et ta série continue. Pour une habitude « X fois par semaine », chaque jour figé retire une fois du quota de la semaine. Deux validations sont demandées ; un gel se retire avec ✕.')}</div>`}
+function sheetHfrz(id){const h=S.data.habits[id];if(!h)return '';const mon=monday(today()),sun=addDays(mon,6),wk=freqOf(h)==='weekly',el=hfrzEligible(h);
+  const z=S.hfrz&&S.hfrz.id===id?S.hfrz:(S.hfrz={id,step:1,days:[],reason:''});z.days=z.days.filter(d=>el.days.includes(d));const n=z.days.length;
+  const base=wk?wkQuota(h,mon):occurrences(h,maxD(mon,hStart(h)),sun),fois=x=>`${x} ${wk?'fois':'jour'+(x>1?'s':'')}`;
+  const eff=`<dl><dt>Cette semaine</dt><dd>${wk?`${base} → <b>${Math.max(0,base-n)}</b> fois`:`${fois(base)} prévu${base>1?'s':''} → <b>${fois(Math.max(0,base-n))}</b>`}</dd><dt>Jour${n>1?'s':''} figé${n>1?'s':''}</dt><dd>ni prévu${n>1?'s':''} ni manqué${n>1?'s':''}, sans bonus ni malus</dd><dt>Série</dt><dd>continue (${esc(streakTxt(h))})</dd></dl>`;
+  const dl=n?z.days.map(d=>esc(fmtDay(d))).join(', '):'<span class="faint">Aucun</span>';
+  if(z.step===2)return sheetTop('Confirmer le gel','Habitude · 2 / 2')+`<section><div class="howto frz-box"><h4>${ICE()}Figer exceptionnellement</h4><dl><dt>Habitude</dt><dd>${esc(h.name||'Habitude')}</dd><dt>Jour${n>1?'s':''}</dt><dd>${dl}</dd><dt>Motif</dt><dd>${z.reason?esc(z.reason):'<span class="faint">Non précisé</span>'}</dd></dl>${eff}</div>
+    <div class="prio-a"><button class="btn-sec" data-act="hfrz-back">Revenir</button><button class="btn btn-ice" data-act="hfrz-go" data-id="${id}" ${n?'':'disabled'}>${ICE()}Oui, figer exceptionnellement</button></div></section>`;
+  return sheetTop('Figer exceptionnellement ?','Habitude · 1 / 2')+`<section><p class="note"><b style="color:var(--fg)">${esc(h.name||'Habitude')}</b> · semaine ${isoWeek(mon).w}</p>
+  <div class="field" style="margin-top:14px"><span>Le${n>1?'s':''} jour${n>1?'s':''} où tu ne peux exceptionnellement pas la faire</span><div class="days hfz-days">${el.days.map(d=>{const on=z.days.includes(d),full=wk&&!on&&n>=el.left;return `<button data-act="hfrz-day" data-d="${d}" aria-pressed="${on}" ${full?'disabled':''} aria-label="${esc(fmtDay(d))}">${esc(DAYS[(wd(d))])}<small>${parse(d).getDate()}</small></button>`}).join('')}</div>${wk?`<span class="hint">Au plus ${el.left} cette semaine : ce qui reste du quota.</span>`:''}</div>
+  <label class="field" style="margin-top:14px"><span>Pourquoi ? (facultatif)</span><textarea id="hfrz-reason" rows="2" placeholder="Malade, déplacement…">${esc(z.reason||'')}</textarea></label>
+  <div class="howto frz-box" style="margin-top:14px"><h4>${ICE()}Ce qui change</h4>${eff}</div>
+  <div class="prio-a" style="margin-top:22px"><button class="btn-sec" data-act="hfrz-cancel">Annuler</button><button class="btn" data-act="hfrz-next" ${n?'':'disabled'}>Continuer</button></div></section>`}
 function sheetHabit(id){const h=S.data.habits[id];
   return sheetTop(esc(h.name||'Nouvelle habitude'),'Habitude')+`<section>${iconPicker('habits',id,h.icon)}
   <div class="field"><span>Couleur du pictogramme</span><div class="swatches">${HCOLORS.map(c=>`<button style="background:${c}" data-act="habit-color" data-id="${id}" data-c="${c}" aria-pressed="${habitColor(h)===c}" aria-label="Couleur ${c}"></button>`).join('')}</div></div>
   ${F('habits',id,'name','Habitude',{ph:'Se coucher avant 21 h 30'})}${freqEditor(h)}${modeEditor(h)}${weekToggles(h)}
   <p class="hint">${streakTxt(h)} · ${rate30Txt(h)}</p></section>
+  <section>${hfrzBlock(h)}</section>
   ${delBtn('del-habit',id,'Supprimer cette habitude')}`}
 function sheetVideo(id){const v=S.data.videos[id];const p=plan(v);const loops=v.loops||[];const t=today();const f=v.filters||{};
   const planHtml=p?`<ul class="plan-t">${[...PHASES.map(ph=>({k:ph.k,l:ph.label,a:p[ph.k]})),{k:'packaging',l:'Titre & miniature (en parallèle)',a:p.packaging}].map(r=>`<li class="${t>=r.a.start&&t<r.a.end?'now':''}"><i class="ph-${r.k}"></i><span>${esc(r.l)}</span><span class="sm muted">${fmtD(r.a.start)} → ${fmtD(addDays(r.a.end,-1))}</span></li>`).join('')}<li><i style="background:var(--fg)"></i><span>Publication</span><span class="sm muted">${fmtD(v.publishDate,true)}</span></li></ul>`:'<p class="hint">Ajoute une date de publication : le rétroplanning se calcule tout seul.</p>';
@@ -2708,8 +2771,8 @@ function sheetVideo(id){const v=S.data.videos[id];const p=plan(v);const loops=v.
   ${v.scriptUrl?`<p class="sm"><a class="link" href="${esc(v.scriptUrl)}" target="_blank" rel="noopener">Ouvrir le script</a></p>`:''}
   ${F('videos',id,'refs','Références',{area:1,rows:3,ph:'Livres, vidéos, articles…'})}
   ${(()=>{const o=list('objectives').find(x=>x.videoId===id&&x.quarter===qKey(today()));const t=videoTemplate();return o?`<div><button class="btn-sec" data-act="edit-objective" data-id="${o.id}">Voir l’objectif « ${esc(o.title)} »</button></div>`:t?`<div><button class="btn-sec" data-act="video-objective" data-id="${id}">Créer l’objectif hebdo (modèle « ${esc(t.name)} »)</button></div>`:''})()}</section>
-  <section><h3>${v.sched?'Calendrier':'Rétroplanning'} <small>${v.sched?'ajusté depuis tes preuves':esc(CPLX[v.complexity||'lourde'])} · ${tag(videoStatus(v))}</small></h3>${planHtml}${v.sched?`<p class="hint" style="margin-top:8px">Dates ajustées depuis une preuve : les phases ne suivent plus la date de publication ni la complexité. <button class="act" data-act="video-unsched" data-id="${id}">Revenir au rétroplanning</button></p>`:''}</section>
-  <section><h3>Travail restant estimé <small>${fmtN(remainingHours(v))} h au total</small></h3><p class="hint" style="margin:4px 0 10px">Ajuste les heures restantes de chaque phase quand tu avances : le temps qui passe ne les réduit pas, et une nouvelle estimation ne repousse pas l’échéance.</p>
+  <section><h3>${v.sched?'Calendrier':'Rétroplanning'} <small>${v.sched?'ajusté depuis tes preuves':esc(CPLX[v.complexity||'lourde'])} · ${tag(videoStatus(v))}</small></h3>${planHtml}${v.sched?`<div style="margin-top:10px"><button class="btn-sec" data-act="video-unsched" data-id="${id}">Revenir au rétroplanning</button></div>${xp('Dates ajustées depuis une preuve : les phases ne suivent plus la date de publication ni la complexité. « Revenir au rétroplanning » recalcule tout depuis la date de sortie.')}`:''}</section>
+  <section><h3>Travail restant estimé <small>${fmtN(remainingHours(v))} h au total</small></h3>${xp('Ajuste les heures restantes de chaque phase quand tu avances : le temps qui passe ne les réduit pas, et une nouvelle estimation ne repousse pas l’échéance.')}
   <div class="form-grid">${PH_ALL().map(ph=>{const done=phaseDone(v,ph.k),val=(v.remaining||{})[ph.k];return `<label class="field"><span>${esc(ph.label)}${done?' · terminée':''}</span><input id="rem-${id}-${ph.k}" type="number" min="0" step="0.5" inputmode="decimal" data-bind="videos:${id}:remaining.${ph.k}" data-type="number" value="${val??''}" placeholder="heures">${done&&+val>0?'<span class="hint tone-warn">Phase terminée : remets ce reste à 0, ou corrige l’étape.</span>':''}</label>`}).join('')}</div></section>
   <section><h3>Angle d'attaque <small>verrouillé avant d'écrire</small></h3>
   ${F('videos',id,'subject','Sujet (1 phrase)',{area:1,rows:2})}
@@ -2759,7 +2822,7 @@ function sheetPick(iid){const ts=templates();const i=idOf(iid);
   ${iid?`<button class="row" data-act="pick-empty" data-id="${iid}"><span class="av sm txt" aria-hidden="true">+</span><span class="m"><span class="t">Objectif vide</span><span class="s">Tu ajoutes les preuves une à une</span></span><span></span></button>`:''}
   ${ts.map(t=>`<div class="row">${av(t.icon,idColor(t.identityId),'sm',t.name)}<span class="m"><span class="t">${esc(t.name||'Modèle sans nom')}</span><span class="s">${plural((t.items||[]).length,'preuve')}${t.video?' · lié à une vidéo':''} · ${esc((t.items||[]).slice(0,3).map(x=>x.title).join(', '))}${(t.items||[]).length>3?'…':''}</span></span><span class="kr-r"><button class="pill-mini" data-act="edit-template" data-id="${t.id}">Modifier</button><button class="btn sm" data-act="pick-tpl" data-id="${t.id}" data-iid="${iid||''}">Utiliser</button></span></div>`).join('')}
   </div>${ts.length?'':'<p class="empty">Aucun modèle pour l’instant. Ouvre un objectif et touche « Enregistrer comme modèle ».</p>'}${addBtn('new-template','Nouveau modèle')}</section>
-  <section><p class="hint">Un modèle recrée l’objectif et toutes ses preuves en un geste. Un modèle « vidéo » se lance aussi depuis la fiche d’une vidéo du Studio : l’objectif prend le titre de la vidéo et s’y relie.</p></section>`}
+  <section>${xp('Un modèle recrée l’objectif et toutes ses preuves en un geste. Un modèle « vidéo » se lance aussi depuis la fiche d’une vidéo du Studio : l’objectif prend le titre de la vidéo et s’y relie.')}</section>`}
 function sheetTemplate(id){const t=S.data.templates[id];const items=t.items||[];
   return sheetTop(esc(t.name||'Nouveau modèle'),'Modèle d’objectif')+`<section>${iconPicker('templates',id,t.icon)}
   ${F('templates',id,'name','Nom du modèle',{ph:'Vidéo longue'})}
@@ -2941,6 +3004,17 @@ const ACT={
   'todo-del':a=>{const t=S.day||today();saveTodos(t,todoItems(t).filter(i=>i.id!==a.dataset.id))},
   'kr-scope':a=>{const k=S.data.krs[a.dataset.id];if(!k)return;const el=document.getElementById('scope-'+k.id);const v=(el&&el.value||'').trim();if(!v||v===krTitle(k)){toast('Écris la nouvelle formulation de l’étape');return}
     put('krs',k.id,{...k,title:v,scopes:[...(k.scopes||[]),{from:krTitle(k),to:v,at:today()}]});toast('Périmètre réduit : l’étape reste à faire');renderSheet()},
+  'hfrz-open':a=>{S.hfrz={id:a.dataset.id,step:1,days:[],reason:''};openSheet('hfrz','habits',a.dataset.id)},
+  'hfrz-cancel':()=>{S.hfrz=null;dismissSheet()},
+  'hfrz-day':a=>{const z=S.hfrz;if(!z)return;const el=document.getElementById('hfrz-reason');if(el)z.reason=el.value;const d=a.dataset.d;z.days=z.days.includes(d)?z.days.filter(x=>x!==d):[...z.days,d].sort();renderSheet()},
+  'hfrz-next':()=>{const el=document.getElementById('hfrz-reason');if(S.hfrz&&S.hfrz.days.length){S.hfrz.reason=(el&&el.value||'').trim();S.hfrz.step=2}renderSheet();const b=$('#sheet-panel [data-act="hfrz-back"]');if(b)b.focus()},
+  'hfrz-back':()=>{if(S.hfrz)S.hfrz.step=1;renderSheet()},
+  'hfrz-go':a=>{if(a.disabled)return;a.disabled=true;const z=S.hfrz;S.hfrz=null;const h=z&&S.data.habits[z.id];if(!h||z.step!==2){dismissSheet();return}
+    const el=hfrzEligible(h),days=z.days.filter(d=>el.days.includes(d)).slice(0,freqOf(h)==='weekly'?el.left:7);if(!days.length){dismissSheet();return}
+    const at=nowIso(),add=days.map((d,i)=>({d,reason:z.reason||'',at:at+'#'+i}));put('habits',h.id,{...clean(h),freezes:[...(h.freezes||[]),...add],updatedAt:nowIso()});dismissSheet();
+    toast(`Figé exceptionnellement : ${h.name||'Habitude'} · ${days.length>1?`${days.length} jours`:fmtDay(days[0])}`,{label:'Annuler',fn:()=>{const c=S.data.habits[h.id];if(c)put('habits',h.id,{...clean(c),freezes:(c.freezes||[]).filter(x=>!add.some(y=>y.at===x.at))});if(S.sheet)renderSheet()}})},
+  'hfrz-del':a=>{const h=S.data.habits[a.dataset.id];if(!h)return;const f=(h.freezes||[]).find(x=>x.at===a.dataset.at);if(!f)return;put('habits',h.id,{...clean(h),freezes:(h.freezes||[]).filter(x=>x.at!==f.at),updatedAt:nowIso()});if(S.sheet)renderSheet();
+    toast('Gel retiré : le jour redevient prévu',{label:'Annuler',fn:()=>{const c=S.data.habits[h.id];if(c)put('habits',h.id,{...clean(c),freezes:[...(c.freezes||[]),f]});if(S.sheet)renderSheet()}})},
   'frz-open':a=>{S.frz={id:a.dataset.id,step:1,n:0,reason:''};openSheet('frz','krs',a.dataset.id)},
   'frz-cancel':()=>{S.frz=null;dismissSheet()},
   'frz-n':a=>{const z=S.frz,k=z&&S.data.krs[z.id];if(!k)return;const el=document.getElementById('frz-reason');if(el)z.reason=el.value;const room=frzRoom(k),stp=qtyStep(k);z.n=clamp(Math.round((z.n+(+a.dataset.d)*stp)*1000)/1000,Math.min(stp,room),room);renderSheet()},
@@ -3163,13 +3237,14 @@ function sheetReset(){const c=today();
   return sheetTop('Repartir de zéro','Réglages')+`<section><p class="note">Départ : <b style="color:var(--fg)">${esc(fmtDay(c,true))}</b>. Tout ce qui a été saisi avant est remis à zéro ; ce que tu as saisi aujourd’hui reste.</p>
   <div class="howto"><h4>Gardé</h4><p style="margin:0">Identités, objectifs, preuves et leurs cibles, habitudes et leurs réglages, indicateurs avec leur dernière mesure, Studio, banque d’idées, modèles et réglages.</p></div>
   <div class="howto rz"><h4>Remis à zéro</h4><p style="margin:0">Cases d’habitudes et séries, quantités et étapes des preuves, tâches, priorités et temps de concentration, matins, revues et semaines sauvegardées, anciennes mesures des indicateurs.</p></div>
-  <p class="hint" style="margin-top:14px">Avant, l’app enregistre une sauvegarde complète : un fichier JSON, et une copie sur cet appareil, restaurable depuis Réglages → Tes données.</p>
+  ${xp('Avant, l’app enregistre une sauvegarde complète : un fichier JSON, et une copie sur cet appareil, restaurable depuis Réglages → Tes données.')}
   <div class="prio-a" style="margin-top:18px"><button class="btn-sec" data-act="close-sheet">Annuler</button><button class="btn btn-warn" data-act="reset-go">Sauvegarder et repartir de zéro</button></div></section>`}
 async function resetTracking(){const c=today();const backup={...snapshotData(),reason:'reset'};try{localStorage.setItem('dqte:backup',JSON.stringify(backup))}catch(e){}
   const saved=await saveJson(backup,`sauvegarde-avant-remise-a-zero-${c}.json`);const ops=[],W=(coll,id,d)=>ops.push({c:coll,id,d});
   for(const m of list('habitlog')){const n=JSON.parse(JSON.stringify(clean(m)));for(const f of ['days','mins','vals'])if(n[f])for(const d of Object.keys(n[f]))if(d<c)delete n[f][d];
     if(['days','mins','vals'].every(f=>!n[f]||!Object.keys(n[f]).length))W('habitlog',m.id,null);else if(!sameDoc(m,n))W('habitlog',m.id,n)}
   for(const j of list('justifs'))W('justifs',j.id,null);
+  for(const h of list('habits'))if((h.freezes||[]).some(f=>f.d<c))W('habits',h.id,{...clean(h),freezes:h.freezes.filter(f=>f.d>=c)});
   for(const x of list('todos'))if(String(x.date||x.id)<c)W('todos',x.id,null);
   for(const x of list('days'))if(String(x.date||x.id)<c)W('days',x.id,null);
   for(const r of list('reviews'))if(String(r.updatedAt||r.closedAt||r.createdAt||'').slice(0,10)<c)W('reviews',r.id,null);
